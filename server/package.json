@@ -1,0 +1,36 @@
+{
+  "name": "campus-events-server",
+  "version": "1.0.0",
+  "description": "Backend API for Francis Xavier Engineering College Campus Event Management System",
+  "main": "src/app.js",
+  "scripts": {
+    "start": "node src/app.js",
+    "dev": "nodemon src/app.js",
+    "seed": "node src/scripts/seed.js",
+    "init-db": "node src/scripts/initDb.js",
+    "test": "node --test test/emailParser.test.js"
+  },
+  "keywords": [
+    "campus-events",
+    "express",
+    "mysql",
+    "fxec"
+  ],
+  "author": "FXEC Event Management Team",
+  "license": "ISC",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "express-rate-limit": "^7.5.0",
+    "express-validator": "^7.2.1",
+    "helmet": "^8.0.0",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^1.4.5-lts.1",
+    "mysql2": "^3.12.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.9"
+  }
+}
