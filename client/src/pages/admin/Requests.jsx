@@ -235,24 +235,35 @@ const Requests = () => {
                 {requests.map((r) => (
                   <tr key={r.id} className="hover:bg-slate-50/70 transition-colors">
                     
-                    {/* Event Details */}
-                    <td className="py-4 px-4 max-w-[220px]">
-                      <div className="space-y-1">
-                        <span className={`inline-block px-2 py-0.5 rounded text-[9px] font-bold ${
-                          r.event_type === 'internal' ? 'bg-emerald-100 text-emerald-800' : 'bg-indigo-100 text-indigo-800'
-                        }`}>
-                          {r.event_type === 'internal' ? 'Inside' : 'Outside'} · {r.event_category}
-                        </span>
-                        <p className="font-extrabold text-slate-900 text-sm leading-snug truncate">
-                          {r.event_title}
-                        </p>
-                        <div className="flex items-center gap-1 text-[11px] text-slate-500">
-                          <Calendar className="w-3 h-3 text-slate-400 shrink-0" />
-                          <span>{formatDate(r.event_date)}</span>
+                    {/* Event Details with Poster */}
+                    <td className="py-4 px-4 max-w-[260px]">
+                      <div className="flex items-start gap-3">
+                        <div className="w-14 h-11 rounded-lg bg-slate-900 overflow-hidden shrink-0 shadow-xs border border-slate-200 mt-0.5">
+                          {r.poster_url ? (
+                            <img src={r.poster_url} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-[10px] font-bold text-white bg-college-900">
+                              FX
+                            </div>
+                          )}
                         </div>
-                        <div className="flex items-center gap-1 text-[11px] text-slate-400 truncate">
-                          <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
-                          <span className="truncate">{r.event_venue}</span>
+                        <div className="space-y-1 truncate">
+                          <span className={`inline-block px-2 py-0.5 rounded text-[9px] font-bold ${
+                            r.event_type === 'internal' ? 'bg-emerald-100 text-emerald-800' : 'bg-indigo-100 text-indigo-800'
+                          }`}>
+                            {r.event_type === 'internal' ? 'Inside' : 'Outside'} · {r.event_category}
+                          </span>
+                          <p className="font-extrabold text-slate-900 text-sm leading-snug truncate">
+                            {r.event_title}
+                          </p>
+                          <div className="flex items-center gap-1 text-[11px] text-slate-500">
+                            <Calendar className="w-3 h-3 text-slate-400 shrink-0" />
+                            <span>{formatDate(r.event_date)}</span>
+                          </div>
+                          <div className="flex items-center gap-1 text-[11px] text-slate-400 truncate">
+                            <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
+                            <span className="truncate">{r.event_venue}</span>
+                          </div>
                         </div>
                       </div>
                     </td>

@@ -269,6 +269,7 @@ async function getAdminRequests(req, res) {
         rr.admission_year,
         e.id AS event_id,
         e.title AS event_title,
+        e.poster_url,
         e.event_date,
         e.venue AS event_venue,
         e.event_type,
