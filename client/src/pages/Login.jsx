@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation, Link } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import api from '../api/axios';
@@ -13,7 +13,10 @@ import {
   CheckCircle2,
   Loader2,
   Sparkles,
-  ArrowRight
+  ArrowRight,
+  Users,
+  ChevronRight,
+  PlusCircle
 } from 'lucide-react';
 
 export default function Login() {
@@ -42,18 +45,29 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
-  const { login, signup, isAuthenticated, isAdmin, isStudent } = useAuth();
+  const {
+    login,
+    signup,
+    accounts,
+    switchAccount,
+    isAuthenticated,
+    isAdmin,
+    user: currentUser
+  } = useAuth();
+
   const { showToast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Redirect if already logged in
+  const isAddingAccount = location.search.includes('action=add_account');
+
+  // Auto redirect if already authenticated and not explicitly adding an account
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isAuthenticated && !isAddingAccount) {
       const destination = isAdmin ? '/admin' : '/events';
       navigate(destination, { replace: true });
     }
-  }, [isAuthenticated, isAdmin, navigate]);
+  }, [isAuthenticated, isAdmin, isAddingAccount, navigate]);
 
   // Real-time debounce parsing on student sign-up email input
   useEffect(() => {
@@ -65,7 +79,6 @@ export default function Login() {
 
     const clean = signupForm.email.trim().toLowerCase();
 
-    // Only attempt parse when looks like an email with domain
     if (!clean.includes('@')) {
       setEmailError('Please include the @francisxavier.ac.in college domain.');
       setParsedEmailInfo(null);
@@ -79,7 +92,6 @@ export default function Login() {
         const res = await api.post('/auth/parse-email', { email: clean });
         if (res.data && res.data.success) {
           setParsedEmailInfo(res.data.data);
-          // Autofill student name if not manually modified
           setSignupForm((prev) => ({
             ...prev,
             name: prev.name.trim().length === 0 ? res.data.data.name : prev.name
@@ -166,6 +178,14 @@ export default function Login() {
     }
   };
 
+  const handleFastSwitch = (accEmail) => {
+    const switchedUser = switchAccount(accEmail);
+    if (switchedUser) {
+      showToast(`Switched to ${switchedUser.name}`, 'success', 2500);
+      navigate(switchedUser.role === 'admin' ? '/admin' : '/events', { replace: true });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-100 flex flex-col justify-center py-10 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md text-center mb-6">
@@ -177,11 +197,56 @@ export default function Login() {
           Francis Xavier Engineering College
         </h2>
         <p className="mt-1 text-xs sm:text-sm text-slate-600 font-medium">
-          Autonomous • Tirunelveli • Campus Event Management System
+          Autonomous • Tirunelveli • Campus Event Portal
         </p>
       </div>
 
-      <div className="sm:mx-auto sm:w-full sm:max-w-md px-4">
+      <div className="sm:mx-auto sm:w-full sm:max-w-md px-4 space-y-4">
+        {/* Saved Accounts on this Device (Account Switcher Card) */}
+        {accounts.length > 0 && (
+          <div className="bg-white p-5 rounded-3xl shadow-sm border border-slate-200 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-slate-600 uppercase tracking-wider flex items-center gap-1.5">
+                <Users className="w-4 h-4 text-blue-600" />
+                <span>Saved Accounts on this Device</span>
+              </span>
+              <span className="text-[11px] font-semibold text-slate-400">
+                {accounts.length} logged in
+              </span>
+            </div>
+
+            <div className="space-y-2">
+              {accounts.map((acc) => (
+                <button
+                  key={acc.user.email}
+                  type="button"
+                  onClick={() => handleFastSwitch(acc.user.email)}
+                  className="w-full flex items-center justify-between p-3 rounded-2xl border border-slate-200 hover:border-blue-500 hover:bg-blue-50/50 transition-all text-left group"
+                >
+                  <div className="flex items-center gap-3 overflow-hidden">
+                    <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-800 to-blue-600 text-white font-bold text-sm flex items-center justify-center shrink-0 shadow-sm">
+                      {acc.user.name?.charAt(0)}
+                    </div>
+                    <div className="overflow-hidden">
+                      <div className="flex items-center gap-2">
+                        <p className="font-bold text-slate-900 text-xs truncate group-hover:text-blue-700">
+                          {acc.user.name}
+                        </p>
+                        <span className="px-1.5 py-0.5 rounded text-[9px] font-extrabold uppercase bg-slate-100 text-slate-700">
+                          {acc.user.role}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-slate-500 truncate">{acc.user.email}</p>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-blue-600 shrink-0" />
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Main Authentication Box */}
         <div className="bg-white py-8 px-6 sm:px-10 shadow-xl rounded-3xl border border-slate-200">
           {/* Main Mode Toggle: Sign In vs Sign Up */}
           <div className="flex bg-slate-100 p-1 rounded-xl mb-6">
@@ -317,7 +382,7 @@ export default function Login() {
 
               {role === 'admin' && (
                 <p className="text-center text-[11px] text-slate-500 mt-3">
-                  Admin credentials from seed: <code className="bg-slate-100 px-1 py-0.5 rounded text-blue-700">admin@francisxavier.ac.in</code> / <code className="bg-slate-100 px-1 py-0.5 rounded text-blue-700">Admin@123</code>
+                  Admin credentials from seed: <code className="bg-slate-100 px-1 py-0.5 rounded text-blue-700 font-semibold">admin@francisxavier.ac.in</code> / <code className="bg-slate-100 px-1 py-0.5 rounded text-blue-700 font-semibold">Admin@123</code>
                 </p>
               )}
             </form>
@@ -376,7 +441,7 @@ export default function Login() {
                 )}
               </div>
 
-              {/* Full Name (Auto-filled but editable) */}
+              {/* Full Name */}
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
                   Full Name <span className="text-slate-400 font-normal">(Auto-filled, editable)</span>

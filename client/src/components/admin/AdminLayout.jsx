@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import {
@@ -7,19 +7,46 @@ import {
   ClipboardList,
   ShieldCheck,
   LogOut,
-  GraduationCap,
   ExternalLink,
-  ChevronRight
+  ChevronUp,
+  PlusCircle,
+  Users,
+  Check
 } from 'lucide-react';
 
 export default function AdminLayout() {
-  const { user, logout } = useAuth();
+  const { user, accounts, switchAccount, logoutAccount, logoutAll } = useAuth();
+  const [accountMenuOpen, setAccountMenuOpen] = useState(false);
+  const menuRef = useRef(null);
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    logout();
+    logoutAccount(user?.email);
     navigate('/login');
   };
+
+  const handleSwitch = (email) => {
+    const switched = switchAccount(email);
+    setAccountMenuOpen(false);
+    if (switched) {
+      navigate(switched.role === 'admin' ? '/admin' : '/events', { replace: true });
+    }
+  };
+
+  const handleAddAccount = () => {
+    setAccountMenuOpen(false);
+    navigate('/login?action=add_account');
+  };
+
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        setAccountMenuOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const navItems = [
     { to: '/admin', label: 'Dashboard', icon: LayoutDashboard, end: true },
@@ -68,26 +95,63 @@ export default function AdminLayout() {
           </nav>
         </div>
 
-        {/* User Footer */}
-        <div className="p-4 border-t border-slate-800 bg-slate-950/40 space-y-3">
-          <div className="flex items-center justify-between text-xs">
-            <span className="text-slate-400 font-medium">Viewing as</span>
-            <span className="px-2 py-0.5 rounded bg-blue-500/20 text-blue-400 font-bold uppercase text-[10px]">
-              Admin
-            </span>
-          </div>
+        {/* User Footer with Multi-Account Switcher */}
+        <div className="p-4 border-t border-slate-800 bg-slate-950/40 relative" ref={menuRef}>
+          {accountMenuOpen && (
+            <div className="absolute bottom-full left-3 right-3 mb-2 bg-slate-800 rounded-2xl shadow-2xl border border-slate-700 p-3 z-50 text-xs">
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">
+                Switch Device Account ({accounts.length})
+              </p>
+              <div className="space-y-1 max-h-44 overflow-y-auto">
+                {accounts.map((acc) => {
+                  const isCurrent = acc.user.email.toLowerCase() === user?.email.toLowerCase();
+                  return (
+                    <button
+                      key={acc.user.email}
+                      onClick={() => handleSwitch(acc.user.email)}
+                      className={`w-full flex items-center justify-between p-2 rounded-xl text-left transition-colors ${
+                        isCurrent
+                          ? 'bg-blue-600/30 text-white font-bold border border-blue-500/40'
+                          : 'text-slate-300 hover:bg-slate-700/60'
+                      }`}
+                    >
+                      <div className="truncate pr-2">
+                        <p className="truncate font-semibold">{acc.user.name}</p>
+                        <p className="text-[10px] text-slate-400 truncate">{acc.user.role.toUpperCase()} • {acc.user.email}</p>
+                      </div>
+                      {isCurrent && <Check className="w-3.5 h-3.5 text-blue-400 shrink-0" />}
+                    </button>
+                  );
+                })}
+              </div>
 
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-white font-bold text-xs">
+              <div className="pt-2 mt-2 border-t border-slate-700 space-y-1">
+                <button
+                  onClick={handleAddAccount}
+                  className="w-full flex items-center gap-2 p-1.5 text-blue-400 hover:text-blue-300 font-bold"
+                >
+                  <PlusCircle className="w-3.5 h-3.5" />
+                  <span>Add Another Account</span>
+                </button>
+              </div>
+            </div>
+          )}
+
+          <div
+            onClick={() => setAccountMenuOpen(!accountMenuOpen)}
+            className="flex items-center gap-3 p-2 rounded-xl hover:bg-slate-800/80 cursor-pointer transition-colors"
+          >
+            <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-xs shrink-0">
               {user?.name?.charAt(0) || 'A'}
             </div>
             <div className="overflow-hidden flex-1">
               <p className="text-xs font-bold text-white truncate">{user?.name}</p>
               <p className="text-[10px] text-slate-400 truncate">{user?.email}</p>
             </div>
+            <ChevronUp className="w-3.5 h-3.5 text-slate-400" />
           </div>
 
-          <div className="pt-2 flex items-center justify-between border-t border-slate-800/80">
+          <div className="pt-2 mt-2 flex items-center justify-between border-t border-slate-800/80">
             <NavLink
               to="/events"
               className="text-xs text-slate-400 hover:text-blue-400 font-medium flex items-center gap-1"

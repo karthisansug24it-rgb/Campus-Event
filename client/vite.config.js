@@ -5,6 +5,7 @@ import react from '@vitejs/plugin-react';
 export default defineConfig({
   plugins: [react()],
   server: {
+    host: '0.0.0.0', // Allows mobile phones, tablets, and devices on the network to access the web app
     port: 5173,
     proxy: {
       '/api': {
