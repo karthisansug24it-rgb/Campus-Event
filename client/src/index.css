@@ -3,42 +3,91 @@
 @tailwind utilities;
 
 @layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    color-scheme: dark;
+    scroll-behavior: smooth;
+  }
+
   body {
-    @apply bg-slate-50 text-slate-800 antialiased font-sans min-h-screen selection:bg-college-100 selection:text-college-900;
+    @apply bg-[#07080D] text-slate-100 antialiased font-sans min-h-screen selection:bg-cyan-500/20 selection:text-cyan-300;
+    margin: 0;
+    padding: 0;
   }
 }
 
-/* Custom subtle scrollbar */
+/* Custom dark scrollbar matching Pathpulse */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  background: #07080D;
 }
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: #1F2744;
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: #334155;
 }
 
-/* Modal animations */
-@keyframes fadeIn {
-  from { opacity: 0; transform: scale(0.97); }
-  to { opacity: 1; transform: scale(1); }
+/* Glassmorphism panels matching C:\Projects */
+.glass-panel {
+  background: rgba(13, 16, 29, 0.82);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.glass-panel-subtle {
+  background: rgba(19, 24, 43, 0.5);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Glowing card interactive border */
+.card-glow-hover {
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.card-glow-hover:hover {
+  border-color: rgba(0, 242, 254, 0.35);
+  box-shadow: 0 0 25px -5px rgba(0, 242, 254, 0.18);
+  transform: translateY(-2px);
+}
+
+/* Modal pop animation */
+@keyframes modalPop {
+  0% {
+    opacity: 0;
+    transform: scale(0.96) translateY(6px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
 }
 
 .animate-modal-pop {
-  animation: fadeIn 0.18s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: modalPop 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-@keyframes slideDown {
-  from { opacity: 0; transform: translateY(-16px); }
-  to { opacity: 1; transform: translateY(0); }
+/* Toast animation */
+@keyframes toastSlide {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -18px) scale(0.96);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1);
+  }
 }
 
 .animate-toast-slide {
-  animation: slideDown 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: toastSlide 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }

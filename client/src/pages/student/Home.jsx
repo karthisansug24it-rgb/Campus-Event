@@ -12,7 +12,8 @@ import {
   MapPin, 
   Clock, 
   Layers, 
-  AlertCircle 
+  AlertCircle,
+  Zap
 } from 'lucide-react';
 
 const CATEGORIES = ['All', 'Hackathon', 'Workshop', 'Seminar', 'Cultural', 'Sports', 'Other'];
@@ -78,40 +79,46 @@ const Home = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 py-8 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-[#07080D] py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto space-y-8">
         
         {/* Hero Section */}
-        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-college-950 via-college-900 to-college-800 text-white p-8 sm:p-12 shadow-xl shadow-college-950/20">
-          <div className="absolute right-0 top-0 bottom-0 w-1/3 opacity-10 pointer-events-none bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-white to-transparent" />
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#0D101D] via-[#11162B] to-[#0A0D18] border border-white/[0.08] p-8 sm:p-12 shadow-glass text-white">
+          {/* Subtle Ambient Radial Lighting */}
+          <div className="absolute right-0 top-0 bottom-0 w-1/2 opacity-25 pointer-events-none bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-cyan-500 via-blue-600 to-transparent" />
           
-          <div className="relative z-10 max-w-2xl">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 text-college-200 text-xs font-bold uppercase tracking-wider backdrop-blur-md mb-4 border border-white/10">
-              <Sparkles className="w-3.5 h-3.5 text-gold-400" />
-              FXEC Campus Events Portal
-            </span>
+          <div className="relative z-10 max-w-2xl space-y-3">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/25 text-cyan-300 text-xs font-mono font-bold tracking-wide">
+              <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+              <span>OFFICIAL FXEC EVENT PLATFORM</span>
+            </div>
+            
             <h1 className="text-3xl sm:text-5xl font-black tracking-tight leading-tight">
-              Discover & Lead Campus Innovations
+              Discover & Lead{' '}
+              <span className="bg-gradient-to-r from-cyan-400 via-blue-400 to-indigo-400 bg-clip-text text-transparent">
+                Campus Innovations
+              </span>
             </h1>
-            <p className="mt-3 text-slate-300 text-sm sm:text-base font-medium leading-relaxed">
-              Explore official internal symposiums, competitive hackathons, and state-level events. Register with your verified college email to earn points.
+            
+            <p className="text-slate-400 text-sm sm:text-base font-normal leading-relaxed">
+              Explore internal hackathons, hands-on technology workshops, and prestigious external symposiums. Register with your verified college credentials to unlock attendance rewards.
             </p>
           </div>
         </div>
 
         {/* Search & Filter Controls */}
-        <div className="bg-white rounded-2xl border border-slate-200 p-4 sm:p-5 shadow-sm space-y-4">
+        <div className="bg-[#0D101D] rounded-2xl border border-white/[0.08] p-4 sm:p-5 shadow-glass space-y-4">
           
           {/* Search bar & Type Toggles */}
           <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3.5">
             <div className="relative flex-1">
-              <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+              <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search by event title, venue, or organizer..."
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-college-500 focus:bg-white transition-all placeholder:text-slate-400"
+                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.03] text-sm text-white font-medium focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/25 transition-all placeholder:text-slate-500"
               />
             </div>
 
@@ -119,30 +126,30 @@ const Home = () => {
             <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0">
               <button
                 onClick={() => setSelectedType('all')}
-                className={`px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
+                className={`px-3.5 py-2 rounded-xl text-xs font-mono font-bold whitespace-nowrap transition-all ${
                   selectedType === 'all'
-                    ? 'bg-college-700 text-white shadow-sm'
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                    ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 shadow-glow-cyan'
+                    : 'bg-white/[0.03] text-slate-400 hover:text-white hover:bg-white/[0.06] border border-white/[0.06]'
                 }`}
               >
                 All Events
               </button>
               <button
                 onClick={() => setSelectedType('internal')}
-                className={`px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
+                className={`px-3.5 py-2 rounded-xl text-xs font-mono font-bold whitespace-nowrap transition-all ${
                   selectedType === 'internal'
-                    ? 'bg-emerald-600 text-white shadow-sm'
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                    ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-glow-emerald'
+                    : 'bg-white/[0.03] text-slate-400 hover:text-white hover:bg-white/[0.06] border border-white/[0.06]'
                 }`}
               >
                 Inside College
               </button>
               <button
                 onClick={() => setSelectedType('external')}
-                className={`px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
+                className={`px-3.5 py-2 rounded-xl text-xs font-mono font-bold whitespace-nowrap transition-all ${
                   selectedType === 'external'
-                    ? 'bg-indigo-600 text-white shadow-sm'
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                    ? 'bg-purple-500/20 text-purple-300 border border-purple-500/40 shadow-glow-purple'
+                    : 'bg-white/[0.03] text-slate-400 hover:text-white hover:bg-white/[0.06] border border-white/[0.06]'
                 }`}
               >
                 Outside College
@@ -150,10 +157,10 @@ const Home = () => {
 
               <button
                 onClick={() => setUpcomingOnly(!upcomingOnly)}
-                className={`px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap border transition-all ${
+                className={`px-3.5 py-2 rounded-xl text-xs font-mono font-bold whitespace-nowrap border transition-all ${
                   upcomingOnly
-                    ? 'bg-amber-100 text-amber-900 border-amber-300'
-                    : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                    ? 'bg-amber-500/20 text-amber-300 border-amber-500/40 shadow-glow-amber'
+                    : 'bg-white/[0.03] text-slate-400 border-white/[0.06] hover:bg-white/[0.06]'
                 }`}
               >
                 Upcoming Only
@@ -162,18 +169,18 @@ const Home = () => {
           </div>
 
           {/* Category Filter Chips */}
-          <div className="flex items-center gap-2 overflow-x-auto pt-2 border-t border-slate-100 no-scrollbar">
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider mr-1 hidden sm:inline">
-              Category:
+          <div className="flex items-center gap-2 overflow-x-auto pt-2 border-t border-white/[0.06]">
+            <span className="text-[11px] font-mono font-bold text-slate-500 uppercase tracking-wider mr-1 hidden sm:inline">
+              CATEGORY:
             </span>
             {CATEGORIES.map((cat) => (
               <button
                 key={cat}
                 onClick={() => setSelectedCategory(cat)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${
+                className={`px-3 py-1.5 rounded-lg text-xs font-mono font-semibold whitespace-nowrap transition-all ${
                   selectedCategory === cat
-                    ? 'bg-slate-900 text-white'
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                    ? 'bg-white text-black font-bold shadow-sm'
+                    : 'bg-white/[0.03] text-slate-400 hover:text-white hover:bg-white/[0.06] border border-white/[0.06]'
                 }`}
               >
                 {cat}
@@ -185,14 +192,14 @@ const Home = () => {
 
         {/* Error State */}
         {error && (
-          <div className="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 flex items-center justify-between">
+          <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-300 flex items-center justify-between">
             <div className="flex items-center gap-2.5 text-sm font-semibold">
-              <AlertCircle className="w-5 h-5 text-rose-500" />
+              <AlertCircle className="w-5 h-5 text-rose-400" />
               <span>{error}</span>
             </div>
             <button
               onClick={loadEvents}
-              className="px-3 py-1.5 rounded-lg bg-rose-600 text-white text-xs font-bold hover:bg-rose-700"
+              className="px-3 py-1.5 rounded-xl bg-rose-600 text-white text-xs font-bold hover:bg-rose-500 transition-colors"
             >
               Retry
             </button>
@@ -205,25 +212,25 @@ const Home = () => {
             {[1, 2, 3, 4, 5, 6].map((idx) => (
               <div 
                 key={idx}
-                className="bg-white rounded-2xl border border-slate-200 p-4 space-y-4 animate-pulse shadow-sm"
+                className="bg-[#0D101D] rounded-2xl border border-white/[0.08] p-4 space-y-4 animate-pulse"
               >
-                <div className="aspect-[16/10] bg-slate-200 rounded-xl" />
+                <div className="aspect-[16/10] bg-white/[0.04] rounded-xl" />
                 <div className="space-y-2">
-                  <div className="h-4 bg-slate-200 rounded-md w-3/4" />
-                  <div className="h-3 bg-slate-200 rounded-md w-1/2" />
+                  <div className="h-4 bg-white/[0.06] rounded-md w-3/4" />
+                  <div className="h-3 bg-white/[0.04] rounded-md w-1/2" />
                 </div>
-                <div className="h-3 bg-slate-100 rounded-md w-full" />
+                <div className="h-3 bg-white/[0.03] rounded-md w-full" />
               </div>
             ))}
           </div>
         ) : events.length === 0 ? (
           /* Empty State */
-          <div className="text-center py-20 bg-white rounded-3xl border border-slate-200 p-8 shadow-sm">
-            <div className="w-16 h-16 rounded-2xl bg-college-50 text-college-600 flex items-center justify-center mx-auto mb-4">
+          <div className="text-center py-20 bg-[#0D101D] rounded-3xl border border-white/[0.08] p-8 shadow-glass">
+            <div className="w-16 h-16 rounded-2xl bg-white/[0.03] border border-white/[0.08] text-cyan-400 flex items-center justify-center mx-auto mb-4 shadow-glow-cyan">
               <Calendar className="w-8 h-8" />
             </div>
-            <h3 className="text-lg font-bold text-slate-900 mb-1">No Events Found</h3>
-            <p className="text-sm text-slate-500 max-w-sm mx-auto mb-6">
+            <h3 className="text-lg font-bold text-white mb-1">No Events Found</h3>
+            <p className="text-xs text-slate-400 max-w-sm mx-auto mb-6">
               We couldn't find any events matching your current filters or search terms.
             </p>
             <button
@@ -233,7 +240,7 @@ const Home = () => {
                 setSelectedCategory('All');
                 setUpcomingOnly(false);
               }}
-              className="px-4 py-2 rounded-xl bg-college-700 text-white font-bold text-xs hover:bg-college-800 transition-colors"
+              className="px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-400 to-blue-500 text-black font-extrabold text-xs shadow-glow-cyan hover:from-cyan-300 hover:to-blue-400 transition-all"
             >
               Reset Filters
             </button>

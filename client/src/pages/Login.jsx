@@ -14,7 +14,9 @@ import {
   AlertCircle, 
   Loader2, 
   ArrowRight,
-  Info
+  Info,
+  Sparkles,
+  KeyRound
 } from 'lucide-react';
 
 const Login = () => {
@@ -101,6 +103,35 @@ const Login = () => {
     setFormError('');
   };
 
+  const handleQuickFill = (role) => {
+    if (role === 'admin') {
+      setIsSignUpMode(false);
+      setSelectedRole('admin');
+      setFormData({
+        name: '',
+        email: 'admin@francisxavier.ac.in',
+        password: 'Admin@123',
+        confirmPassword: '',
+        section: 'A',
+        registerNumber: ''
+      });
+      setFormError('');
+    } else {
+      setIsSignUpMode(false);
+      setSelectedRole('student');
+      setFormData({
+        name: 'Karthisan S',
+        email: 'karthisans.ug.24.it@francisxavier.ac.in',
+        password: 'Student@123',
+        confirmPassword: '',
+        section: 'A',
+        registerNumber: '953624104001'
+      });
+      setFormError('');
+    }
+    showToast(`Filled ${role} demo credentials`, 'info');
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setFormError('');
@@ -167,60 +198,66 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center py-10 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-college-50/60 via-slate-50 to-slate-100">
-      <div className="w-full max-w-md">
+    <div className="relative min-h-[calc(100vh-4rem)] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-dark-bg overflow-hidden">
+      {/* Background Ambient Glows & Grid */}
+      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[620px] h-[620px] bg-gradient-to-tr from-cyan-500/10 via-blue-600/10 to-transparent rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-24 right-1/4 w-[400px] h-[400px] bg-amber-500/5 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff04_1px,transparent_1px),linear-gradient(to_bottom,#ffffff04_1px,transparent_1px)] bg-[size:32px_32px] pointer-events-none" />
+
+      <div className="w-full max-w-md relative z-10">
         
         {/* College Header Crest */}
         <div className="text-center mb-6">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-college-800 text-white shadow-lg shadow-college-800/25 mb-3 ring-4 ring-college-100">
-            <GraduationCap className="w-8 h-8" />
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-dark-surface border border-cyan-500/30 text-cyan-400 shadow-glow-cyan mb-3 group hover:scale-105 transition-transform duration-300">
+            <GraduationCap className="w-8 h-8 drop-shadow" />
           </div>
-          <h1 className="text-2xl font-black tracking-tight text-slate-900">
+          <h1 className="text-2xl font-black tracking-tight text-white flex items-center justify-center gap-2">
             Francis Xavier Engineering College
           </h1>
-          <p className="text-sm font-medium text-slate-500 mt-1">
-            Campus Event Management Portal
+          <p className="text-xs font-mono text-cyan-400/80 mt-1 uppercase tracking-wider flex items-center justify-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+            Campus Event Management System
           </p>
         </div>
 
-        {/* Card Container */}
-        <div className="bg-white rounded-2xl shadow-xl shadow-slate-200/60 border border-slate-200/80 p-6 sm:p-8 backdrop-blur-sm">
+        {/* Glass Card Container */}
+        <div className="glass-panel rounded-2xl border border-white/10 bg-dark-card/90 shadow-2xl backdrop-blur-xl p-6 sm:p-8">
           
           {/* Student vs Admin Toggle (Only visible in Sign In mode) */}
           {!isSignUpMode ? (
-            <div className="flex bg-slate-100 p-1 rounded-xl mb-6 border border-slate-200/60">
+            <div className="flex bg-dark-bg/90 p-1 rounded-xl mb-6 border border-white/10">
               <button
                 type="button"
                 onClick={() => { setSelectedRole('student'); setFormError(''); }}
-                className={`flex-1 py-2 px-3 rounded-lg text-sm font-bold flex items-center justify-center gap-2 transition-all ${
+                className={`flex-1 py-2.5 px-3 rounded-lg text-xs font-mono font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all ${
                   selectedRole === 'student'
-                    ? 'bg-white text-college-700 shadow-sm'
-                    : 'text-slate-500 hover:text-slate-900'
+                    ? 'bg-cyan-500/15 text-cyan-300 border border-cyan-500/40 shadow-glow-cyan'
+                    : 'text-slate-400 hover:text-slate-200 hover:bg-white/5 border border-transparent'
                 }`}
               >
-                <GraduationCap className="w-4 h-4" />
-                <span>Student Login</span>
+                <GraduationCap className="w-4 h-4 text-cyan-400" />
+                <span>Student</span>
               </button>
               <button
                 type="button"
                 onClick={() => { setSelectedRole('admin'); setFormError(''); }}
-                className={`flex-1 py-2 px-3 rounded-lg text-sm font-bold flex items-center justify-center gap-2 transition-all ${
+                className={`flex-1 py-2.5 px-3 rounded-lg text-xs font-mono font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all ${
                   selectedRole === 'admin'
-                    ? 'bg-college-800 text-white shadow-sm'
-                    : 'text-slate-500 hover:text-slate-900'
+                    ? 'bg-amber-500/15 text-amber-300 border border-amber-500/40 shadow-glow-amber'
+                    : 'text-slate-400 hover:text-slate-200 hover:bg-white/5 border border-transparent'
                 }`}
               >
-                <Shield className="w-4 h-4" />
-                <span>Admin Login</span>
+                <Shield className="w-4 h-4 text-amber-400" />
+                <span>Admin</span>
               </button>
             </div>
           ) : (
-            <div className="mb-6 pb-4 border-b border-slate-100">
-              <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                <GraduationCap className="w-5 h-5 text-college-600" />
+            <div className="mb-6 pb-4 border-b border-white/10">
+              <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                <GraduationCap className="w-5 h-5 text-cyan-400" />
                 Student Registration
               </h2>
-              <p className="text-xs text-slate-500 mt-0.5">
+              <p className="text-xs text-slate-400 mt-0.5">
                 Enter your official college email address to automatically configure your profile.
               </p>
             </div>
@@ -228,8 +265,8 @@ const Login = () => {
 
           {/* Form Error Banner */}
           {formError && (
-            <div className="mb-5 p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold flex items-start gap-2.5">
-              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-500" />
+            <div className="mb-5 p-3.5 rounded-xl bg-rose-950/40 border border-rose-500/40 text-rose-300 text-xs font-medium flex items-start gap-2.5">
+              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-400" />
               <span>{formError}</span>
             </div>
           )}
@@ -238,11 +275,11 @@ const Login = () => {
             
             {/* College Email Field */}
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wide">
+              <label className="block text-xs font-mono font-semibold text-slate-300 mb-1.5 uppercase tracking-wider">
                 {selectedRole === 'admin' && !isSignUpMode ? 'Admin Email' : 'College Email'}
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
                   <Mail className="w-4 h-4" />
                 </div>
                 <input
@@ -256,19 +293,19 @@ const Login = () => {
                       : 'karthisans.ug.24.it@francisxavier.ac.in'
                   }
                   required
-                  className="w-full pl-10 pr-10 py-2.5 rounded-xl border border-slate-300 bg-slate-50/50 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-college-500 focus:border-college-500 focus:bg-white transition-all font-medium placeholder:text-slate-400"
+                  className="w-full pl-10 pr-10 py-2.5 rounded-xl border border-white/10 bg-dark-surface/90 text-white text-sm focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 transition-all font-medium placeholder:text-slate-500"
                 />
                 <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
-                  {parsingEmail && <Loader2 className="w-4 h-4 text-college-600 animate-spin" />}
+                  {parsingEmail && <Loader2 className="w-4 h-4 text-cyan-400 animate-spin" />}
                   {!parsingEmail && parsedData && (
-                    <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400" />
                   )}
                 </div>
               </div>
 
               {/* Inline validation feedback for Email */}
               {emailParseError && (
-                <p className="text-[11px] font-medium text-rose-600 mt-1 flex items-center gap-1">
+                <p className="text-[11px] font-medium text-rose-400 mt-1 flex items-center gap-1">
                   <AlertCircle className="w-3.5 h-3.5 shrink-0" />
                   {emailParseError}
                 </p>
@@ -276,24 +313,24 @@ const Login = () => {
 
               {/* Derived Information Card (shown when email is validly parsed) */}
               {parsedData && (
-                <div className="mt-2.5 p-3 rounded-xl bg-college-50/80 border border-college-200/70 text-college-900 space-y-1.5 animate-modal-pop">
+                <div className="mt-2.5 p-3 rounded-xl bg-cyan-950/30 border border-cyan-500/40 text-cyan-200 space-y-1.5 animate-modal-pop shadow-glow-cyan">
                   <div className="flex items-center justify-between text-xs font-bold">
-                    <span className="flex items-center gap-1.5 text-college-700">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                    <span className="flex items-center gap-1.5 text-cyan-300 font-mono">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
                       Verified FXEC Student
                     </span>
-                    <span className="px-2 py-0.5 rounded-full bg-college-200/80 text-college-900 text-[10px] font-extrabold uppercase">
-                      {parsedData.yearOfStudyRoman}
+                    <span className="px-2 py-0.5 rounded-md bg-cyan-500/20 text-cyan-300 text-[10px] font-mono font-extrabold uppercase border border-cyan-500/30">
+                      Year {parsedData.yearOfStudyRoman}
                     </span>
                   </div>
-                  <div className="grid grid-cols-2 gap-2 text-[11px] pt-1 border-t border-college-200/50 text-slate-700">
+                  <div className="grid grid-cols-2 gap-2 text-[11px] pt-1.5 border-t border-cyan-500/20 text-slate-300 font-mono">
                     <div>
-                      <span className="text-slate-500">Department:</span>{' '}
-                      <span className="font-semibold text-slate-900">{parsedData.departmentName}</span>
+                      <span className="text-slate-400">Dept:</span>{' '}
+                      <span className="font-semibold text-white">{parsedData.departmentName}</span>
                     </div>
                     <div>
-                      <span className="text-slate-500">Degree:</span>{' '}
-                      <span className="font-semibold text-slate-900">{parsedData.level?.toUpperCase()} ({parsedData.admissionYear})</span>
+                      <span className="text-slate-400">Degree:</span>{' '}
+                      <span className="font-semibold text-white">{parsedData.level?.toUpperCase()} ('{parsedData.admissionYear})</span>
                     </div>
                   </div>
                 </div>
@@ -306,13 +343,13 @@ const Login = () => {
                 {/* Editable Student Name (pre-filled from email) */}
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
-                    <label className="text-xs font-bold text-slate-700 uppercase tracking-wide">
+                    <label className="text-xs font-mono font-semibold text-slate-300 uppercase tracking-wider">
                       Full Name
                     </label>
-                    <span className="text-[10px] text-slate-400 font-medium">Auto-derived, editable</span>
+                    <span className="text-[10px] font-mono text-cyan-400/80">Auto-derived, editable</span>
                   </div>
                   <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
                       <User className="w-4 h-4" />
                     </div>
                     <input
@@ -320,9 +357,9 @@ const Login = () => {
                       name="name"
                       value={formData.name}
                       onChange={handleChange}
-                      placeholder="e.g. Karthisans"
+                      placeholder="e.g. Karthisan S"
                       required
-                      className="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-slate-300 bg-slate-50/50 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-college-500 focus:border-college-500 focus:bg-white transition-all font-medium"
+                      className="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-white/10 bg-dark-surface/90 text-white text-sm focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 transition-all font-medium placeholder:text-slate-500"
                     />
                   </div>
                 </div>
@@ -330,23 +367,23 @@ const Login = () => {
                 {/* Section & Register Number */}
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wide">
+                    <label className="block text-xs font-mono font-semibold text-slate-300 mb-1.5 uppercase tracking-wider">
                       Section
                     </label>
                     <select
                       name="section"
                       value={formData.section}
                       onChange={handleChange}
-                      className="w-full px-3 py-2.5 rounded-xl border border-slate-300 bg-slate-50/50 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-college-500 focus:border-college-500 focus:bg-white font-medium"
+                      className="w-full px-3 py-2.5 rounded-xl border border-white/10 bg-dark-surface/90 text-white text-sm focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 font-medium"
                     >
-                      <option value="A">Section A</option>
-                      <option value="B">Section B</option>
-                      <option value="C">Section C</option>
-                      <option value="D">Section D</option>
+                      <option value="A" className="bg-dark-card text-white">Section A</option>
+                      <option value="B" className="bg-dark-card text-white">Section B</option>
+                      <option value="C" className="bg-dark-card text-white">Section C</option>
+                      <option value="D" className="bg-dark-card text-white">Section D</option>
                     </select>
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wide">
+                    <label className="block text-xs font-mono font-semibold text-slate-300 mb-1.5 uppercase tracking-wider">
                       Reg Number
                     </label>
                     <div className="relative">
@@ -356,7 +393,7 @@ const Login = () => {
                         value={formData.registerNumber}
                         onChange={handleChange}
                         placeholder="953624104001"
-                        className="w-full px-3 py-2.5 rounded-xl border border-slate-300 bg-slate-50/50 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-college-500 focus:border-college-500 focus:bg-white uppercase font-medium placeholder:normal-case"
+                        className="w-full px-3 py-2.5 rounded-xl border border-white/10 bg-dark-surface/90 text-white text-sm focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 uppercase font-mono placeholder:normal-case placeholder:font-sans placeholder:text-slate-500"
                       />
                     </div>
                   </div>
@@ -366,11 +403,11 @@ const Login = () => {
 
             {/* Password Field */}
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wide">
+              <label className="block text-xs font-mono font-semibold text-slate-300 mb-1.5 uppercase tracking-wider">
                 Password
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
                   <Lock className="w-4 h-4" />
                 </div>
                 <input
@@ -380,7 +417,7 @@ const Login = () => {
                   onChange={handleChange}
                   placeholder="••••••••"
                   required
-                  className="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-slate-300 bg-slate-50/50 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-college-500 focus:border-college-500 focus:bg-white transition-all font-medium"
+                  className="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-white/10 bg-dark-surface/90 text-white text-sm focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 transition-all font-medium placeholder:text-slate-500"
                 />
               </div>
             </div>
@@ -388,11 +425,11 @@ const Login = () => {
             {/* Confirm Password in Sign Up Mode */}
             {isSignUpMode && (
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wide">
+                <label className="block text-xs font-mono font-semibold text-slate-300 mb-1.5 uppercase tracking-wider">
                   Confirm Password
                 </label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
                     <Lock className="w-4 h-4" />
                   </div>
                   <input
@@ -402,7 +439,7 @@ const Login = () => {
                     onChange={handleChange}
                     placeholder="••••••••"
                     required
-                    className="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-slate-300 bg-slate-50/50 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-college-500 focus:border-college-500 focus:bg-white transition-all font-medium"
+                    className="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-white/10 bg-dark-surface/90 text-white text-sm focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 transition-all font-medium placeholder:text-slate-500"
                   />
                 </div>
               </div>
@@ -412,15 +449,15 @@ const Login = () => {
             <button
               type="submit"
               disabled={submitting}
-              className={`w-full py-3 px-4 rounded-xl text-white font-bold text-sm flex items-center justify-center gap-2 shadow-lg transition-all active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed ${
+              className={`w-full py-3 px-4 rounded-xl font-bold text-sm flex items-center justify-center gap-2 shadow-lg transition-all active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed ${
                 selectedRole === 'admin' && !isSignUpMode
-                  ? 'bg-college-900 hover:bg-slate-900 shadow-college-900/25'
-                  : 'bg-college-600 hover:bg-college-700 shadow-college-600/30'
+                  ? 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 shadow-glow-amber'
+                  : 'bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 shadow-glow-cyan'
               }`}
             >
               {submitting ? (
                 <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <Loader2 className="w-4 h-4 animate-spin text-slate-950" />
                   <span>{isSignUpMode ? 'Creating Account...' : 'Authenticating...'}</span>
                 </>
               ) : (
@@ -433,14 +470,14 @@ const Login = () => {
           </form>
 
           {/* Mode Switcher: Sign In <-> Student Registration */}
-          <div className="mt-6 pt-5 border-t border-slate-100 text-center">
+          <div className="mt-6 pt-5 border-t border-white/10 text-center">
             {isSignUpMode ? (
-              <p className="text-xs text-slate-600">
+              <p className="text-xs text-slate-400">
                 Already have an account?{' '}
                 <button
                   type="button"
                   onClick={() => { setIsSignUpMode(false); setFormError(''); }}
-                  className="font-bold text-college-700 hover:text-college-800 underline ml-1"
+                  className="font-bold text-cyan-400 hover:text-cyan-300 underline ml-1"
                 >
                   Sign in here
                 </button>
@@ -448,12 +485,12 @@ const Login = () => {
             ) : (
               <div className="space-y-2">
                 {selectedRole === 'student' && (
-                  <p className="text-xs text-slate-600">
+                  <p className="text-xs text-slate-400">
                     New FXEC student?{' '}
                     <button
                       type="button"
                       onClick={() => { setIsSignUpMode(true); setFormError(''); }}
-                      className="font-bold text-college-700 hover:text-college-800 underline ml-1"
+                      className="font-bold text-cyan-400 hover:text-cyan-300 underline ml-1"
                     >
                       Create student account
                     </button>
@@ -461,7 +498,7 @@ const Login = () => {
                 )}
                 {selectedRole === 'admin' && (
                   <div className="flex items-center justify-center gap-1.5 text-[11px] text-slate-400">
-                    <Info className="w-3.5 h-3.5" />
+                    <Info className="w-3.5 h-3.5 text-amber-400" />
                     <span>Admin accounts are managed via secure system credentials.</span>
                   </div>
                 )}
@@ -471,11 +508,41 @@ const Login = () => {
 
         </div>
 
-        {/* Demo Credentials Reminder Footer */}
-        <div className="mt-6 p-3 rounded-xl bg-white/70 border border-slate-200 text-[11px] text-slate-500 shadow-sm backdrop-blur-xs text-center space-y-1">
-          <p className="font-semibold text-slate-700">Quick Test Credentials:</p>
-          <p>Admin: <code className="bg-slate-100 px-1 py-0.5 rounded text-slate-800 font-mono">admin@francisxavier.ac.in</code> / <code className="bg-slate-100 px-1 py-0.5 rounded text-slate-800 font-mono">Admin@123</code></p>
-          <p>Student: <code className="bg-slate-100 px-1 py-0.5 rounded text-slate-800 font-mono">karthisans.ug.24.it@francisxavier.ac.in</code> / <code className="bg-slate-100 px-1 py-0.5 rounded text-slate-800 font-mono">Student@123</code></p>
+        {/* 1-Click Demo Credentials Quick-Fill Widget */}
+        <div className="mt-6 p-4 rounded-xl glass-panel border border-white/10 text-xs text-slate-400 shadow-xl space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="font-mono text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+              <KeyRound className="w-3.5 h-3.5 text-cyan-400" />
+              Quick Demo Access
+            </span>
+            <span className="text-[10px] font-mono text-cyan-400/70 uppercase">One-Click Fill</span>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => handleQuickFill('student')}
+              className="py-2 px-2.5 rounded-lg bg-dark-surface hover:bg-cyan-950/40 border border-white/10 hover:border-cyan-500/40 text-left transition-all group"
+            >
+              <div className="text-[11px] font-bold text-cyan-400 flex items-center justify-between">
+                <span>Student</span>
+                <span className="text-[10px] text-slate-500 group-hover:text-cyan-300 font-mono">Fill &rarr;</span>
+              </div>
+              <div className="text-[10px] text-slate-400 truncate mt-0.5 font-mono">karthisans.ug.24.it</div>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleQuickFill('admin')}
+              className="py-2 px-2.5 rounded-lg bg-dark-surface hover:bg-amber-950/40 border border-white/10 hover:border-amber-500/40 text-left transition-all group"
+            >
+              <div className="text-[11px] font-bold text-amber-400 flex items-center justify-between">
+                <span>Admin</span>
+                <span className="text-[10px] text-slate-500 group-hover:text-amber-300 font-mono">Fill &rarr;</span>
+              </div>
+              <div className="text-[10px] text-slate-400 truncate mt-0.5 font-mono">admin@francisxavier</div>
+            </button>
+          </div>
         </div>
 
       </div>
@@ -484,3 +551,4 @@ const Login = () => {
 };
 
 export default Login;
+
