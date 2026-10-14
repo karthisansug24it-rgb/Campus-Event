@@ -14,6 +14,8 @@ export default {
         card: '#FFFFFF',
         'card-hover': '#FAFCFF',
         'card-border': '#E2E8F0',
+        canvas: '#F8FAFC',
+        midnight: '#0B1220',
         brand: {
           50: '#EFF6FF',
           100: '#DBEAFE',
@@ -25,7 +27,7 @@ export default {
           700: '#1D4ED8',
           800: '#1E40AF',
           900: '#1E3A8A',
-          950: '#172554',
+          950: '#0B1220',
         },
         college: {
           50: '#EFF6FF',
@@ -42,6 +44,7 @@ export default {
       },
       fontFamily: {
         sans: ['"Plus Jakarta Sans"', 'Inter', 'system-ui', '-apple-system', 'sans-serif'],
+        display: ['"Space Grotesk"', '"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
         mono: ['"JetBrains Mono"', 'Fira Code', 'monospace'],
       },
       boxShadow: {

@@ -12,9 +12,10 @@ import {
   CheckCircle2, 
   AlertCircle, 
   Loader2,
-  Calendar,
-  Sparkles
+  Sparkles,
+  ShieldCheck
 } from 'lucide-react';
+import { Button } from './ui/Button';
 
 const RegisterModal = ({ event, onClose, onSuccess }) => {
   const { user } = useAuth();
@@ -34,7 +35,7 @@ const RegisterModal = ({ event, onClose, onSuccess }) => {
   const [generalError, setGeneralError] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  // Auto-fill from user profile
+  // Sync state with auth user profile
   useEffect(() => {
     if (user) {
       setFormData(prev => ({
@@ -50,16 +51,21 @@ const RegisterModal = ({ event, onClose, onSuccess }) => {
     }
   }, [user]);
 
-  // Handle ESC key to dismiss
+  // Handle ESC key to dismiss modal
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.key === 'Escape') {
+      if (e.key === 'Escape' && !submitting) {
         onClose();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onClose]);
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = 'unset';
+    };
+  }, [onClose, submitting]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -112,7 +118,7 @@ const RegisterModal = ({ event, onClose, onSuccess }) => {
       });
 
       if (res.data.success) {
-        // Show required Toast banner at the TOP of the screen (auto-hides after 3 seconds)
+        // Show required success toast with exact wording
         showToast('Request sent to admin', 'success', 3000);
         onSuccess();
       }
@@ -127,27 +133,35 @@ const RegisterModal = ({ event, onClose, onSuccess }) => {
 
   return (
     <div 
-      className="fixed inset-0 z-[60] overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6"
-      onClick={onClose}
+      className="fixed inset-0 z-[60] overflow-y-auto bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6"
+      onClick={!submitting ? onClose : undefined}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="register-dialog-title"
     >
       <div 
-        className="relative bg-white text-slate-800 rounded-3xl max-w-lg w-full shadow-2xl shadow-blue-900/20 border border-blue-100 overflow-hidden animate-modal-pop my-auto"
+        className="relative bg-white text-slate-800 rounded-3xl max-w-lg w-full shadow-2xl border border-slate-200 overflow-hidden animate-modal-pop my-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="px-6 py-4.5 bg-blue-50/80 border-b border-blue-100 flex items-center justify-between">
-          <div>
-            <div className="flex items-center gap-2">
-              <GraduationCap className="w-5 h-5 text-blue-600" />
-              <h3 className="font-extrabold text-base tracking-tight text-slate-900">Event Registration Request</h3>
+        <div className="px-6 py-5 bg-gradient-to-r from-blue-50/80 via-white to-blue-50/40 border-b border-slate-100 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-blue-600 text-white flex items-center justify-center shadow-md shadow-blue-600/20">
+              <GraduationCap className="w-5 h-5 text-white" />
             </div>
-            <p className="text-xs text-blue-700 font-mono mt-0.5 truncate max-w-sm font-semibold">
-              {event?.title}
-            </p>
+            <div>
+              <h3 id="register-dialog-title" className="font-display font-extrabold text-base tracking-tight text-slate-900">
+                Event Registration Request
+              </h3>
+              <p className="text-xs text-blue-700 font-mono font-semibold truncate max-w-xs mt-0.5">
+                {event?.title}
+              </p>
+            </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-white transition-colors"
+            disabled={submitting}
+            className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors disabled:opacity-50"
             aria-label="Close dialog"
           >
             <X className="w-5 h-5" />
@@ -158,19 +172,19 @@ const RegisterModal = ({ event, onClose, onSuccess }) => {
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           
           {generalError && (
-            <div className="p-3.5 rounded-2xl bg-blue-50 border border-blue-300 text-blue-900 text-xs font-semibold flex items-start gap-2.5">
-              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-blue-700" />
+            <div className="p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-semibold flex items-start gap-2.5">
+              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-600" />
               <span>{generalError}</span>
             </div>
           )}
 
-          {/* Read-Only College Email */}
+          {/* Verified Read-Only College Email */}
           <div>
             <div className="flex items-center justify-between mb-1.5">
               <label className="text-xs font-mono font-bold text-slate-600 uppercase tracking-wide">
                 College Email (Read-only)
               </label>
-              <span className="text-[10px] text-blue-700 font-mono font-bold bg-blue-100 px-2 py-0.5 rounded-full border border-blue-200">
+              <span className="text-[10px] text-blue-700 font-mono font-bold bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200">
                 Verified Account
               </span>
             </div>
@@ -183,24 +197,24 @@ const RegisterModal = ({ event, onClose, onSuccess }) => {
                 value={formData.email}
                 readOnly
                 disabled
-                className="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-500 text-sm font-mono cursor-not-allowed select-none"
+                className="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-500 text-xs sm:text-sm font-mono cursor-not-allowed select-none"
               />
             </div>
             {fieldErrors.email && (
-              <p className="text-[11px] font-medium text-blue-700 mt-1 flex items-center gap-1">
+              <p className="text-[11px] font-medium text-rose-600 mt-1 flex items-center gap-1">
                 <AlertCircle className="w-3.5 h-3.5" />
                 {fieldErrors.email}
               </p>
             )}
           </div>
 
-          {/* Student Full Name (Auto-filled, editable) */}
+          {/* Student Full Name */}
           <div>
             <div className="flex items-center justify-between mb-1.5">
               <label className="text-xs font-mono font-bold text-slate-600 uppercase tracking-wide">
-                Student Full Name
+                Student Full Name <span className="text-rose-500">*</span>
               </label>
-              <span className="text-[10px] text-slate-400 font-medium">Auto-filled</span>
+              <span className="text-[10px] text-slate-400 font-mono">Official FXEC Name</span>
             </div>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
@@ -211,23 +225,23 @@ const RegisterModal = ({ event, onClose, onSuccess }) => {
                 name="name"
                 value={formData.name}
                 onChange={handleChange}
-                placeholder="Enter your official full name"
-                className={`w-full pl-10 pr-3.5 py-2.5 rounded-xl border text-sm font-medium focus:outline-none transition-all ${
+                placeholder="Official student name"
+                className={`w-full pl-10 pr-3.5 py-2.5 rounded-xl border text-xs sm:text-sm font-medium focus:outline-none transition-all ${
                   fieldErrors.name
-                    ? 'border-blue-300 bg-blue-50/50 text-blue-900 ring-1 ring-blue-300'
+                    ? 'border-rose-300 bg-rose-50/40 text-rose-900 ring-1 ring-rose-300'
                     : 'border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 bg-white text-slate-800'
                 }`}
               />
             </div>
             {fieldErrors.name && (
-              <p className="text-[11px] font-medium text-blue-700 mt-1 flex items-center gap-1">
+              <p className="text-[11px] font-medium text-rose-600 mt-1 flex items-center gap-1">
                 <AlertCircle className="w-3.5 h-3.5" />
                 {fieldErrors.name}
               </p>
             )}
           </div>
 
-          {/* Department & Year of Study (Read-only Chip) */}
+          {/* Department & Year of Study (Verified Academic Chips) */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-mono font-bold text-slate-600 mb-1.5 uppercase tracking-wide">
@@ -251,9 +265,9 @@ const RegisterModal = ({ event, onClose, onSuccess }) => {
               <label className="block text-xs font-mono font-bold text-slate-600 mb-1.5 uppercase tracking-wide">
                 Year of Study
               </label>
-              <div className="h-10 px-3.5 rounded-xl border border-blue-200 bg-blue-50 flex items-center justify-between">
-                <span className="text-xs font-mono font-bold text-blue-800">
-                  {formData.yearOfStudyRoman || 'Undergraduate'}
+              <div className="h-10 px-3.5 rounded-xl border border-blue-200/90 bg-blue-50/70 flex items-center justify-between">
+                <span className="text-xs font-mono font-bold text-blue-900">
+                  {formData.yearOfStudyRoman ? `${formData.yearOfStudyRoman} Year` : 'Undergraduate'}
                 </span>
                 <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-blue-100 text-blue-700 uppercase border border-blue-200">
                   Verified
@@ -266,13 +280,13 @@ const RegisterModal = ({ event, onClose, onSuccess }) => {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-mono font-bold text-slate-600 mb-1.5 uppercase tracking-wide">
-                Section (A - D)
+                Section (A - D) <span className="text-rose-500">*</span>
               </label>
               <select
                 name="section"
                 value={formData.section}
                 onChange={handleChange}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-800 text-sm font-semibold focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-800 text-xs sm:text-sm font-semibold focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
               >
                 <option value="A">Section A</option>
                 <option value="B">Section B</option>
@@ -280,7 +294,7 @@ const RegisterModal = ({ event, onClose, onSuccess }) => {
                 <option value="D">Section D</option>
               </select>
               {fieldErrors.section && (
-                <p className="text-[11px] font-medium text-blue-700 mt-1">
+                <p className="text-[11px] font-medium text-rose-600 mt-1">
                   {fieldErrors.section}
                 </p>
               )}
@@ -288,7 +302,7 @@ const RegisterModal = ({ event, onClose, onSuccess }) => {
 
             <div>
               <label className="block text-xs font-mono font-bold text-slate-600 mb-1.5 uppercase tracking-wide">
-                Register Number
+                Register Number <span className="text-rose-500">*</span>
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
@@ -300,15 +314,15 @@ const RegisterModal = ({ event, onClose, onSuccess }) => {
                   value={formData.registerNumber}
                   onChange={handleChange}
                   placeholder="953624104001"
-                  className={`w-full pl-10 pr-3.5 py-2.5 rounded-xl border text-sm font-mono font-semibold uppercase placeholder:normal-case focus:outline-none transition-all ${
+                  className={`w-full pl-10 pr-3.5 py-2.5 rounded-xl border text-xs sm:text-sm font-mono font-semibold uppercase placeholder:normal-case focus:outline-none transition-all ${
                     fieldErrors.registerNumber
-                      ? 'border-blue-300 bg-blue-50/50 text-blue-900 ring-1 ring-blue-300'
+                      ? 'border-rose-300 bg-rose-50/40 text-rose-900 ring-1 ring-rose-300'
                       : 'border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 bg-white text-slate-800'
                   }`}
                 />
               </div>
               {fieldErrors.registerNumber && (
-                <p className="text-[11px] font-medium text-blue-700 mt-1 flex items-center gap-1">
+                <p className="text-[11px] font-medium text-rose-600 mt-1 flex items-center gap-1">
                   <AlertCircle className="w-3.5 h-3.5" />
                   {fieldErrors.registerNumber}
                 </p>
@@ -317,29 +331,25 @@ const RegisterModal = ({ event, onClose, onSuccess }) => {
           </div>
 
           {/* Action Buttons */}
-          <div className="pt-3 flex items-center gap-3">
-            <button
-              type="button"
+          <div className="pt-4 flex items-center gap-3">
+            <Button
+              variant="outline"
+              size="md"
+              className="flex-1"
               onClick={onClose}
               disabled={submitting}
-              className="flex-1 py-3 px-4 rounded-xl border border-slate-200 text-slate-600 font-bold text-xs hover:bg-slate-50 transition-colors"
             >
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="primary"
+              size="md"
               type="submit"
-              disabled={submitting}
-              className="flex-1 py-3 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs shadow-md shadow-blue-600/25 transition-all flex items-center justify-center gap-2 disabled:opacity-60 active:scale-95"
+              className="flex-1"
+              loading={submitting}
             >
-              {submitting ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin text-white" />
-                  <span>Submitting...</span>
-                </>
-              ) : (
-                <span>Register</span>
-              )}
-            </button>
+              Submit Request
+            </Button>
           </div>
 
         </form>

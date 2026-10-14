@@ -64,6 +64,12 @@
   transform: translateY(-3px);
 }
 
+/* Font Display Utility */
+.font-display {
+  font-family: 'Space Grotesk', 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  letter-spacing: -0.02em;
+}
+
 /* Modal pop animation */
 @keyframes modalPop {
   0% {
@@ -94,4 +100,18 @@
 
 .animate-toast-slide {
   animation: toastSlide 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Editorial Glass Nav */
+.glass-nav {
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(226, 232, 240, 0.85);
+}
+
+/* Subtle editorial dots background */
+.bg-dots {
+  background-image: radial-gradient(rgba(37, 99, 235, 0.08) 1px, transparent 1px);
+  background-size: 24px 24px;
 }

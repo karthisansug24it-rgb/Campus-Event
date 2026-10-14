@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../../api/axios';
 import RegisterModal from '../../components/RegisterModal';
@@ -14,14 +14,30 @@ import {
   Award,
   Loader2,
   RefreshCw,
-  Sparkles
+  Sparkles,
+  Search,
+  Filter
 } from 'lucide-react';
+import { 
+  PageHeader, 
+  StatCard, 
+  Button, 
+  Badge, 
+  SearchInput, 
+  FilterChips, 
+  EmptyState,
+  AnimatedSection
+} from '../../components/ui';
 
 const MyRequests = () => {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   
+  // Filter & Search states
+  const [statusFilter, setStatusFilter] = useState('all'); // 'all', 'pending', 'approved', 'rejected'
+  const [searchQuery, setSearchQuery] = useState('');
+
   // Re-apply modal state
   const [reapplyEvent, setReapplyEvent] = useState(null);
 
@@ -56,18 +72,40 @@ const MyRequests = () => {
     });
   };
 
+  // Status counts
+  const counts = useMemo(() => {
+    const total = requests.length;
+    const pending = requests.filter(r => r.status === 'pending').length;
+    const approved = requests.filter(r => r.status === 'approved').length;
+    const rejected = requests.filter(r => r.status === 'rejected').length;
+    return { total, pending, approved, rejected };
+  }, [requests]);
+
+  // Filtered requests list
+  const filteredRequests = useMemo(() => {
+    return requests.filter(req => {
+      const matchesStatus = statusFilter === 'all' || req.status === statusFilter;
+      const q = searchQuery.trim().toLowerCase();
+      const matchesSearch = !q || 
+        req.event_title?.toLowerCase().includes(q) ||
+        req.venue?.toLowerCase().includes(q) ||
+        req.category?.toLowerCase().includes(q);
+      return matchesStatus && matchesSearch;
+    });
+  }, [requests, statusFilter, searchQuery]);
+
   const getStatusBadge = (status) => {
     switch (status) {
       case 'approved':
         return (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-bold bg-blue-50 text-blue-700 border border-blue-200 shadow-sm">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-bold bg-blue-50 text-blue-700 border border-blue-200 shadow-xs">
             <span className="w-2 h-2 rounded-full bg-blue-600 animate-pulse" />
-            <span>Registered ✓ (Approved)</span>
+            <span>Registered ✓</span>
           </span>
         );
       case 'pending':
         return (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-bold bg-blue-100 text-blue-800 border border-blue-300 shadow-sm">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-bold bg-blue-100 text-blue-800 border border-blue-300 shadow-xs">
             <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
             <span>Request Pending</span>
           </span>
@@ -85,68 +123,124 @@ const MyRequests = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white py-8 px-4 sm:px-6 lg:px-8 text-slate-800">
-      <div className="max-w-5xl mx-auto space-y-6">
+    <div className="min-h-screen bg-[#F8FAFC] py-8 sm:py-12 px-4 sm:px-6 lg:px-8 text-slate-800">
+      <div className="max-w-6xl mx-auto space-y-8">
         
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white p-6 rounded-3xl border border-blue-100 shadow-sm shadow-blue-500/5">
-          <div>
-            <h1 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2.5">
-              <FileText className="w-6 h-6 text-blue-600" />
-              My Registration Requests
-            </h1>
-            <p className="text-xs text-slate-500 mt-1">
-              Track your event application approvals, review admin notes, and manage your campus registrations.
-            </p>
-          </div>
-          <button
-            onClick={fetchMyRequests}
-            className="self-start sm:self-auto inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-mono font-bold border border-blue-200 transition-colors"
-          >
-            <RefreshCw className="w-3.5 h-3.5" />
-            <span>Refresh</span>
-          </button>
-        </div>
+        {/* Top Header */}
+        <AnimatedSection delay={0.05}>
+          <PageHeader
+            badge="STUDENT PORTAL"
+            title="My Event Registrations"
+            subtitle="Track your campus application approvals, review administrator notes, and confirm your seats."
+            actions={
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={fetchMyRequests}
+                icon={RefreshCw}
+                loading={loading}
+              >
+                Refresh Queue
+              </Button>
+            }
+          />
+        </AnimatedSection>
 
-        {/* Content */}
+        {/* Real KPI Stat Cards */}
+        <AnimatedSection className="grid grid-cols-2 lg:grid-cols-4 gap-4" delay={0.15}>
+          <div className="bg-white p-5 rounded-3xl border border-slate-200/90 shadow-xs">
+            <p className="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-400">Total Requests</p>
+            <h4 className="text-2xl font-black font-mono text-slate-900 mt-1">{counts.total}</h4>
+            <p className="text-[10px] text-slate-500 font-mono mt-0.5">All time applications</p>
+          </div>
+
+          <div className="bg-white p-5 rounded-3xl border border-slate-200/90 shadow-xs">
+            <p className="text-[11px] font-mono font-bold uppercase tracking-wider text-blue-600">Pending Review</p>
+            <h4 className="text-2xl font-black font-mono text-blue-600 mt-1">{counts.pending}</h4>
+            <p className="text-[10px] text-slate-500 font-mono mt-0.5">Awaiting admin review</p>
+          </div>
+
+          <div className="bg-white p-5 rounded-3xl border border-slate-200/90 shadow-xs">
+            <p className="text-[11px] font-mono font-bold uppercase tracking-wider text-emerald-600">Approved Seats</p>
+            <h4 className="text-2xl font-black font-mono text-emerald-600 mt-1">{counts.approved}</h4>
+            <p className="text-[10px] text-slate-500 font-mono mt-0.5">Confirmed attendances</p>
+          </div>
+
+          <div className="bg-white p-5 rounded-3xl border border-slate-200/90 shadow-xs">
+            <p className="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-400">Rejected</p>
+            <h4 className="text-2xl font-black font-mono text-slate-600 mt-1">{counts.rejected}</h4>
+            <p className="text-[10px] text-slate-500 font-mono mt-0.5">Eligible to re-apply</p>
+          </div>
+        </AnimatedSection>
+
+        {/* Search & Filter Bar */}
+        <AnimatedSection className="bg-white rounded-3xl border border-slate-200/90 p-4 sm:p-5 shadow-xs flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4" delay={0.2}>
+          <SearchInput
+            value={searchQuery}
+            onChange={setSearchQuery}
+            onClear={() => setSearchQuery('')}
+            placeholder="Search my applications by event title or venue..."
+            className="max-w-md"
+          />
+
+          <FilterChips
+            options={[
+              { value: 'all', label: 'All', count: counts.total },
+              { value: 'pending', label: 'In Review', count: counts.pending },
+              { value: 'approved', label: 'Approved', count: counts.approved },
+              { value: 'rejected', label: 'Rejected', count: counts.rejected },
+            ]}
+            selected={statusFilter}
+            onChange={setStatusFilter}
+          />
+        </AnimatedSection>
+
+        {/* Content Display */}
         {loading ? (
           <div className="py-24 text-center">
             <Loader2 className="w-8 h-8 animate-spin text-blue-600 mx-auto mb-3" />
-            <p className="text-sm font-semibold text-slate-500 font-mono">Retrieving your requests...</p>
+            <p className="text-xs font-mono font-bold text-slate-500 uppercase tracking-wider">
+              Retrieving your registration records...
+            </p>
           </div>
         ) : error ? (
-          <div className="p-4 rounded-2xl bg-blue-50 border border-blue-300 text-blue-900 text-sm font-semibold flex items-center gap-3">
-            <AlertCircle className="w-5 h-5 text-blue-700" />
-            <span>{error}</span>
-          </div>
-        ) : requests.length === 0 ? (
-          /* Empty State */
-          <div className="bg-slate-50/70 rounded-3xl border border-blue-100 p-12 text-center shadow-sm">
-            <div className="w-16 h-16 rounded-2xl bg-blue-100 text-blue-600 flex items-center justify-center mx-auto mb-4 shadow-sm">
-              <Calendar className="w-8 h-8" />
+          <div className="p-4 rounded-3xl bg-rose-50 border border-rose-200 text-rose-800 text-sm font-semibold flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <AlertCircle className="w-5 h-5 text-rose-600 shrink-0" />
+              <span>{error}</span>
             </div>
-            <h3 className="text-lg font-bold text-slate-800 mb-1">No Event Requests Yet</h3>
-            <p className="text-xs text-slate-500 max-w-sm mx-auto mb-6">
-              You haven't requested registration for any campus events. Discover upcoming workshops, symposiums, and hackathons now.
-            </p>
-            <Link
-              to="/events"
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs shadow-md shadow-blue-600/25 transition-all"
-            >
-              <span>Explore Events</span>
-              <ArrowRight className="w-4 h-4" />
-            </Link>
+            <Button variant="primary" size="xs" onClick={fetchMyRequests}>
+              Retry
+            </Button>
           </div>
+        ) : filteredRequests.length === 0 ? (
+          /* Empty State */
+          <EmptyState
+            icon={Calendar}
+            title={requests.length === 0 ? "No Event Requests Yet" : "No Matching Requests"}
+            description={
+              requests.length === 0 
+                ? "You haven't requested registration for any campus events yet. Explore upcoming technical workshops, symposiums, and hackathons."
+                : "No registration records match your current status filter or search keywords."
+            }
+            actionLabel={requests.length === 0 ? "Browse Events Catalogue" : "Reset Filter"}
+            onAction={
+              requests.length === 0 
+                ? () => window.location.href = '/events'
+                : () => { setStatusFilter('all'); setSearchQuery(''); }
+            }
+            actionIcon={ArrowRight}
+          />
         ) : (
-          /* Requests List */
+          /* Structured Requests List */
           <div className="space-y-4">
-            {requests.map((req) => (
+            {filteredRequests.map((req) => (
               <div 
                 key={req.id}
-                className="bg-white rounded-3xl border border-slate-200 p-5 sm:p-6 shadow-sm hover:border-blue-300 hover:shadow-md transition-all flex flex-col md:flex-row gap-5 items-start"
+                className="bg-white rounded-3xl border border-slate-200/90 p-5 sm:p-6 shadow-xs hover:border-blue-300 hover:shadow-md transition-all duration-300 flex flex-col md:flex-row gap-5 items-start"
               >
                 {/* Event Poster Thumbnail */}
-                <div className="w-full md:w-48 h-32 rounded-2xl bg-slate-100 overflow-hidden shrink-0 relative border border-slate-200">
+                <div className="w-full md:w-52 aspect-[16/10] md:h-36 rounded-2xl bg-slate-100 overflow-hidden shrink-0 relative border border-slate-200/80">
                   {req.poster_url ? (
                     <img 
                       src={req.poster_url} 
@@ -154,25 +248,26 @@ const MyRequests = () => {
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-blue-50 text-blue-900 p-3 text-center">
-                      <span className="text-xs font-bold leading-snug">{req.event_title}</span>
+                    <div className="w-full h-full flex flex-col items-center justify-center bg-blue-50/70 text-blue-900 p-3 text-center">
+                      <Calendar className="w-8 h-8 text-blue-600 mb-1" />
+                      <span className="text-xs font-bold leading-snug line-clamp-2">{req.event_title}</span>
                     </div>
                   )}
-                  <span className={`absolute top-2 left-2 px-2 py-0.5 rounded-md text-[10px] font-mono font-bold text-white shadow-md ${
-                    req.event_type === 'internal' ? 'bg-blue-600' : 'bg-blue-800'
+                  <span className={`absolute top-2.5 left-2.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold text-white shadow-xs ${
+                    req.event_type === 'internal' ? 'bg-blue-600' : 'bg-slate-900'
                   }`}>
                     {req.event_type === 'internal' ? 'Inside' : 'Outside'}
                   </span>
                 </div>
 
-                {/* Main Details */}
-                <div className="flex-1 space-y-3 w-full">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                {/* Main Event & Registration Details */}
+                <div className="flex-1 space-y-3.5 w-full">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
                     <div>
                       <span className="text-[10px] font-mono font-bold text-blue-600 uppercase tracking-wider">
                         {req.category}
                       </span>
-                      <h3 className="text-lg font-black text-slate-900 leading-snug mt-0.5">
+                      <h3 className="text-lg font-extrabold font-display text-slate-900 leading-snug mt-0.5">
                         {req.event_title}
                       </h3>
                     </div>
@@ -181,64 +276,69 @@ const MyRequests = () => {
                     </div>
                   </div>
 
-                  {/* Metadata Chips */}
+                  {/* Metadata Chips: Date & Venue */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-slate-500 font-mono">
                     <div className="flex items-center gap-1.5">
-                      <Calendar className="w-3.5 h-3.5 text-blue-600" />
-                      <span>Event Date: <strong className="text-slate-800">{formatDate(req.event_date)}</strong></span>
+                      <Calendar className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                      <span>Scheduled: <strong className="text-slate-800">{formatDate(req.event_date)}</strong></span>
                     </div>
                     <div className="flex items-center gap-1.5 truncate">
-                      <MapPin className="w-3.5 h-3.5 text-blue-600" />
-                      <span className="truncate text-slate-800">{req.venue}</span>
+                      <MapPin className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                      <span className="truncate text-slate-800 font-medium">{req.venue}</span>
                     </div>
                   </div>
 
                   {/* Student Submission Record */}
-                  <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200/80 text-[11px] text-slate-600 flex flex-wrap gap-x-4 gap-y-1 font-mono">
+                  <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 text-[11px] text-slate-600 flex flex-wrap items-center gap-x-5 gap-y-1.5 font-mono">
                     <span>Year: <strong className="text-slate-900">Year {req.year_of_study}</strong></span>
                     <span>Department: <strong className="text-slate-900">{req.department_name}</strong></span>
                     <span>Section: <strong className="text-slate-900">{req.section}</strong></span>
                     <span>Reg No: <strong className="text-blue-700 font-bold">{req.register_number}</strong></span>
-                    <span>Applied: <strong className="text-slate-700">{formatDate(req.requested_at)}</strong></span>
+                    <span className="text-slate-400">· Applied {formatDate(req.requested_at)}</span>
                   </div>
 
-                  {/* Admin Rejection Note Box */}
+                  {/* Admin Rejection Feedback Box with Re-register Action */}
                   {req.status === 'rejected' && (
-                    <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-slate-700 text-xs space-y-2">
-                      <div className="flex items-start gap-2">
+                    <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-slate-700 text-xs space-y-3">
+                      <div className="flex items-start gap-2.5">
                         <AlertCircle className="w-4 h-4 text-slate-500 shrink-0 mt-0.5" />
                         <div>
-                          <p className="font-bold font-mono text-slate-800">Reason for Rejection from Administrator:</p>
-                          <p className="mt-0.5 text-slate-600">
+                          <p className="font-bold font-mono text-slate-800 uppercase tracking-wide text-[10px]">
+                            Administrator Note:
+                          </p>
+                          <p className="mt-0.5 text-slate-600 leading-relaxed font-sans">
                             {req.admin_note || 'No specific note provided by administrator.'}
                           </p>
                         </div>
                       </div>
                       <div className="pt-2 border-t border-slate-200 flex justify-end">
-                        <button
+                        <Button
+                          variant="primary"
+                          size="xs"
                           onClick={() => setReapplyEvent({
                             id: req.event_id,
                             title: req.event_title,
                             event_type: req.event_type
                           })}
-                          className="px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all shadow-sm active:scale-95"
                         >
                           Register Again
-                        </button>
+                        </Button>
                       </div>
                     </div>
                   )}
 
-                  {/* Approved Success Note */}
+                  {/* Approved Confirmation Note */}
                   {req.status === 'approved' && (
-                    <div className="p-3.5 rounded-2xl bg-blue-50 border border-blue-200 text-blue-900 text-xs flex items-center justify-between shadow-sm">
+                    <div className="p-3.5 rounded-2xl bg-blue-50/70 border border-blue-200 text-blue-900 text-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 shadow-xs">
                       <div className="flex items-center gap-2">
                         <CheckCircle2 className="w-4 h-4 text-blue-600 shrink-0" />
-                        <span className="font-semibold text-slate-800">Seat reserved. Please present your official FXEC identity card upon arrival at the venue.</span>
+                        <span className="font-medium text-slate-800">
+                          Seat confirmed. Present your official FXEC identity card upon arrival at the venue.
+                        </span>
                       </div>
                       {req.reward_points > 0 && (
-                        <span className="font-mono font-black text-white bg-blue-600 px-2.5 py-1 rounded-lg text-[10px] shrink-0 shadow-sm">
-                          +{req.reward_points} PTS UPON ATTENDANCE
+                        <span className="font-mono font-black text-white bg-blue-600 px-2.5 py-1 rounded-xl text-[10px] shrink-0 shadow-xs">
+                          +{req.reward_points} PTS EARNED
                         </span>
                       )}
                     </div>
