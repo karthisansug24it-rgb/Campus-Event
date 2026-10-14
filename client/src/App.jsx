@@ -21,7 +21,7 @@ function App() {
     <BrowserRouter>
       <AuthProvider>
         <ToastProvider>
-          <div className="min-h-screen flex flex-col bg-dark-bg text-dark-text antialiased selection:bg-cyan-500/20 selection:text-cyan-300">
+          <div className="min-h-screen flex flex-col bg-white text-slate-800 antialiased selection:bg-blue-600 selection:text-white">
             <Navbar />
             <div className="flex-1">
               <Routes>

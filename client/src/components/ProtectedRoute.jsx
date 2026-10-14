@@ -9,13 +9,13 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-dark-bg text-dark-text">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-white text-slate-800">
         <div className="relative">
-          <div className="w-12 h-12 rounded-2xl bg-dark-surface border border-cyan-500/30 flex items-center justify-center shadow-glow-cyan mb-4">
-            <Loader2 className="w-6 h-6 animate-spin text-cyan-400" />
+          <div className="w-14 h-14 rounded-2xl bg-blue-50 border border-blue-200 flex items-center justify-center shadow-soft-blue mb-4">
+            <Loader2 className="w-7 h-7 animate-spin text-blue-600" />
           </div>
         </div>
-        <p className="text-xs font-mono text-cyan-400/80 uppercase tracking-wider">Verifying session credentials...</p>
+        <p className="text-xs font-mono text-blue-700 font-semibold uppercase tracking-wider">Verifying session credentials...</p>
       </div>
     );
   }

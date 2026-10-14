@@ -60,22 +60,22 @@ const MyRequests = () => {
     switch (status) {
       case 'approved':
         return (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-glow-emerald">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-bold bg-blue-50 text-blue-700 border border-blue-200 shadow-sm">
+            <span className="w-2 h-2 rounded-full bg-blue-600 animate-pulse" />
             <span>Registered ✓ (Approved)</span>
           </span>
         );
       case 'pending':
         return (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-glow-amber">
-            <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-bold bg-blue-100 text-blue-800 border border-blue-300 shadow-sm">
+            <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
             <span>Request Pending</span>
           </span>
         );
       case 'rejected':
         return (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40">
-            <XCircle className="w-3.5 h-3.5 text-rose-400" />
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-bold bg-slate-100 text-slate-700 border border-slate-200">
+            <XCircle className="w-3.5 h-3.5 text-slate-500" />
             <span>Rejected</span>
           </span>
         );
@@ -85,23 +85,23 @@ const MyRequests = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#07080D] py-8 px-4 sm:px-6 lg:px-8 text-slate-100">
+    <div className="min-h-screen bg-white py-8 px-4 sm:px-6 lg:px-8 text-slate-800">
       <div className="max-w-5xl mx-auto space-y-6">
         
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-[#0D101D] p-6 rounded-3xl border border-white/[0.08] shadow-glass">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white p-6 rounded-3xl border border-blue-100 shadow-sm shadow-blue-500/5">
           <div>
-            <h1 className="text-2xl font-black text-white tracking-tight flex items-center gap-2.5">
-              <FileText className="w-6 h-6 text-cyan-400" />
+            <h1 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2.5">
+              <FileText className="w-6 h-6 text-blue-600" />
               My Registration Requests
             </h1>
-            <p className="text-xs text-slate-400 mt-1">
+            <p className="text-xs text-slate-500 mt-1">
               Track your event application approvals, review admin notes, and manage your campus registrations.
             </p>
           </div>
           <button
             onClick={fetchMyRequests}
-            className="self-start sm:self-auto inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-cyan-300 text-xs font-mono font-bold border border-white/[0.08] transition-colors"
+            className="self-start sm:self-auto inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-mono font-bold border border-blue-200 transition-colors"
           >
             <RefreshCw className="w-3.5 h-3.5" />
             <span>Refresh</span>
@@ -111,27 +111,27 @@ const MyRequests = () => {
         {/* Content */}
         {loading ? (
           <div className="py-24 text-center">
-            <Loader2 className="w-8 h-8 animate-spin text-cyan-400 mx-auto mb-3" />
-            <p className="text-sm font-semibold text-slate-400 font-mono">Retrieving your requests...</p>
+            <Loader2 className="w-8 h-8 animate-spin text-blue-600 mx-auto mb-3" />
+            <p className="text-sm font-semibold text-slate-500 font-mono">Retrieving your requests...</p>
           </div>
         ) : error ? (
-          <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-sm font-semibold flex items-center gap-3">
-            <AlertCircle className="w-5 h-5 text-rose-400" />
+          <div className="p-4 rounded-2xl bg-blue-50 border border-blue-300 text-blue-900 text-sm font-semibold flex items-center gap-3">
+            <AlertCircle className="w-5 h-5 text-blue-700" />
             <span>{error}</span>
           </div>
         ) : requests.length === 0 ? (
           /* Empty State */
-          <div className="bg-[#0D101D] rounded-3xl border border-white/[0.08] p-12 text-center shadow-glass">
-            <div className="w-16 h-16 rounded-2xl bg-white/[0.03] border border-white/[0.08] text-cyan-400 flex items-center justify-center mx-auto mb-4 shadow-glow-cyan">
+          <div className="bg-slate-50/70 rounded-3xl border border-blue-100 p-12 text-center shadow-sm">
+            <div className="w-16 h-16 rounded-2xl bg-blue-100 text-blue-600 flex items-center justify-center mx-auto mb-4 shadow-sm">
               <Calendar className="w-8 h-8" />
             </div>
-            <h3 className="text-lg font-bold text-white mb-1">No Event Requests Yet</h3>
-            <p className="text-xs text-slate-400 max-w-sm mx-auto mb-6">
+            <h3 className="text-lg font-bold text-slate-800 mb-1">No Event Requests Yet</h3>
+            <p className="text-xs text-slate-500 max-w-sm mx-auto mb-6">
               You haven't requested registration for any campus events. Discover upcoming workshops, symposiums, and hackathons now.
             </p>
             <Link
               to="/events"
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-400 to-blue-500 text-black font-extrabold text-xs shadow-glow-cyan transition-all hover:from-cyan-300 hover:to-blue-400"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs shadow-md shadow-blue-600/25 transition-all"
             >
               <span>Explore Events</span>
               <ArrowRight className="w-4 h-4" />
@@ -143,10 +143,10 @@ const MyRequests = () => {
             {requests.map((req) => (
               <div 
                 key={req.id}
-                className="bg-[#0D101D] rounded-3xl border border-white/[0.08] p-5 sm:p-6 shadow-card hover:border-cyan-500/30 transition-all flex flex-col md:flex-row gap-5 items-start"
+                className="bg-white rounded-3xl border border-slate-200 p-5 sm:p-6 shadow-sm hover:border-blue-300 hover:shadow-md transition-all flex flex-col md:flex-row gap-5 items-start"
               >
                 {/* Event Poster Thumbnail */}
-                <div className="w-full md:w-48 h-32 rounded-2xl bg-[#07080D] overflow-hidden shrink-0 relative border border-white/[0.06]">
+                <div className="w-full md:w-48 h-32 rounded-2xl bg-slate-100 overflow-hidden shrink-0 relative border border-slate-200">
                   {req.poster_url ? (
                     <img 
                       src={req.poster_url} 
@@ -154,12 +154,12 @@ const MyRequests = () => {
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#121628] to-[#07080D] text-white p-3 text-center">
+                    <div className="w-full h-full flex items-center justify-center bg-blue-50 text-blue-900 p-3 text-center">
                       <span className="text-xs font-bold leading-snug">{req.event_title}</span>
                     </div>
                   )}
                   <span className={`absolute top-2 left-2 px-2 py-0.5 rounded-md text-[10px] font-mono font-bold text-white shadow-md ${
-                    req.event_type === 'internal' ? 'bg-emerald-600/90' : 'bg-purple-600/90'
+                    req.event_type === 'internal' ? 'bg-blue-600' : 'bg-blue-800'
                   }`}>
                     {req.event_type === 'internal' ? 'Inside' : 'Outside'}
                   </span>
@@ -169,10 +169,10 @@ const MyRequests = () => {
                 <div className="flex-1 space-y-3 w-full">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                     <div>
-                      <span className="text-[10px] font-mono font-bold text-cyan-400 uppercase tracking-wider">
+                      <span className="text-[10px] font-mono font-bold text-blue-600 uppercase tracking-wider">
                         {req.category}
                       </span>
-                      <h3 className="text-lg font-black text-white leading-snug mt-0.5">
+                      <h3 className="text-lg font-black text-slate-900 leading-snug mt-0.5">
                         {req.event_title}
                       </h3>
                     </div>
@@ -182,46 +182,46 @@ const MyRequests = () => {
                   </div>
 
                   {/* Metadata Chips */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-slate-400 font-mono">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-slate-500 font-mono">
                     <div className="flex items-center gap-1.5">
-                      <Calendar className="w-3.5 h-3.5 text-cyan-400" />
-                      <span>Event Date: <strong className="text-slate-200">{formatDate(req.event_date)}</strong></span>
+                      <Calendar className="w-3.5 h-3.5 text-blue-600" />
+                      <span>Event Date: <strong className="text-slate-800">{formatDate(req.event_date)}</strong></span>
                     </div>
                     <div className="flex items-center gap-1.5 truncate">
-                      <MapPin className="w-3.5 h-3.5 text-rose-400" />
-                      <span className="truncate text-slate-200">{req.venue}</span>
+                      <MapPin className="w-3.5 h-3.5 text-blue-600" />
+                      <span className="truncate text-slate-800">{req.venue}</span>
                     </div>
                   </div>
 
                   {/* Student Submission Record */}
-                  <div className="p-3 rounded-2xl bg-white/[0.03] border border-white/[0.06] text-[11px] text-slate-400 flex flex-wrap gap-x-4 gap-y-1 font-mono">
-                    <span>Year: <strong className="text-white">Year {req.year_of_study}</strong></span>
-                    <span>Department: <strong className="text-white">{req.department_name}</strong></span>
-                    <span>Section: <strong className="text-white">{req.section}</strong></span>
-                    <span>Reg No: <strong className="text-cyan-300">{req.register_number}</strong></span>
-                    <span>Applied: <strong className="text-slate-300">{formatDate(req.requested_at)}</strong></span>
+                  <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200/80 text-[11px] text-slate-600 flex flex-wrap gap-x-4 gap-y-1 font-mono">
+                    <span>Year: <strong className="text-slate-900">Year {req.year_of_study}</strong></span>
+                    <span>Department: <strong className="text-slate-900">{req.department_name}</strong></span>
+                    <span>Section: <strong className="text-slate-900">{req.section}</strong></span>
+                    <span>Reg No: <strong className="text-blue-700 font-bold">{req.register_number}</strong></span>
+                    <span>Applied: <strong className="text-slate-700">{formatDate(req.requested_at)}</strong></span>
                   </div>
 
                   {/* Admin Rejection Note Box */}
                   {req.status === 'rejected' && (
-                    <div className="p-3.5 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-200 text-xs space-y-2">
+                    <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-slate-700 text-xs space-y-2">
                       <div className="flex items-start gap-2">
-                        <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+                        <AlertCircle className="w-4 h-4 text-slate-500 shrink-0 mt-0.5" />
                         <div>
-                          <p className="font-bold font-mono text-rose-300">Reason for Rejection from Administrator:</p>
-                          <p className="mt-0.5 text-slate-300">
+                          <p className="font-bold font-mono text-slate-800">Reason for Rejection from Administrator:</p>
+                          <p className="mt-0.5 text-slate-600">
                             {req.admin_note || 'No specific note provided by administrator.'}
                           </p>
                         </div>
                       </div>
-                      <div className="pt-2 border-t border-rose-500/20 flex justify-end">
+                      <div className="pt-2 border-t border-slate-200 flex justify-end">
                         <button
                           onClick={() => setReapplyEvent({
                             id: req.event_id,
                             title: req.event_title,
                             event_type: req.event_type
                           })}
-                          className="px-3.5 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold transition-all shadow-md active:scale-95"
+                          className="px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all shadow-sm active:scale-95"
                         >
                           Register Again
                         </button>
@@ -231,13 +231,13 @@ const MyRequests = () => {
 
                   {/* Approved Success Note */}
                   {req.status === 'approved' && (
-                    <div className="p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs flex items-center justify-between shadow-glow-emerald">
+                    <div className="p-3.5 rounded-2xl bg-blue-50 border border-blue-200 text-blue-900 text-xs flex items-center justify-between shadow-sm">
                       <div className="flex items-center gap-2">
-                        <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                        <span className="font-semibold text-slate-200">Seat reserved. Please present your official FXEC identity card upon arrival at the venue.</span>
+                        <CheckCircle2 className="w-4 h-4 text-blue-600 shrink-0" />
+                        <span className="font-semibold text-slate-800">Seat reserved. Please present your official FXEC identity card upon arrival at the venue.</span>
                       </div>
                       {req.reward_points > 0 && (
-                        <span className="font-mono font-black text-amber-400 bg-amber-500/20 px-2.5 py-1 rounded-lg text-[10px] shrink-0 border border-amber-500/30 shadow-glow-amber">
+                        <span className="font-mono font-black text-white bg-blue-600 px-2.5 py-1 rounded-lg text-[10px] shrink-0 shadow-sm">
                           +{req.reward_points} PTS UPON ATTENDANCE
                         </span>
                       )}

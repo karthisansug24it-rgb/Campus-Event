@@ -79,46 +79,46 @@ const Home = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#07080D] py-8 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-white py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto space-y-8">
         
-        {/* Hero Section */}
-        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#0D101D] via-[#11162B] to-[#0A0D18] border border-white/[0.08] p-8 sm:p-12 shadow-glass text-white">
+        {/* Hero Section (White and Blue) */}
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-blue-900 via-blue-800 to-blue-950 border border-blue-800 p-8 sm:p-12 shadow-xl shadow-blue-900/10 text-white">
           {/* Subtle Ambient Radial Lighting */}
-          <div className="absolute right-0 top-0 bottom-0 w-1/2 opacity-25 pointer-events-none bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-cyan-500 via-blue-600 to-transparent" />
+          <div className="absolute right-0 top-0 bottom-0 w-1/2 opacity-30 pointer-events-none bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-blue-400 via-blue-600 to-transparent" />
           
           <div className="relative z-10 max-w-2xl space-y-3">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/25 text-cyan-300 text-xs font-mono font-bold tracking-wide">
-              <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-200 text-xs font-mono font-bold tracking-wide">
+              <Sparkles className="w-3.5 h-3.5 text-blue-300" />
               <span>OFFICIAL FXEC EVENT PLATFORM</span>
             </div>
             
             <h1 className="text-3xl sm:text-5xl font-black tracking-tight leading-tight">
               Discover & Lead{' '}
-              <span className="bg-gradient-to-r from-cyan-400 via-blue-400 to-indigo-400 bg-clip-text text-transparent">
+              <span className="text-blue-300">
                 Campus Innovations
               </span>
             </h1>
             
-            <p className="text-slate-400 text-sm sm:text-base font-normal leading-relaxed">
+            <p className="text-blue-100/90 text-sm sm:text-base font-normal leading-relaxed">
               Explore internal hackathons, hands-on technology workshops, and prestigious external symposiums. Register with your verified college credentials to unlock attendance rewards.
             </p>
           </div>
         </div>
 
-        {/* Search & Filter Controls */}
-        <div className="bg-[#0D101D] rounded-2xl border border-white/[0.08] p-4 sm:p-5 shadow-glass space-y-4">
+        {/* Search & Filter Controls (White Card with Blue Highlights) */}
+        <div className="bg-white rounded-2xl border border-blue-100 p-4 sm:p-5 shadow-sm shadow-blue-500/5 space-y-4">
           
           {/* Search bar & Type Toggles */}
           <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3.5">
             <div className="relative flex-1">
-              <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
+              <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search by event title, venue, or organizer..."
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.03] text-sm text-white font-medium focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/25 transition-all placeholder:text-slate-500"
+                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 text-sm text-slate-800 font-medium focus:outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100 transition-all placeholder:text-slate-400"
               />
             </div>
 
@@ -128,8 +128,8 @@ const Home = () => {
                 onClick={() => setSelectedType('all')}
                 className={`px-3.5 py-2 rounded-xl text-xs font-mono font-bold whitespace-nowrap transition-all ${
                   selectedType === 'all'
-                    ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 shadow-glow-cyan'
-                    : 'bg-white/[0.03] text-slate-400 hover:text-white hover:bg-white/[0.06] border border-white/[0.06]'
+                    ? 'bg-blue-600 text-white shadow-sm shadow-blue-600/30 border border-blue-600'
+                    : 'bg-slate-100 text-slate-600 hover:text-blue-700 hover:bg-blue-50 border border-slate-200'
                 }`}
               >
                 All Events
@@ -138,8 +138,8 @@ const Home = () => {
                 onClick={() => setSelectedType('internal')}
                 className={`px-3.5 py-2 rounded-xl text-xs font-mono font-bold whitespace-nowrap transition-all ${
                   selectedType === 'internal'
-                    ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-glow-emerald'
-                    : 'bg-white/[0.03] text-slate-400 hover:text-white hover:bg-white/[0.06] border border-white/[0.06]'
+                    ? 'bg-blue-50 text-blue-700 border border-blue-300 shadow-sm'
+                    : 'bg-slate-100 text-slate-600 hover:text-blue-700 hover:bg-blue-50 border border-slate-200'
                 }`}
               >
                 Inside College
@@ -148,8 +148,8 @@ const Home = () => {
                 onClick={() => setSelectedType('external')}
                 className={`px-3.5 py-2 rounded-xl text-xs font-mono font-bold whitespace-nowrap transition-all ${
                   selectedType === 'external'
-                    ? 'bg-purple-500/20 text-purple-300 border border-purple-500/40 shadow-glow-purple'
-                    : 'bg-white/[0.03] text-slate-400 hover:text-white hover:bg-white/[0.06] border border-white/[0.06]'
+                    ? 'bg-blue-100 text-blue-800 border border-blue-300 shadow-sm'
+                    : 'bg-slate-100 text-slate-600 hover:text-blue-700 hover:bg-blue-50 border border-slate-200'
                 }`}
               >
                 Outside College
@@ -159,8 +159,8 @@ const Home = () => {
                 onClick={() => setUpcomingOnly(!upcomingOnly)}
                 className={`px-3.5 py-2 rounded-xl text-xs font-mono font-bold whitespace-nowrap border transition-all ${
                   upcomingOnly
-                    ? 'bg-amber-500/20 text-amber-300 border-amber-500/40 shadow-glow-amber'
-                    : 'bg-white/[0.03] text-slate-400 border-white/[0.06] hover:bg-white/[0.06]'
+                    ? 'bg-blue-600 text-white border-blue-600 shadow-sm shadow-blue-600/30'
+                    : 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-blue-50 hover:text-blue-700'
                 }`}
               >
                 Upcoming Only
@@ -169,8 +169,8 @@ const Home = () => {
           </div>
 
           {/* Category Filter Chips */}
-          <div className="flex items-center gap-2 overflow-x-auto pt-2 border-t border-white/[0.06]">
-            <span className="text-[11px] font-mono font-bold text-slate-500 uppercase tracking-wider mr-1 hidden sm:inline">
+          <div className="flex items-center gap-2 overflow-x-auto pt-2 border-t border-slate-100">
+            <span className="text-[11px] font-mono font-bold text-slate-400 uppercase tracking-wider mr-1 hidden sm:inline">
               CATEGORY:
             </span>
             {CATEGORIES.map((cat) => (
@@ -179,8 +179,8 @@ const Home = () => {
                 onClick={() => setSelectedCategory(cat)}
                 className={`px-3 py-1.5 rounded-lg text-xs font-mono font-semibold whitespace-nowrap transition-all ${
                   selectedCategory === cat
-                    ? 'bg-white text-black font-bold shadow-sm'
-                    : 'bg-white/[0.03] text-slate-400 hover:text-white hover:bg-white/[0.06] border border-white/[0.06]'
+                    ? 'bg-blue-600 text-white font-bold shadow-sm shadow-blue-600/25'
+                    : 'bg-slate-100/80 text-slate-600 hover:text-blue-700 hover:bg-blue-50 border border-slate-200/80'
                 }`}
               >
                 {cat}
@@ -192,14 +192,14 @@ const Home = () => {
 
         {/* Error State */}
         {error && (
-          <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-300 flex items-center justify-between">
+          <div className="p-4 rounded-2xl bg-blue-50 border border-blue-300 text-blue-900 flex items-center justify-between">
             <div className="flex items-center gap-2.5 text-sm font-semibold">
-              <AlertCircle className="w-5 h-5 text-rose-400" />
+              <AlertCircle className="w-5 h-5 text-blue-700" />
               <span>{error}</span>
             </div>
             <button
               onClick={loadEvents}
-              className="px-3 py-1.5 rounded-xl bg-rose-600 text-white text-xs font-bold hover:bg-rose-500 transition-colors"
+              className="px-3 py-1.5 rounded-xl bg-blue-600 text-white text-xs font-bold hover:bg-blue-700 transition-colors"
             >
               Retry
             </button>
@@ -212,25 +212,25 @@ const Home = () => {
             {[1, 2, 3, 4, 5, 6].map((idx) => (
               <div 
                 key={idx}
-                className="bg-[#0D101D] rounded-2xl border border-white/[0.08] p-4 space-y-4 animate-pulse"
+                className="bg-white rounded-2xl border border-slate-200 p-4 space-y-4 animate-pulse shadow-sm"
               >
-                <div className="aspect-[16/10] bg-white/[0.04] rounded-xl" />
+                <div className="aspect-[16/10] bg-slate-100 rounded-xl" />
                 <div className="space-y-2">
-                  <div className="h-4 bg-white/[0.06] rounded-md w-3/4" />
-                  <div className="h-3 bg-white/[0.04] rounded-md w-1/2" />
+                  <div className="h-4 bg-slate-200 rounded-md w-3/4" />
+                  <div className="h-3 bg-slate-100 rounded-md w-1/2" />
                 </div>
-                <div className="h-3 bg-white/[0.03] rounded-md w-full" />
+                <div className="h-3 bg-slate-100 rounded-md w-full" />
               </div>
             ))}
           </div>
         ) : events.length === 0 ? (
           /* Empty State */
-          <div className="text-center py-20 bg-[#0D101D] rounded-3xl border border-white/[0.08] p-8 shadow-glass">
-            <div className="w-16 h-16 rounded-2xl bg-white/[0.03] border border-white/[0.08] text-cyan-400 flex items-center justify-center mx-auto mb-4 shadow-glow-cyan">
+          <div className="text-center py-20 bg-slate-50/60 rounded-3xl border border-blue-100 p-8 shadow-sm">
+            <div className="w-16 h-16 rounded-2xl bg-blue-100 text-blue-600 flex items-center justify-center mx-auto mb-4 shadow-sm">
               <Calendar className="w-8 h-8" />
             </div>
-            <h3 className="text-lg font-bold text-white mb-1">No Events Found</h3>
-            <p className="text-xs text-slate-400 max-w-sm mx-auto mb-6">
+            <h3 className="text-lg font-bold text-slate-800 mb-1">No Events Found</h3>
+            <p className="text-xs text-slate-500 max-w-sm mx-auto mb-6">
               We couldn't find any events matching your current filters or search terms.
             </p>
             <button
@@ -240,7 +240,7 @@ const Home = () => {
                 setSelectedCategory('All');
                 setUpcomingOnly(false);
               }}
-              className="px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-400 to-blue-500 text-black font-extrabold text-xs shadow-glow-cyan hover:from-cyan-300 hover:to-blue-400 transition-all"
+              className="px-4 py-2 rounded-xl bg-blue-600 text-white font-bold text-xs shadow-md shadow-blue-600/20 hover:bg-blue-700 transition-all"
             >
               Reset Filters
             </button>
