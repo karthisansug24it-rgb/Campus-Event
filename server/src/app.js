@@ -50,6 +50,37 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // Serve static uploaded posters
 app.use('/uploads', express.static(uploadsDir));
 
+// Root landing endpoint
+app.get('/', (req, res) => {
+  res.json({
+    success: true,
+    message: 'Francis Xavier Engineering College (FXEC) - Campus Event Management API is online.',
+    frontend_application: 'http://localhost:5173',
+    version: '1.0.0',
+    endpoints: {
+      health: 'GET /api/health',
+      events: 'GET /api/events',
+      event_details: 'GET /api/events/:id',
+      parse_email: 'POST /api/auth/parse-email',
+      student_signup: 'POST /api/auth/signup',
+      login: 'POST /api/auth/login',
+      my_requests: 'GET /api/my/requests',
+      admin_stats: 'GET /api/admin/stats',
+      admin_requests: 'GET /api/admin/requests'
+    }
+  });
+});
+
+// API index endpoint
+app.get('/api', (req, res) => {
+  res.json({
+    success: true,
+    message: 'FXEC Campus Events API Root',
+    health: '/api/health',
+    events: '/api/events'
+  });
+});
+
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.json({
@@ -59,17 +90,25 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Mount API routes
+// Mount API routes (with /api and without /api alias)
 app.use('/api/auth', authRoutes);
-app.use('/api/events', eventRoutes);
-app.use('/api/my', studentRoutes);
-app.use('/api/admin', adminRoutes);
+app.use('/auth', authRoutes);
 
-// 404 handler for unknown API routes
-app.use('/api/*', (req, res) => {
+app.use('/api/events', eventRoutes);
+app.use('/events', eventRoutes);
+
+app.use('/api/my', studentRoutes);
+app.use('/my', studentRoutes);
+
+app.use('/api/admin', adminRoutes);
+app.use('/admin', adminRoutes);
+
+// Catch-all JSON 404 handler for undefined routes
+app.use('*', (req, res) => {
   res.status(404).json({
     success: false,
-    message: `API route ${req.originalUrl} not found.`
+    message: `Cannot ${req.method} ${req.originalUrl}. Route not found on this server.`,
+    hint: 'Check GET / for available API endpoints or visit the frontend application at http://localhost:5173'
   });
 });
 
