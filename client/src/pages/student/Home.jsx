@@ -29,6 +29,7 @@ import {
   EmptyState,
   AnimatedSection
 } from '../../components/ui';
+import { getPosterUrl, handleImageError } from '../../utils/imageUrl';
 
 const CATEGORIES = ['All', 'Hackathon', 'Workshop', 'Seminar', 'Cultural', 'Sports', 'Other'];
 
@@ -166,15 +167,15 @@ const Home = () => {
                   <div className="relative aspect-[16/10] bg-slate-100 overflow-hidden">
                     {featuredEvent.poster_url ? (
                       <img
-                        src={featuredEvent.poster_url}
+                        src={getPosterUrl(featuredEvent.poster_url)}
                         alt={featuredEvent.title}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
+                        onError={(e) => handleImageError(e, featuredEvent.poster_url)}
                       />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-blue-50 text-blue-600">
-                        <Calendar className="w-12 h-12" />
-                      </div>
-                    )}
+                    ) : null}
+                    <div className={`w-full h-full flex items-center justify-center bg-blue-50 text-blue-600 ${featuredEvent.poster_url ? 'hidden' : 'flex'}`}>
+                      <Calendar className="w-12 h-12" />
+                    </div>
                     <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent pointer-events-none" />
                     
                     <div className="absolute top-4 left-4 flex gap-2">

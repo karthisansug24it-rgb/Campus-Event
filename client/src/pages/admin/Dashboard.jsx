@@ -27,6 +27,7 @@ import {
   EmptyState,
   AnimatedSection 
 } from '../../components/ui';
+import { getPosterUrl, handleImageError } from '../../utils/imageUrl';
 
 const Dashboard = () => {
   const [stats, setStats] = useState(null);
@@ -247,15 +248,15 @@ const Dashboard = () => {
                 <div className="w-14 h-14 rounded-xl bg-slate-100 overflow-hidden shrink-0 border border-slate-200">
                   {evt.poster_url ? (
                     <img
-                      src={evt.poster_url}
+                      src={getPosterUrl(evt.poster_url)}
                       alt={evt.title}
                       className="w-full h-full object-cover"
+                      onError={(e) => handleImageError(e, evt.poster_url)}
                     />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-blue-50 text-blue-600">
-                      <Calendar className="w-6 h-6" />
-                    </div>
-                  )}
+                  ) : null}
+                  <div className={`w-full h-full flex items-center justify-center bg-blue-50 text-blue-600 ${evt.poster_url ? 'hidden' : 'flex'}`}>
+                    <Calendar className="w-6 h-6" />
+                  </div>
                 </div>
 
                 <div className="space-y-0.5 truncate flex-1">

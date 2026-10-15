@@ -28,6 +28,7 @@ import {
   EmptyState,
   AnimatedSection
 } from '../../components/ui';
+import { getPosterUrl, handleImageError } from '../../utils/imageUrl';
 
 const Requests = () => {
   const { showToast } = useToast();
@@ -299,12 +300,16 @@ const Requests = () => {
                       <div className="flex items-start gap-3">
                         <div className="w-12 h-10 rounded-xl bg-slate-100 overflow-hidden shrink-0 shadow-xs border border-slate-200 mt-0.5">
                           {r.poster_url ? (
-                            <img src={r.poster_url} alt="" className="w-full h-full object-cover" />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center text-[10px] font-bold text-blue-700 bg-blue-50">
-                              FX
-                            </div>
-                          )}
+                            <img
+                              src={getPosterUrl(r.poster_url)}
+                              alt=""
+                              className="w-full h-full object-cover"
+                              onError={(e) => handleImageError(e, r.poster_url)}
+                            />
+                          ) : null}
+                          <div className={`w-full h-full flex items-center justify-center text-[10px] font-bold text-blue-700 bg-blue-50 ${r.poster_url ? 'hidden' : 'flex'}`}>
+                            FX
+                          </div>
                         </div>
                         <div className="space-y-1 truncate">
                           <span className={`inline-block px-2 py-0.5 rounded text-[9px] font-mono font-bold border ${

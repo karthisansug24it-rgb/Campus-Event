@@ -9,6 +9,7 @@ import {
   Users
 } from 'lucide-react';
 import { Badge } from './ui/Badge';
+import { getPosterUrl, handleImageError } from '../utils/imageUrl';
 
 const EventCard = ({ event, onSelect }) => {
   const isInternal = event.event_type === 'internal';
@@ -25,6 +26,8 @@ const EventCard = ({ event, onSelect }) => {
     year: 'numeric'
   });
 
+  const posterSrc = getPosterUrl(event.poster_url);
+
   return (
     <article
       onClick={() => onSelect(event)}
@@ -40,17 +43,12 @@ const EventCard = ({ event, onSelect }) => {
     >
       {/* Poster Image Container */}
       <div className="relative aspect-[16/10] bg-slate-100 overflow-hidden">
-        {event.poster_url ? (
+        {posterSrc ? (
           <img
-            src={event.poster_url}
+            src={posterSrc}
             alt={event.title}
             className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700 ease-out"
-            loading="lazy"
-            onError={(e) => {
-              // Graceful fallback if image load fails
-              e.currentTarget.style.display = 'none';
-              e.currentTarget.nextElementSibling?.classList.remove('hidden');
-            }}
+            onError={(e) => handleImageError(e, event.poster_url)}
           />
         ) : null}
 

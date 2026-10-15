@@ -19,7 +19,8 @@ const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5173';
 // 1. Security Headers with Helmet (configured for cross-origin poster image access)
 app.use(
   helmet({
-    crossOriginResourcePolicy: { policy: 'cross-origin' }
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+    contentSecurityPolicy: false
   })
 );
 

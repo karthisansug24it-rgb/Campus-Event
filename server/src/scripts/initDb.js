@@ -106,7 +106,7 @@ async function initDatabase() {
         1,
         'Smart City Hackathon 2026',
         'A 24-hour flagship hackathon designed to solve urban mobility, clean energy, and smart campus challenges. Build real-time IoT and AI prototypes with industry mentorship, cloud credits, and cash prizes.',
-        '/uploads/sample-hackathon.svg',
+        '/uploads/hackathon.jpg',
         'internal',
         'Hackathon',
         'Campus Auditorium & FX Innovation Hub',
@@ -122,7 +122,7 @@ async function initDatabase() {
         2,
         'Hands-on GenAI & Full-Stack Workshop',
         'Deep dive into Large Language Models, prompt engineering, vector databases, and modern full-stack deployment with React and Node.js. Practical exercises with attendance certificates.',
-        '/uploads/sample-workshop.svg',
+        '/uploads/workshop.jpg',
         'internal',
         'Workshop',
         'Lab 3, Department of CSE & IT',
@@ -138,7 +138,7 @@ async function initDatabase() {
         3,
         'National Robotics & Automation Symposium',
         'Premier state-level symposium featuring line follower bots, drone obstacle navigation, CAD modeling sprints, and tech paper presentations evaluated by leading industry experts.',
-        '/uploads/sample-symposium.svg',
+        '/uploads/symposium.jpg',
         'external',
         'Seminar',
         'Anna University Regional Campus Conference Hall',
@@ -154,7 +154,7 @@ async function initDatabase() {
         4,
         'Dhwani 2026 - Inter-Collegiate Cultural Fest',
         'Annual mega cultural celebration bringing together dance, western music band battles, classical singing, mono-acting, literary debates, and short-film contests.',
-        '/uploads/sample-cultural.svg',
+        '/uploads/cultural.jpg',
         'internal',
         'Cultural',
         'Open Air Amphitheatre, FXEC Campus',
@@ -170,7 +170,7 @@ async function initDatabase() {
         5,
         'South Zone Inter-University Basketball Tournament',
         'Compete with elite collegiate basketball teams in tournament brackets. Trophies, medals, cash prizes, and physical activity certificates awarded.',
-        '/uploads/sample-sports.svg',
+        '/uploads/sports.jpg',
         'external',
         'Sports',
         'District Indoor Sports Complex',
@@ -238,6 +238,17 @@ async function initDatabase() {
       }
     }
     console.log(`[Database Init] Sample visual posters generated in ${uploadsDir}`);
+
+    // Sync uploads to client/public/uploads for direct client serving
+    const clientPublicUploads = path.join(__dirname, '../../../client/public/uploads');
+    if (!fs.existsSync(clientPublicUploads)) {
+      fs.mkdirSync(clientPublicUploads, { recursive: true });
+    }
+    const uploadedFiles = fs.readdirSync(uploadsDir);
+    for (const f of uploadedFiles) {
+      fs.copyFileSync(path.join(uploadsDir, f), path.join(clientPublicUploads, f));
+    }
+    console.log(`[Database Init] Synced ${uploadedFiles.length} poster files to ${clientPublicUploads}`);
 
     console.log('----------------------------------------------------');
     console.log('[Database Init] Database initialization completed successfully!');

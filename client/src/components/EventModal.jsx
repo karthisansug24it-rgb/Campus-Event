@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { Button } from './ui/Button';
 import { Badge } from './ui/Badge';
+import { getPosterUrl, handleImageError } from '../utils/imageUrl';
 
 const EventModal = ({ eventId, onClose, onOpenRegister }) => {
   const { isAuthenticated, isAdmin } = useAuth();
@@ -242,16 +243,16 @@ const EventModal = ({ eventId, onClose, onOpenRegister }) => {
               <div className="relative aspect-[16/9] w-full bg-slate-100 overflow-hidden">
                 {event.poster_url ? (
                   <img
-                    src={event.poster_url}
+                    src={getPosterUrl(event.poster_url)}
                     alt={event.title}
                     className="w-full h-full object-cover"
+                    onError={(e) => handleImageError(e, event.poster_url)}
                   />
-                ) : (
-                  <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100/60 text-blue-900 p-6 text-center">
-                    <Calendar className="w-16 h-16 text-blue-600 mb-2 opacity-80" />
-                    <span className="font-display font-extrabold text-lg">{event.title}</span>
-                  </div>
-                )}
+                ) : null}
+                <div className={`w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100/60 text-blue-900 p-6 text-center ${event.poster_url ? 'hidden' : 'flex'}`}>
+                  <Calendar className="w-16 h-16 text-blue-600 mb-2 opacity-80" />
+                  <span className="font-display font-extrabold text-lg">{event.title}</span>
+                </div>
 
                 {/* Gradient vignette for badges readability */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20 pointer-events-none" />

@@ -1,4 +1,28 @@
 const { pool } = require('../config/db');
+const path = require('path');
+const fs = require('fs');
+
+/**
+ * Safely format any valid date string or Date object to MySQL DATETIME format (YYYY-MM-DD HH:MM:SS)
+ */
+function toMySQLDateTime(dateInput) {
+  if (!dateInput) return null;
+  if (typeof dateInput === 'string' && /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(dateInput)) {
+    return dateInput;
+  }
+  const d = new Date(dateInput);
+  if (isNaN(d.getTime())) return dateInput;
+
+  const pad = (n) => String(n).padStart(2, '0');
+  const year = d.getFullYear();
+  const month = pad(d.getMonth() + 1);
+  const day = pad(d.getDate());
+  const hours = pad(d.getHours());
+  const minutes = pad(d.getMinutes());
+  const seconds = pad(d.getSeconds());
+
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+}
 
 /**
  * GET /api/events
@@ -207,7 +231,21 @@ async function createEvent(req, res) {
       external_link
     } = req.body;
 
-    const posterUrl = req.file ? `/uploads/${req.file.filename}` : (req.body.poster_url || null);
+    let posterUrl = req.file ? `/uploads/${req.file.filename}` : (req.body.poster_url || null);
+    if (req.file) {
+      // Sync uploaded poster to client/public/uploads for direct client serving
+      const clientPublicUploads = path.join(__dirname, '../../../client/public/uploads');
+      if (fs.existsSync(clientPublicUploads)) {
+        try {
+          fs.copyFileSync(req.file.path, path.join(clientPublicUploads, req.file.filename));
+        } catch (e) {
+          console.warn('[Poster Sync Warning]:', e.message);
+        }
+      }
+    }
+
+    const formattedEventDate = toMySQLDateTime(event_date);
+    const formattedDeadline = toMySQLDateTime(registration_deadline);
 
     const [result] = await pool.execute(
       `INSERT INTO events (
@@ -223,8 +261,8 @@ async function createEvent(req, res) {
         category,
         venue.trim(),
         organizer.trim(),
-        event_date,
-        registration_deadline,
+        formattedEventDate,
+        formattedDeadline,
         max_seats ? parseInt(max_seats, 10) : null,
         reward_points ? parseInt(reward_points, 10) : 0,
         external_link ? external_link.trim() : null,
@@ -246,7 +284,7 @@ async function createEvent(req, res) {
     console.error('[createEvent Error]:', error);
     return res.status(500).json({
       success: false,
-      message: 'Failed to create event.'
+      message: error.message || 'Failed to create event.'
     });
   }
 }
@@ -288,9 +326,21 @@ async function updateEvent(req, res) {
     let posterUrl = existing[0].poster_url;
     if (req.file) {
       posterUrl = `/uploads/${req.file.filename}`;
+      // Sync uploaded poster to client/public/uploads for direct client serving
+      const clientPublicUploads = path.join(__dirname, '../../../client/public/uploads');
+      if (fs.existsSync(clientPublicUploads)) {
+        try {
+          fs.copyFileSync(req.file.path, path.join(clientPublicUploads, req.file.filename));
+        } catch (e) {
+          console.warn('[Poster Sync Warning]:', e.message);
+        }
+      }
     } else if (req.body.poster_url !== undefined) {
       posterUrl = req.body.poster_url;
     }
+
+    const formattedEventDate = event_date ? toMySQLDateTime(event_date) : existing[0].event_date;
+    const formattedDeadline = registration_deadline ? toMySQLDateTime(registration_deadline) : existing[0].registration_deadline;
 
     await pool.execute(
       `UPDATE events SET 
@@ -315,8 +365,8 @@ async function updateEvent(req, res) {
         category || existing[0].category,
         venue ? venue.trim() : existing[0].venue,
         organizer ? organizer.trim() : existing[0].organizer,
-        event_date || existing[0].event_date,
-        registration_deadline || existing[0].registration_deadline,
+        formattedEventDate,
+        formattedDeadline,
         max_seats !== undefined ? (max_seats ? parseInt(max_seats, 10) : null) : existing[0].max_seats,
         reward_points !== undefined ? parseInt(reward_points, 10) : existing[0].reward_points,
         external_link !== undefined ? (external_link ? external_link.trim() : null) : existing[0].external_link,
@@ -338,7 +388,7 @@ async function updateEvent(req, res) {
     console.error('[updateEvent Error]:', error);
     return res.status(500).json({
       success: false,
-      message: 'Failed to update event.'
+      message: error.message || 'Failed to update event.'
     });
   }
 }

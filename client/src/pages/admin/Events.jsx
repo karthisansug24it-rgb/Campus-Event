@@ -31,6 +31,7 @@ import {
   EmptyState,
   AnimatedSection
 } from '../../components/ui';
+import { getPosterUrl, handleImageError } from '../../utils/imageUrl';
 
 const CATEGORIES = ['All', 'Hackathon', 'Workshop', 'Seminar', 'Cultural', 'Sports', 'Other'];
 
@@ -236,8 +237,17 @@ const Events = () => {
       data.append('category', formData.category);
       data.append('venue', formData.venue.trim());
       data.append('organizer', formData.organizer.trim());
-      data.append('event_date', new Date(formData.event_date).toISOString());
-      data.append('registration_deadline', new Date(formData.registration_deadline).toISOString());
+      // Send datetime in YYYY-MM-DD HH:mm:ss format
+      const formatLocalToMySQL = (val) => {
+        if (!val) return '';
+        const d = new Date(val);
+        if (isNaN(d.getTime())) return val;
+        const pad = (n) => String(n).padStart(2, '0');
+        return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+      };
+
+      data.append('event_date', formatLocalToMySQL(formData.event_date));
+      data.append('registration_deadline', formatLocalToMySQL(formData.registration_deadline));
       
       if (formData.max_seats) {
         data.append('max_seats', formData.max_seats);
@@ -462,15 +472,15 @@ const Events = () => {
                         <div className="w-14 h-14 rounded-xl bg-slate-100 overflow-hidden shrink-0 border border-slate-200">
                           {evt.poster_url ? (
                             <img
-                              src={evt.poster_url}
+                              src={getPosterUrl(evt.poster_url)}
                               alt={evt.title}
                               className="w-full h-full object-cover"
+                              onError={(e) => handleImageError(e, evt.poster_url)}
                             />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center bg-blue-50 text-blue-600">
-                              <Calendar className="w-5 h-5" />
-                            </div>
-                          )}
+                          ) : null}
+                          <div className={`w-full h-full flex items-center justify-center bg-blue-50 text-blue-600 ${evt.poster_url ? 'hidden' : 'flex'}`}>
+                            <Calendar className="w-5 h-5" />
+                          </div>
                         </div>
                         <div className="space-y-0.5 max-w-xs">
                           <h4 className="font-extrabold font-display text-slate-900 text-sm line-clamp-1">
@@ -626,9 +636,10 @@ const Events = () => {
                   {posterPreview ? (
                     <>
                       <img
-                        src={posterPreview}
+                        src={getPosterUrl(posterPreview)}
                         alt="Poster Preview"
                         className="w-full h-full object-cover absolute inset-0"
+                        onError={(e) => handleImageError(e, posterPreview)}
                       />
                       <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
                         <span className="px-3 py-1.5 rounded-xl bg-white text-slate-900 font-bold text-xs shadow-md">

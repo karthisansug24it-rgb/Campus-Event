@@ -28,6 +28,7 @@ import {
   EmptyState,
   AnimatedSection
 } from '../../components/ui';
+import { getPosterUrl, handleImageError } from '../../utils/imageUrl';
 
 const MyRequests = () => {
   const [requests, setRequests] = useState([]);
@@ -243,16 +244,16 @@ const MyRequests = () => {
                 <div className="w-full md:w-52 aspect-[16/10] md:h-36 rounded-2xl bg-slate-100 overflow-hidden shrink-0 relative border border-slate-200/80">
                   {req.poster_url ? (
                     <img 
-                      src={req.poster_url} 
+                      src={getPosterUrl(req.poster_url)} 
                       alt={req.event_title} 
                       className="w-full h-full object-cover"
+                      onError={(e) => handleImageError(e, req.poster_url)}
                     />
-                  ) : (
-                    <div className="w-full h-full flex flex-col items-center justify-center bg-blue-50/70 text-blue-900 p-3 text-center">
-                      <Calendar className="w-8 h-8 text-blue-600 mb-1" />
-                      <span className="text-xs font-bold leading-snug line-clamp-2">{req.event_title}</span>
-                    </div>
-                  )}
+                  ) : null}
+                  <div className={`w-full h-full flex flex-col items-center justify-center bg-blue-50/70 text-blue-900 p-3 text-center ${req.poster_url ? 'hidden' : 'flex'}`}>
+                    <Calendar className="w-8 h-8 text-blue-600 mb-1" />
+                    <span className="text-xs font-bold leading-snug line-clamp-2">{req.event_title}</span>
+                  </div>
                   <span className={`absolute top-2.5 left-2.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold text-white shadow-xs ${
                     req.event_type === 'internal' ? 'bg-blue-600' : 'bg-slate-900'
                   }`}>

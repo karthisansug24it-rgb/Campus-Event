@@ -8,6 +8,7 @@
     "dev": "nodemon src/app.js",
     "seed": "node src/scripts/seed.js",
     "init-db": "node src/scripts/initDb.js",
+    "db:check": "node src/scripts/checkDb.js",
     "test": "node --test test/emailParser.test.js"
   },
   "keywords": [
