@@ -62,7 +62,21 @@ const Home = () => {
 
       const res = await api.get('/events', { params });
       if (res.data.success) {
-        setEvents(res.data.data);
+        const rawEvents = res.data.data || [];
+        // Ensure upcoming events are sorted chronologically: soonest upcoming event first
+        const now = new Date();
+        const sorted = [...rawEvents].sort((a, b) => {
+          const dateA = new Date(a.event_date);
+          const dateB = new Date(b.event_date);
+          const aUpcoming = dateA >= now;
+          const bUpcoming = dateB >= now;
+
+          if (aUpcoming && !bUpcoming) return -1;
+          if (!aUpcoming && bUpcoming) return 1;
+          return aUpcoming ? dateA - dateB : dateB - dateA;
+        });
+
+        setEvents(sorted);
       }
     } catch (err) {
       console.error('Failed to load events:', err);
@@ -74,6 +88,11 @@ const Home = () => {
 
   useEffect(() => {
     loadEvents();
+
+    // Auto-refresh when tab gains focus so admin uploads appear immediately
+    const handleFocus = () => loadEvents();
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
   }, [loadEvents]);
 
   // Smooth scroll to event discovery section
@@ -106,123 +125,165 @@ const Home = () => {
     setUpcomingOnly(false);
   };
 
-  // Featured event (first available event)
-  const featuredEvent = events.length > 0 ? events[0] : null;
+  // Soonest upcoming event (first in sorted events)
+  const soonestEvent = events.length > 0 ? events[0] : null;
+
+  const getDaysRemainingText = (eventDateStr) => {
+    if (!eventDateStr) return '';
+    const diff = new Date(eventDateStr) - new Date();
+    const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
+    if (days < 0) return 'Concluded';
+    if (days === 0) return 'Happening Today!';
+    if (days === 1) return 'Happening Tomorrow!';
+    return `Happening in ${days} days`;
+  };
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] text-slate-800">
+    <div className="w-full text-slate-800">
       
-      {/* Editorial Hero Section */}
-      <section className="relative overflow-hidden bg-white border-b border-slate-200/80 pt-12 pb-16 sm:pt-20 sm:pb-24">
-        {/* Subtle decorative mesh background */}
-        <div className="absolute inset-0 bg-dots opacity-40 pointer-events-none" />
-        <div className="absolute top-0 right-1/4 w-96 h-96 bg-blue-100/50 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 left-1/3 w-80 h-80 bg-blue-50/70 rounded-full blur-2xl pointer-events-none" />
+      {/* Container */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-8">
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+        {/* 1. Highlight: Soonest Upcoming Event ("Recent ah nadakapora event") */}
+        {soonestEvent && (
+          <AnimatedSection className="bg-gradient-to-br from-blue-700 via-blue-800 to-indigo-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl shadow-blue-900/15 relative overflow-hidden" delay={0.1}>
+            <div className="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full blur-3xl pointer-events-none" />
             
-            {/* Left Narrative Column */}
-            <AnimatedSection className="lg:col-span-7 space-y-6" delay={0.1}>
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-50 border border-blue-200/80 text-blue-700 text-xs font-mono font-bold tracking-wide shadow-xs">
-                <Sparkles className="w-3.5 h-3.5 text-blue-600" />
-                <span>FRANCIS XAVIER ENGINEERING COLLEGE · EVENT HUB</span>
-              </div>
-
-              <h1 className="text-4xl sm:text-6xl font-extrabold font-display text-slate-900 tracking-tight leading-[1.08]">
-                Find your next <br className="hidden sm:block" />
-                <span className="text-blue-600">big moment.</span>
-              </h1>
-
-              <p className="text-base sm:text-lg text-slate-600 font-sans leading-relaxed max-w-xl">
-                Explore premier hackathons, hands-on engineering workshops, cultural fests, and prestigious external symposiums. Register with your college credentials to claim official attendance points.
-              </p>
-
-              <div className="pt-2 flex flex-wrap items-center gap-3.5">
-                <Button
-                  variant="primary"
-                  size="lg"
-                  onClick={scrollToDiscovery}
-                  icon={ArrowDown}
-                  iconPosition="right"
-                >
-                  Explore All Events
-                </Button>
-                
-                <div className="flex items-center gap-3 px-4 py-2.5 rounded-2xl bg-slate-50 border border-slate-200/80 text-xs font-mono font-bold text-slate-600">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                  <span>{events.length} Live Opportunities</span>
-                </div>
-              </div>
-            </AnimatedSection>
-
-            {/* Right Featured Card Preview Column */}
-            {featuredEvent ? (
-              <AnimatedSection className="lg:col-span-5" delay={0.25} yOffset={32}>
-                <div 
-                  onClick={() => handleSelectEvent(featuredEvent)}
-                  className="group relative bg-white rounded-3xl border border-slate-200/90 shadow-xl shadow-blue-600/10 hover:border-blue-300 transition-all duration-300 overflow-hidden cursor-pointer hover:-translate-y-1"
-                >
-                  <div className="relative aspect-[16/10] bg-slate-100 overflow-hidden">
-                    {featuredEvent.poster_url ? (
+            <div className="relative z-10 flex flex-col lg:flex-row items-stretch lg:items-center gap-6 sm:gap-8">
+              {/* Event Poster / Visual Preview */}
+              <div 
+                onClick={() => handleSelectEvent(soonestEvent)}
+                className="w-full lg:w-auto flex items-center justify-center shrink-0 self-center"
+              >
+                <div className="relative group cursor-pointer rounded-2xl overflow-hidden bg-white/10 backdrop-blur-md border border-white/20 shadow-2xl p-1.5 flex items-center justify-center transition-all duration-300 hover:border-white/40 hover:shadow-blue-950/40 max-w-full">
+                  {soonestEvent.poster_url ? (
+                    <>
                       <img
-                        src={featuredEvent.poster_url}
-                        alt={featuredEvent.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
+                        src={soonestEvent.poster_url}
+                        alt={soonestEvent.title}
+                        className="w-auto h-auto max-h-[280px] sm:max-h-[340px] max-w-full sm:max-w-xs md:max-w-sm object-contain rounded-xl shadow-md transition-transform duration-300 group-hover:scale-[1.02] block"
                       />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-blue-50 text-blue-600">
-                        <Calendar className="w-12 h-12" />
+                      <div className="absolute inset-0 bg-slate-950/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center rounded-xl pointer-events-none">
+                        <span className="px-3 py-1.5 rounded-full bg-white/95 text-slate-900 text-xs font-mono font-bold shadow-lg flex items-center gap-1.5 backdrop-blur-sm">
+                          <ExternalLink className="w-3.5 h-3.5 text-blue-600" />
+                          <span>View Full Poster</span>
+                        </span>
                       </div>
-                    )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent pointer-events-none" />
-                    
-                    <div className="absolute top-4 left-4 flex gap-2">
-                      <span className="px-3 py-1 rounded-full text-xs font-mono font-bold bg-blue-600 text-white shadow-sm border border-blue-400">
-                        Featured Event
-                      </span>
-                      <span className="px-3 py-1 rounded-full text-xs font-mono font-bold bg-white/95 text-slate-800 backdrop-blur-md">
-                        {featuredEvent.category}
-                      </span>
+                    </>
+                  ) : (
+                    <div className="w-56 h-56 flex flex-col items-center justify-center bg-blue-900/60 rounded-xl text-blue-200">
+                      <Calendar className="w-12 h-12 mb-2" />
+                      <span className="text-xs font-mono font-medium">No Poster Available</span>
                     </div>
-
-                    <div className="absolute bottom-4 left-4 right-4 text-white">
-                      <p className="text-xs font-mono text-blue-200 font-semibold mb-1">
-                        {new Date(featuredEvent.event_date).toLocaleDateString('en-IN', {
-                          day: 'numeric',
-                          month: 'short',
-                          year: 'numeric'
-                        })} · {featuredEvent.venue}
-                      </p>
-                      <h3 className="font-display font-black text-xl leading-snug line-clamp-2">
-                        {featuredEvent.title}
-                      </h3>
-                    </div>
-                  </div>
-
-                  <div className="p-5 flex items-center justify-between text-xs bg-white">
-                    <span className="text-slate-500 font-medium">
-                      Organized by <strong className="text-slate-800">{featuredEvent.organizer}</strong>
-                    </span>
-                    <span className="font-bold text-blue-600 flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
-                      <span>View Specifications</span>
-                      <ArrowRight className="w-4 h-4" />
-                    </span>
-                  </div>
+                  )}
                 </div>
-              </AnimatedSection>
-            ) : null}
+              </div>
 
-          </div>
-        </div>
-      </section>
+              {/* Event Details Narrative */}
+              <div className="flex-1 space-y-3.5">
+                <div className="flex flex-wrap items-center gap-2">
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-400 text-slate-950 text-xs font-mono font-black tracking-wider uppercase shadow-xs">
+                    <Sparkles className="w-3.5 h-3.5" />
+                    <span>NEXT UPCOMING EVENT · HAPPENING SOONEST</span>
+                  </div>
+                  <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-white/15 text-blue-100 text-xs font-mono font-semibold backdrop-blur-md">
+                    <Clock className="w-3.5 h-3.5 text-amber-300" />
+                    {getDaysRemainingText(soonestEvent.event_date)}
+                  </span>
+                  {soonestEvent.category && (
+                    <span className="inline-flex items-center px-3 py-1 rounded-full bg-blue-500/80 text-white text-xs font-mono font-bold backdrop-blur-md border border-blue-400/40">
+                      {soonestEvent.category}
+                    </span>
+                  )}
+                  <span className="inline-flex items-center px-3 py-1 rounded-full bg-black/30 text-white text-xs font-mono font-semibold backdrop-blur-md border border-white/15">
+                    {soonestEvent.event_type === 'internal' ? 'Inside College' : 'Outside College'}
+                  </span>
+                </div>
 
-      {/* Event Discovery Section */}
-      <section 
-        id="event-discovery" 
-        ref={discoverySectionRef}
-        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 space-y-8"
-      >
+                <h2 
+                  onClick={() => handleSelectEvent(soonestEvent)}
+                  className="text-2xl sm:text-3xl font-black font-display text-white tracking-tight leading-snug cursor-pointer hover:text-blue-200 transition-colors"
+                >
+                  {soonestEvent.title}
+                </h2>
+
+                <p className="text-sm text-blue-100/90 leading-relaxed line-clamp-2">
+                  {soonestEvent.description
+                    ? soonestEvent.description.replace(/^#{2,4}\s*[^\n]+\n*/gm, '').replace(/[-*•]\s*/g, '').replace(/\s+/g, ' ').trim()
+                    : ''}
+                </p>
+
+                <div className="flex flex-wrap items-center gap-4 text-xs text-blue-200 pt-1 font-sans">
+                  <span className="flex items-center gap-1.5 bg-white/10 px-3 py-1.5 rounded-xl backdrop-blur-sm">
+                    <Calendar className="w-4 h-4 text-blue-300" />
+                    <strong className="text-white">
+                      {new Date(soonestEvent.event_date).toLocaleDateString('en-IN', {
+                        day: 'numeric',
+                        month: 'short',
+                        year: 'numeric'
+                      })}
+                    </strong>
+                  </span>
+                  <span className="flex items-center gap-1.5 bg-white/10 px-3 py-1.5 rounded-xl backdrop-blur-sm">
+                    <MapPin className="w-4 h-4 text-blue-300" />
+                    <span className="text-white truncate max-w-[200px]">{soonestEvent.venue}</span>
+                  </span>
+                  <span className="flex items-center gap-1.5 bg-white/10 px-3 py-1.5 rounded-xl backdrop-blur-sm">
+                    <Award className="w-4 h-4 text-amber-300" />
+                    <span className="text-amber-300 font-bold">+{soonestEvent.reward_points} Points</span>
+                  </span>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="pt-2 flex flex-wrap items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => handleSelectEvent(soonestEvent)}
+                    className="px-5 py-2.5 rounded-xl bg-white text-blue-900 font-bold text-xs hover:bg-blue-50 transition-all flex items-center gap-2 shadow-md shadow-black/10"
+                  >
+                    <span>View Specifications</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+
+                  {soonestEvent.user_request_status === 'approved' ? (
+                    <span className="px-5 py-2.5 rounded-xl bg-emerald-500/90 text-white font-bold text-xs flex items-center gap-2 border border-emerald-400 backdrop-blur-md">
+                      <CheckCircle2 className="w-4 h-4" />
+                      <span>Registered ✓</span>
+                    </span>
+                  ) : soonestEvent.user_request_status === 'pending' ? (
+                    <button
+                      type="button"
+                      onClick={() => handleOpenRegister(soonestEvent)}
+                      className="px-5 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs transition-all flex items-center gap-2 shadow-sm"
+                    >
+                      <Clock className="w-4 h-4" />
+                      <span>Pending (Update Details)</span>
+                    </button>
+                  ) : soonestEvent.user_request_status === 'rejected' ? (
+                    <span className="px-5 py-2.5 rounded-xl bg-rose-500/80 text-white font-mono font-bold text-xs flex items-center gap-2 border border-rose-400">
+                      <span>Registration Rejected</span>
+                    </span>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => handleOpenRegister(soonestEvent)}
+                      className="px-5 py-2.5 rounded-xl bg-blue-500 hover:bg-blue-400 text-white font-bold text-xs transition-all flex items-center gap-2 border border-blue-400"
+                    >
+                      <span>Register Now</span>
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          </AnimatedSection>
+        )}
+
+        {/* 2. Event Discovery Filter Bar */}
+        <section 
+          id="event-discovery" 
+          ref={discoverySectionRef}
+          className="space-y-6"
+        >
         
         {/* Discovery Filter Controls Bar */}
         <AnimatedSection className="bg-white rounded-3xl border border-slate-200/90 p-5 sm:p-6 shadow-sm space-y-5" delay={0.1}>
@@ -318,15 +379,25 @@ const Home = () => {
             subtitle="Verified technical symposiums, workshops, and student initiatives"
           />
 
-          {(searchQuery || selectedType !== 'all' || selectedCategory !== 'All' || upcomingOnly) && (
+          <div className="flex items-center gap-2">
             <Button
               variant="outline"
               size="xs"
-              onClick={handleResetFilters}
+              onClick={loadEvents}
+              loading={loading}
             >
-              Reset Filters
+              Refresh
             </Button>
-          )}
+            {(searchQuery || selectedType !== 'all' || selectedCategory !== 'All' || upcomingOnly) && (
+              <Button
+                variant="outline"
+                size="xs"
+                onClick={handleResetFilters}
+              >
+                Reset Filters
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* Server Error State */}
@@ -372,6 +443,8 @@ const Home = () => {
         )}
 
       </section>
+
+      </div>
 
       {/* Event Details Popup Modal */}
       {selectedEventId && (

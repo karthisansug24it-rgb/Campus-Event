@@ -100,6 +100,8 @@ const RegisterModal = ({ event, onClose, onSuccess }) => {
     return Object.keys(errors).length === 0;
   };
 
+  const isUpdate = event?.user_request_status === 'pending' || event?.isUpdate;
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setGeneralError('');
@@ -118,8 +120,11 @@ const RegisterModal = ({ event, onClose, onSuccess }) => {
       });
 
       if (res.data.success) {
-        // Show required success toast with exact wording
-        showToast('Request sent to admin', 'success', 3000);
+        showToast(
+          isUpdate ? 'Registration details updated successfully!' : 'Request sent to admin', 
+          'success', 
+          3000
+        );
         onSuccess();
       }
     } catch (err) {
@@ -151,7 +156,7 @@ const RegisterModal = ({ event, onClose, onSuccess }) => {
             </div>
             <div>
               <h3 id="register-dialog-title" className="font-display font-extrabold text-base tracking-tight text-slate-900">
-                Event Registration Request
+                {isUpdate ? 'Update Registration Details' : 'Event Registration Request'}
               </h3>
               <p className="text-xs text-blue-700 font-mono font-semibold truncate max-w-xs mt-0.5">
                 {event?.title}
@@ -348,7 +353,7 @@ const RegisterModal = ({ event, onClose, onSuccess }) => {
               className="flex-1"
               loading={submitting}
             >
-              Submit Request
+              {isUpdate ? 'Update Registration' : 'Submit Request'}
             </Button>
           </div>
 

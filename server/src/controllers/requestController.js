@@ -101,55 +101,63 @@ async function submitRegistrationRequest(req, res) {
 
     if (existing.length > 0) {
       const currentStatus = existing[0].status;
-      if (currentStatus === 'pending') {
-        return res.status(400).json({
-          success: false,
-          message: 'You already have a pending registration request for this event.'
-        });
-      }
+
+      // 1. Rule: After admin approval, student cannot register again
       if (currentStatus === 'approved') {
         return res.status(400).json({
           success: false,
-          message: 'You are already registered and approved for this event.'
+          message: 'Your registration is already approved by the admin. You cannot register again.'
         });
       }
 
-      // If rejected, allow re-application by resetting the existing record
-      await pool.execute(
-        `UPDATE registration_requests SET
-          name = ?,
-          department_code = ?,
-          section = ?,
-          register_number = ?,
-          email = ?,
-          admission_year = ?,
-          year_of_study = ?,
-          status = 'pending',
-          admin_note = NULL,
-          reviewed_by = NULL,
-          reviewed_at = NULL,
-          created_at = NOW()
-         WHERE id = ?`,
-        [
-          studentName,
-          parsed.departmentCode,
-          normalizedSection,
-          regNumber,
-          studentEmail,
-          parsed.admissionYear,
-          parsed.yearOfStudy,
-          existing[0].id
-        ]
-      );
+      // 2. Rule: After admin rejection, student cannot register again
+      if (currentStatus === 'rejected') {
+        return res.status(400).json({
+          success: false,
+          message: 'Your registration was rejected by the admin. You cannot register again for this event.'
+        });
+      }
 
-      return res.json({
-        success: true,
-        message: 'Registration request re-submitted to admin successfully!',
-        data: {
-          requestId: existing[0].id,
-          status: 'pending'
-        }
-      });
+      // 3. Rule: Student can update their details ONLY before admin approval/rejection (while pending)
+      if (currentStatus === 'pending') {
+        await pool.execute(
+          `UPDATE registration_requests SET
+            name = ?,
+            department_code = ?,
+            section = ?,
+            register_number = ?,
+            email = ?,
+            admission_year = ?,
+            year_of_study = ?
+           WHERE id = ? AND status = 'pending'`,
+          [
+            studentName,
+            parsed.departmentCode,
+            normalizedSection,
+            regNumber,
+            studentEmail,
+            parsed.admissionYear,
+            parsed.yearOfStudy,
+            existing[0].id
+          ]
+        );
+
+        // Also update student's profile defaults
+        await pool.execute(
+          `UPDATE users SET section = COALESCE(?, section), register_number = COALESCE(?, register_number) WHERE id = ?`,
+          [normalizedSection, regNumber, req.user.id]
+        );
+
+        return res.json({
+          success: true,
+          message: 'Registration details updated successfully! Pending admin approval.',
+          data: {
+            requestId: existing[0].id,
+            status: 'pending',
+            isUpdated: true
+          }
+        });
+      }
     }
 
     // 8. Insert new registration request

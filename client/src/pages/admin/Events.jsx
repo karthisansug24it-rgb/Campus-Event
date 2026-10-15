@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import api from '../../api/axios';
 import { useToast } from '../../components/Toast';
 import { 
@@ -9,16 +10,16 @@ import {
   MapPin, 
   Users, 
   Award, 
-  ExternalLink, 
   Clock, 
   X, 
   Upload, 
   AlertCircle, 
   Loader2, 
   Search,
-  CheckCircle2,
-  Sparkles,
-  Image as ImageIcon
+  FileText,
+  Check,
+  PlusCircle,
+  Tag
 } from 'lucide-react';
 import { 
   PageHeader, 
@@ -26,30 +27,41 @@ import {
   IconButton, 
   Badge, 
   SearchInput, 
-  FilterChips, 
   ConfirmDialog, 
   EmptyState,
   AnimatedSection
 } from '../../components/ui';
 
-const CATEGORIES = ['All', 'Hackathon', 'Workshop', 'Seminar', 'Cultural', 'Sports', 'Other'];
+const CATEGORIES = [
+  'All', 
+  'Hackathon', 
+  'Symposium', 
+  'Job Fair', 
+  'Workshop', 
+  'Conference', 
+  'Seminar', 
+  'Cultural', 
+  'Sports', 
+  'Other'
+];
+
+
 
 const initialForm = {
   title: '',
   description: '',
   event_type: 'internal',
-  category: 'Hackathon',
+  category: '',
   venue: '',
   organizer: '',
   event_date: '',
-  registration_deadline: '',
-  max_seats: '',
-  reward_points: '0',
-  external_link: ''
+  reward_points: '' // Strictly provided by Admin only
 };
 
 const Events = () => {
   const { showToast } = useToast();
+  const location = useLocation();
+  const navigate = useNavigate();
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -68,6 +80,11 @@ const Events = () => {
   const [modalSubmitting, setModalSubmitting] = useState(false);
   const [modalError, setModalError] = useState('');
   const [isDragging, setIsDragging] = useState(false);
+
+  const [posterOrientation, setPosterOrientation] = useState('landscape'); // 'vertical' or 'landscape'
+
+  // Dynamic Topic Cards
+  const [topicCards, setTopicCards] = useState([]);
 
   // Delete confirmation dialog state
   const [deletingEvent, setDeletingEvent] = useState(null);
@@ -95,6 +112,15 @@ const Events = () => {
     fetchEvents();
   }, []);
 
+  // Auto-open modal if URL has ?create=true
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get('create') === 'true') {
+      handleOpenCreateModal();
+      navigate('/admin/events', { replace: true });
+    }
+  }, [location.search]);
+
   // Helper to convert ISO/MySQL datetime string to datetime-local input format (YYYY-MM-DDTHH:mm)
   const toDateTimeLocal = (dateStr) => {
     if (!dateStr) return '';
@@ -104,32 +130,82 @@ const Events = () => {
     return local.toISOString().slice(0, 16);
   };
 
+  const handleImageLoad = (e) => {
+    const { naturalWidth, naturalHeight } = e.target;
+    if (naturalHeight > naturalWidth) {
+      setPosterOrientation('vertical');
+    } else {
+      setPosterOrientation('landscape');
+    }
+  };
+
+  const parseDescriptionForEdit = (rawDescription = '') => {
+    if (!rawDescription) return { mainDesc: '', cards: [] };
+
+    const sections = rawDescription.split(/(?=^###\s+)/m);
+    let mainDesc = '';
+    const cards = [];
+
+    sections.forEach((sec, idx) => {
+      const trimmed = sec.trim();
+      if (trimmed.startsWith('### ')) {
+        const firstLineEnd = trimmed.indexOf('\n');
+        if (firstLineEnd !== -1) {
+          const title = trimmed.slice(4, firstLineEnd).trim().replace(/^[^\w\s]+\s*/, '');
+          const content = trimmed.slice(firstLineEnd + 1).trim();
+          cards.push({
+            id: Date.now() + Math.random() + idx,
+            name: title,
+            details: content
+          });
+        } else {
+          const title = trimmed.slice(4).trim().replace(/^[^\w\s]+\s*/, '');
+          cards.push({
+            id: Date.now() + Math.random() + idx,
+            name: title,
+            details: ''
+          });
+        }
+      } else {
+        if (mainDesc) {
+          mainDesc += '\n\n' + trimmed;
+        } else {
+          mainDesc = trimmed;
+        }
+      }
+    });
+
+    return { mainDesc, cards };
+  };
+
   const handleOpenCreateModal = () => {
     setEditingEventId(null);
     setFormData(initialForm);
+    setTopicCards([]);
     setPosterFile(null);
     setPosterPreview(null);
+    setPosterOrientation('landscape');
     setModalError('');
     setIsModalOpen(true);
   };
 
   const handleOpenEditModal = (event) => {
     setEditingEventId(event.id);
+    const { mainDesc, cards } = parseDescriptionForEdit(event.description);
     setFormData({
       title: event.title || '',
-      description: event.description || '',
+      description: mainDesc,
       event_type: event.event_type || 'internal',
-      category: event.category || 'Hackathon',
+      category: event.category || '',
       venue: event.venue || '',
       organizer: event.organizer || '',
       event_date: toDateTimeLocal(event.event_date),
-      registration_deadline: toDateTimeLocal(event.registration_deadline),
-      max_seats: event.max_seats !== null ? String(event.max_seats) : '',
-      reward_points: String(event.reward_points || 0),
-      external_link: event.external_link || ''
+      reward_points: event.reward_points !== undefined && event.reward_points !== null ? String(event.reward_points) : ''
     });
+    setTopicCards(cards);
     setPosterFile(null);
     setPosterPreview(event.poster_url || null);
+    setPosterOrientation('landscape');
     setModalError('');
     setIsModalOpen(true);
   };
@@ -138,8 +214,10 @@ const Events = () => {
     setIsModalOpen(false);
     setEditingEventId(null);
     setFormData(initialForm);
+    setTopicCards([]);
     setPosterFile(null);
     setPosterPreview(null);
+    setPosterOrientation('landscape');
     setModalError('');
   };
 
@@ -151,8 +229,8 @@ const Events = () => {
       return;
     }
 
-    if (file.size > 2 * 1024 * 1024) {
-      setModalError('Poster file exceeds 2 MB limit.');
+    if (file.size > 8 * 1024 * 1024) {
+      setModalError('Poster file exceeds 8 MB limit.');
       return;
     }
 
@@ -192,6 +270,23 @@ const Events = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handleAddTopicCard = () => {
+    setTopicCards((prev) => [
+      ...prev,
+      { id: Date.now() + Math.random(), name: '', details: '' }
+    ]);
+  };
+
+  const handleRemoveTopicCard = (id) => {
+    setTopicCards((prev) => prev.filter((card) => card.id !== id));
+  };
+
+  const handleTopicCardChange = (id, field, value) => {
+    setTopicCards((prev) =>
+      prev.map((card) => (card.id === id ? { ...card, [field]: value } : card))
+    );
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setModalError('');
@@ -203,6 +298,10 @@ const Events = () => {
     }
     if (!formData.description.trim()) {
       setModalError('Description is required.');
+      return;
+    }
+    if (!formData.category.trim()) {
+      setModalError('Category is required.');
       return;
     }
     if (!formData.venue.trim()) {
@@ -217,39 +316,38 @@ const Events = () => {
       setModalError('Event date and time is required.');
       return;
     }
-    if (!formData.registration_deadline) {
-      setModalError('Registration deadline is required.');
-      return;
-    }
-
-    if (new Date(formData.registration_deadline) > new Date(formData.event_date)) {
-      setModalError('Registration deadline cannot be after the event date.');
+    if (formData.reward_points === '' || formData.reward_points === null || formData.reward_points === undefined) {
+      setModalError('Please provide Reward Points for students (Admin specified).');
       return;
     }
 
     setModalSubmitting(true);
     try {
+      let finalDescription = formData.description.trim();
+      if (topicCards.length > 0) {
+        topicCards.forEach((card) => {
+          if (card.name.trim() && card.details.trim()) {
+            finalDescription += `\n\n### ${card.name.trim()}\n${card.details.trim()}`;
+          }
+        });
+      }
+
       const data = new FormData();
       data.append('title', formData.title.trim());
-      data.append('description', formData.description.trim());
+      data.append('description', finalDescription);
       data.append('event_type', formData.event_type);
       data.append('category', formData.category);
       data.append('venue', formData.venue.trim());
       data.append('organizer', formData.organizer.trim());
       data.append('event_date', new Date(formData.event_date).toISOString());
-      data.append('registration_deadline', new Date(formData.registration_deadline).toISOString());
-      
-      if (formData.max_seats) {
-        data.append('max_seats', formData.max_seats);
-      }
+      // Default deadline to event_date to satisfy database schema
+      data.append('registration_deadline', new Date(formData.event_date).toISOString());
       data.append('reward_points', formData.reward_points || 0);
-
-      if (formData.external_link.trim()) {
-        data.append('external_link', formData.external_link.trim());
-      }
 
       if (posterFile) {
         data.append('poster', posterFile);
+      } else if (posterPreview && !posterPreview.startsWith('data:')) {
+        data.append('poster_url', posterPreview);
       }
 
       if (editingEventId) {
@@ -268,14 +366,14 @@ const Events = () => {
           headers: { 'Content-Type': 'multipart/form-data' }
         });
         if (res.data.success) {
-          showToast('New event published successfully.', 'success');
+          showToast('New campus event published successfully.', 'success');
           handleCloseModal();
           fetchEvents();
         }
       }
     } catch (err) {
       console.error('Save event failed:', err);
-      const msg = err.response?.data?.message || 'Failed to save event. Check fields.';
+      const msg = err.response?.data?.message || 'Failed to save event. Check required fields.';
       setModalError(msg);
     } finally {
       setModalSubmitting(false);
@@ -321,15 +419,16 @@ const Events = () => {
         <PageHeader
           badge="EVENTS REPOSITORY"
           title="Campus Events Manager"
-          subtitle="Publish, curate, and configure Francis Xavier Engineering College technical programs, symposia, and capacities."
+          subtitle="Publish, curate, and configure Francis Xavier Engineering College technical programs, symposia, and opportunities."
           actions={
             <Button
               variant="primary"
               size="md"
               onClick={handleOpenCreateModal}
               icon={Plus}
+              className="font-extrabold shadow-md shadow-blue-600/25"
             >
-              Publish New Event
+              Create Event
             </Button>
           }
         />
@@ -386,7 +485,7 @@ const Events = () => {
         {/* Category Pills */}
         <div className="flex items-center gap-2 pt-3 border-t border-slate-100 overflow-x-auto scrollbar-none">
           <span className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-wider mr-1 hidden sm:inline">
-            FILTER:
+            CATEGORY:
           </span>
           {CATEGORIES.map((cat) => (
             <button
@@ -449,7 +548,7 @@ const Events = () => {
                   <th className="py-4 px-6">Event & Poster</th>
                   <th className="py-4 px-4">Category / Type</th>
                   <th className="py-4 px-4">Schedule & Venue</th>
-                  <th className="py-4 px-4">Seats / Quota</th>
+                  <th className="py-4 px-4">Reward Points</th>
                   <th className="py-4 px-6 text-right">Actions</th>
                 </tr>
               </thead>
@@ -479,12 +578,6 @@ const Events = () => {
                           <p className="text-xs text-slate-500 truncate">
                             By {evt.organizer}
                           </p>
-                          {evt.reward_points > 0 && (
-                            <span className="inline-flex items-center gap-1 text-[10px] font-mono font-black text-blue-600">
-                              <Award className="w-3 h-3" />
-                              <span>+{evt.reward_points} PTS</span>
-                            </span>
-                          )}
                         </div>
                       </div>
                     </td>
@@ -506,35 +599,24 @@ const Events = () => {
                       <div className="space-y-0.5 text-xs">
                         <p className="font-semibold text-slate-800">
                           {new Date(evt.event_date).toLocaleDateString('en-IN', {
+                            weekday: 'short',
                             day: 'numeric',
                             month: 'short',
                             year: 'numeric'
                           })}
                         </p>
-                        <p className="text-slate-500 truncate max-w-[180px]">
+                        <p className="text-slate-500 truncate max-w-[200px]">
                           {evt.venue}
-                        </p>
-                        <p className="text-[11px] font-mono text-slate-400">
-                          Closes: {new Date(evt.registration_deadline).toLocaleDateString('en-IN', {
-                            day: 'numeric',
-                            month: 'short'
-                          })}
                         </p>
                       </div>
                     </td>
 
-                    {/* Seats Capacity */}
+                    {/* Reward Points */}
                     <td className="py-4 px-4">
-                      <div className="space-y-0.5 font-mono text-xs">
-                        <p className="font-bold text-slate-800">
-                          {evt.max_seats 
-                            ? `${evt.seats_left} / ${evt.max_seats}`
-                            : 'Unlimited'}
-                        </p>
-                        <p className="text-[11px] text-slate-500">
-                          {evt.max_seats ? 'Seats Remaining' : 'Open Registration'}
-                        </p>
-                      </div>
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-mono font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                        <Award className="w-3.5 h-3.5 text-blue-600" />
+                        <span>+{evt.reward_points || 0} Pts</span>
+                      </span>
                     </td>
 
                     {/* Actions */}
@@ -583,7 +665,7 @@ const Events = () => {
                   {editingEventId ? 'Edit Campus Event' : 'Publish New Campus Event'}
                 </h3>
                 <p className="text-xs text-slate-500 font-sans mt-0.5">
-                  Configure event logistics, student point incentives, and attendance limits.
+                  Upload an event poster and enter all event details manually.
                 </p>
               </div>
               <button
@@ -606,46 +688,57 @@ const Events = () => {
                 </div>
               )}
 
-              {/* Poster Upload Zone (Drag & Drop + Click) */}
-              <div>
-                <label className="block text-xs font-mono font-bold text-slate-600 mb-1.5 uppercase tracking-wide">
-                  Event Poster Visual (JPG, PNG, WebP · Max 2MB)
-                </label>
+              {/* Event Poster Upload Zone */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-mono font-bold text-slate-700 uppercase tracking-wide flex items-center gap-1.5">
+                    <Upload className="w-3.5 h-3.5 text-blue-600" />
+                    <span>Event Poster Image</span>
+                  </label>
+                  <span className="text-[11px] font-mono font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full border border-slate-200">
+                    JPG, PNG, WebP (Max 8MB)
+                  </span>
+                </div>
                 
+                {/* Poster Dropzone */}
+                {/* Poster Dropzone - Adapts dynamically to Vertical or Horizontal poster */}
                 <div
                   onDragOver={handleDragOver}
                   onDragLeave={handleDragLeave}
                   onDrop={handleDrop}
                   onClick={() => fileInputRef.current?.click()}
-                  className={`relative aspect-[16/7] rounded-2xl border-2 border-dashed transition-all duration-200 cursor-pointer overflow-hidden flex flex-col items-center justify-center p-4 text-center ${
+                  className={`relative rounded-2xl border-2 border-dashed transition-all duration-200 cursor-pointer overflow-hidden flex flex-col items-center justify-center p-3 text-center bg-slate-50/60 hover:bg-blue-50/30 ${
                     isDragging
                       ? 'border-blue-500 bg-blue-50/80'
-                      : 'border-slate-300 hover:border-blue-400 bg-slate-50/60 hover:bg-blue-50/30'
+                      : 'border-slate-300 hover:border-blue-400'
                   }`}
                 >
                   {posterPreview ? (
-                    <>
+                    <div className="relative group w-full flex items-center justify-center">
                       <img
                         src={posterPreview}
                         alt="Poster Preview"
-                        className="w-full h-full object-cover absolute inset-0"
+                        onLoad={handleImageLoad}
+                        className={`w-auto max-w-full rounded-xl object-contain shadow-xs transition-all ${
+                          posterOrientation === 'vertical'
+                            ? 'max-h-[580px]'
+                            : 'max-h-[380px]'
+                        }`}
                       />
-                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
-                        <span className="px-3 py-1.5 rounded-xl bg-white text-slate-900 font-bold text-xs shadow-md">
-                          Change Poster
+                      <div className="absolute inset-0 bg-black/40 rounded-xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                        <span className="px-3.5 py-1.5 rounded-xl bg-white text-slate-900 font-bold text-xs shadow-md flex items-center gap-1.5">
+                          <Upload className="w-3.5 h-3.5" />
+                          <span>Change Poster Image</span>
                         </span>
                       </div>
-                    </>
+                    </div>
                   ) : (
-                    <div className="space-y-2 pointer-events-none">
-                      <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 mx-auto flex items-center justify-center shadow-xs">
+                    <div className="py-10 space-y-2 pointer-events-none">
+                      <div className="w-10 h-10 rounded-2xl bg-blue-600 text-white mx-auto flex items-center justify-center shadow-md shadow-blue-600/20">
                         <Upload className="w-5 h-5" />
                       </div>
                       <p className="text-xs font-bold text-slate-800">
-                        Drag and drop poster image here, or <span className="text-blue-600 underline">browse</span>
-                      </p>
-                      <p className="text-[11px] text-slate-400 font-mono">
-                        Recommended aspect ratio 16:9 or 16:10
+                        Drop event poster here, or <span className="text-blue-600 underline">browse</span>
                       </p>
                     </div>
                   )}
@@ -660,38 +753,90 @@ const Events = () => {
                 </div>
               </div>
 
-              {/* Title & Description */}
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-xs font-mono font-bold text-slate-600 mb-1.5 uppercase tracking-wide">
-                    Event Title <span className="text-rose-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="title"
-                    value={formData.title}
-                    onChange={handleInputChange}
-                    placeholder="e.g. FX HackNova 2026: 24-Hour AI Hackathon"
-                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 text-sm font-medium text-slate-900 focus:outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-mono font-bold text-slate-600 mb-1.5 uppercase tracking-wide">
-                    Full Description <span className="text-rose-500">*</span>
-                  </label>
-                  <textarea
-                    name="description"
-                    rows={4}
-                    value={formData.description}
-                    onChange={handleInputChange}
-                    placeholder="Provide complete event details, prerequisites, rules, agenda, and target student branches..."
-                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 text-xs sm:text-sm font-sans text-slate-800 focus:outline-none leading-relaxed"
-                  />
-                </div>
+              {/* Title Input */}
+              <div>
+                <label className="block text-xs font-mono font-bold text-slate-600 mb-1.5 uppercase tracking-wide">
+                  Event Title <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="title"
+                  value={formData.title}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 text-sm font-bold text-slate-900 focus:outline-none"
+                />
               </div>
 
-              {/* Type & Category */}
+              {/* Description */}
+              <div className="space-y-2">
+                <label className="block text-xs font-mono font-bold text-slate-700 uppercase tracking-wide flex items-center gap-1.5">
+                  <FileText className="w-3.5 h-3.5 text-blue-600" />
+                  <span>Description <span className="text-rose-500">*</span></span>
+                </label>
+
+                <textarea
+                  name="description"
+                  rows={5}
+                  value={formData.description}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 text-xs sm:text-sm font-mono text-slate-800 focus:outline-none leading-relaxed"
+                />
+              </div>
+
+              {/* Dynamic Topic Cards Added by clicking Add */}
+              {topicCards.length > 0 && (
+                <div className="space-y-3 pt-1">
+                  {topicCards.map((topic, index) => (
+                    <div
+                      key={topic.id}
+                      className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3 relative group transition-all animate-fadeIn"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-mono font-bold text-slate-700 uppercase tracking-wide flex items-center gap-1.5">
+                          <Tag className="w-3.5 h-3.5 text-blue-600" />
+                          Topic #{index + 1}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveTopicCard(topic.id)}
+                          className="p-1 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+                          title="Remove card"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+
+                      <div className="space-y-2">
+                        <div>
+                          <label className="block text-[11px] font-mono font-bold text-slate-600 mb-1 uppercase tracking-wide">
+                            Topic Name <span className="text-rose-500">*</span>
+                          </label>
+                          <input
+                            type="text"
+                            value={topic.name}
+                            onChange={(e) => handleTopicCardChange(topic.id, 'name', e.target.value)}
+                            className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-xs sm:text-sm font-semibold focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-[11px] font-mono font-bold text-slate-600 mb-1 uppercase tracking-wide">
+                            Details <span className="text-rose-500">*</span>
+                          </label>
+                          <textarea
+                            rows={3}
+                            value={topic.details}
+                            onChange={(e) => handleTopicCardChange(topic.id, 'details', e.target.value)}
+                            className="w-full px-3.5 py-2 rounded-xl border border-slate-200 bg-white text-xs sm:text-sm font-mono focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 leading-relaxed"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Event Type & Category */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-mono font-bold text-slate-600 mb-1.5 uppercase tracking-wide">
@@ -712,19 +857,13 @@ const Events = () => {
                   <label className="block text-xs font-mono font-bold text-slate-600 mb-1.5 uppercase tracking-wide">
                     Category
                   </label>
-                  <select
+                  <input
+                    type="text"
                     name="category"
                     value={formData.category}
                     onChange={handleInputChange}
                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-xs sm:text-sm font-semibold focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                  >
-                    <option value="Hackathon">Hackathon</option>
-                    <option value="Workshop">Workshop</option>
-                    <option value="Seminar">Seminar</option>
-                    <option value="Cultural">Cultural</option>
-                    <option value="Sports">Sports</option>
-                    <option value="Other">Other</option>
-                  </select>
+                  />
                 </div>
               </div>
 
@@ -739,27 +878,25 @@ const Events = () => {
                     name="venue"
                     value={formData.venue}
                     onChange={handleInputChange}
-                    placeholder="e.g. Einstein Hall, FXEC"
                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm font-medium focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                   />
                 </div>
 
                 <div>
                   <label className="block text-xs font-mono font-bold text-slate-600 mb-1.5 uppercase tracking-wide">
-                    Organizer Department / Cell <span className="text-rose-500">*</span>
+                    Department <span className="text-rose-500">*</span>
                   </label>
                   <input
                     type="text"
                     name="organizer"
                     value={formData.organizer}
                     onChange={handleInputChange}
-                    placeholder="e.g. Department of IT & IEDC"
                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm font-medium focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                   />
                 </div>
               </div>
 
-              {/* Dates: Event Date & Registration Deadline */}
+              {/* Event Date & Reward Points (Side-by-Side in same style and color) */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-mono font-bold text-slate-600 mb-1.5 uppercase tracking-wide">
@@ -776,38 +913,7 @@ const Events = () => {
 
                 <div>
                   <label className="block text-xs font-mono font-bold text-slate-600 mb-1.5 uppercase tracking-wide">
-                    Registration Deadline <span className="text-rose-500">*</span>
-                  </label>
-                  <input
-                    type="datetime-local"
-                    name="registration_deadline"
-                    value={formData.registration_deadline}
-                    onChange={handleInputChange}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm font-mono font-medium focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                  />
-                </div>
-              </div>
-
-              {/* Seats, Points & External Link */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-xs font-mono font-bold text-slate-600 mb-1.5 uppercase tracking-wide">
-                    Max Seats (Leave empty if unlimited)
-                  </label>
-                  <input
-                    type="number"
-                    name="max_seats"
-                    min="1"
-                    value={formData.max_seats}
-                    onChange={handleInputChange}
-                    placeholder="Unlimited"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm font-mono font-medium focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-mono font-bold text-slate-600 mb-1.5 uppercase tracking-wide">
-                    Reward Points
+                    Reward Points <span className="text-rose-500">*</span>
                   </label>
                   <input
                     type="number"
@@ -815,29 +921,15 @@ const Events = () => {
                     min="0"
                     value={formData.reward_points}
                     onChange={handleInputChange}
-                    placeholder="0"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm font-mono font-bold text-blue-700 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-mono font-bold text-slate-600 mb-1.5 uppercase tracking-wide">
-                    External Link (Optional)
-                  </label>
-                  <input
-                    type="url"
-                    name="external_link"
-                    value={formData.external_link}
-                    onChange={handleInputChange}
-                    placeholder="https://"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm font-mono focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm font-mono font-medium focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                   />
                 </div>
               </div>
 
               {/* Action Buttons in Modal */}
-              <div className="pt-4 border-t border-slate-100 flex items-center justify-end gap-3">
+              <div className="pt-4 border-t border-slate-100 flex items-center justify-between gap-3">
                 <Button
+                  type="button"
                   variant="outline"
                   size="md"
                   onClick={handleCloseModal}
@@ -845,13 +937,23 @@ const Events = () => {
                 >
                   Cancel
                 </Button>
+
+                <button
+                  type="button"
+                  onClick={handleAddTopicCard}
+                  className="px-5 py-2.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold text-xs flex items-center gap-1.5 border border-blue-200 transition-colors shadow-xs cursor-pointer active:scale-95"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Add</span>
+                </button>
+
                 <Button
                   variant="primary"
                   size="md"
                   type="submit"
                   loading={modalSubmitting}
                 >
-                  {editingEventId ? 'Update Event Specifications' : 'Publish Campus Event'}
+                  {editingEventId ? 'Update Event' : 'Publish Event'}
                 </Button>
               </div>
 

@@ -97,9 +97,9 @@ const Dashboard = () => {
           subtitle="Real-time monitoring of Francis Xavier Engineering College events, capacity quotas, and verification queue."
           actions={
             <div className="flex items-center gap-2.5">
-              <Link to="/admin/events">
-                <Button variant="primary" size="sm" icon={Plus}>
-                  Publish Event
+              <Link to="/admin/events?create=true">
+                <Button variant="primary" size="sm" icon={Plus} className="font-extrabold shadow-sm">
+                  Create Event
                 </Button>
               </Link>
               <Link to="/admin/requests">

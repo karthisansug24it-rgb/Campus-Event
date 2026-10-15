@@ -39,23 +39,23 @@ const EventCard = ({ event, onSelect }) => {
       aria-label={`View details for ${event.title}`}
     >
       {/* Poster Image Container */}
-      <div className="relative aspect-[16/10] bg-slate-100 overflow-hidden">
+      <div className="relative aspect-[4/5] bg-slate-100/80 overflow-hidden flex items-center justify-center border-b border-slate-100">
         {event.poster_url ? (
           <img
             src={event.poster_url}
             alt={event.title}
-            className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700 ease-out"
+            className="w-full h-full object-contain object-center group-hover:scale-[1.02] transition-transform duration-500 ease-out"
             loading="lazy"
             onError={(e) => {
               // Graceful fallback if image load fails
               e.currentTarget.style.display = 'none';
-              e.currentTarget.nextElementSibling?.classList.remove('hidden');
+              e.currentTarget.parentElement?.querySelector('.fallback-container')?.classList.remove('hidden');
             }}
           />
         ) : null}
 
         {/* Fallback Display if no image or error */}
-        <div className={`w-full h-full flex flex-col items-center justify-center p-6 text-center bg-gradient-to-br from-blue-50 via-slate-50 to-blue-100/60 ${event.poster_url ? 'hidden' : 'flex'}`}>
+        <div className={`fallback-container w-full h-full flex flex-col items-center justify-center p-6 text-center bg-gradient-to-br from-blue-50 via-slate-50 to-blue-100/60 ${event.poster_url ? 'hidden' : 'flex'}`}>
           <div className="w-12 h-12 rounded-2xl bg-white text-blue-600 flex items-center justify-center shadow-sm mb-3">
             <Calendar className="w-6 h-6" />
           </div>
@@ -64,17 +64,14 @@ const EventCard = ({ event, onSelect }) => {
           </span>
         </div>
 
-        {/* Ambient Gradient Overlay for text contrast */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent pointer-events-none" />
-
         {/* Badges on Top */}
-        <div className="absolute top-3.5 left-3.5 right-3.5 flex items-center justify-between gap-2 pointer-events-none z-10">
+        <div className="absolute top-3 left-3 right-3 flex items-center justify-between gap-2 pointer-events-none z-10">
           {/* Inside / Outside College Pill */}
           <span
             className={`px-3 py-1 rounded-full text-[11px] font-mono font-bold tracking-wide shadow-sm backdrop-blur-md border ${
               isInternal
-                ? 'bg-blue-600/90 text-white border-blue-500/80'
-                : 'bg-white/95 text-slate-900 border-white/80'
+                ? 'bg-blue-600/95 text-white border-blue-500/80'
+                : 'bg-white/95 text-slate-900 border-white/90 shadow-xs'
             }`}
           >
             {isInternal ? 'Inside College' : 'Outside College'}
@@ -89,31 +86,8 @@ const EventCard = ({ event, onSelect }) => {
           )}
         </div>
 
-        {/* Registered status indicator if user has an existing request */}
-        {event.user_request_status && (
-          <div className="absolute bottom-3.5 left-3.5 z-10">
-            {event.user_request_status === 'approved' && (
-              <span className="px-3 py-1 rounded-xl text-xs font-bold bg-white/95 text-blue-700 border border-blue-200 backdrop-blur-md flex items-center gap-1.5 shadow-md">
-                <span className="w-2 h-2 rounded-full bg-blue-600 animate-pulse" />
-                <span>Registered ✓</span>
-              </span>
-            )}
-            {event.user_request_status === 'pending' && (
-              <span className="px-3 py-1 rounded-xl text-xs font-bold bg-white/95 text-blue-800 border border-blue-300 backdrop-blur-md flex items-center gap-1.5 shadow-md">
-                <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" />
-                <span>Request Pending</span>
-              </span>
-            )}
-            {event.user_request_status === 'rejected' && (
-              <span className="px-3 py-1 rounded-xl text-xs font-bold bg-white/95 text-slate-700 border border-slate-300 backdrop-blur-md">
-                Rejected
-              </span>
-            )}
-          </div>
-        )}
-
-        {/* Action arrow affordance in top right of card */}
-        <div className="absolute bottom-3.5 right-3.5 z-10 w-8 h-8 rounded-full bg-white/90 text-slate-900 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-1 group-hover:translate-y-0 shadow-md">
+        {/* Action arrow affordance in bottom right of image */}
+        <div className="absolute bottom-3 right-3 z-10 w-8 h-8 rounded-full bg-white/95 text-slate-900 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-1 group-hover:translate-y-0 shadow-md">
           <ArrowUpRight className="w-4 h-4 text-blue-600" />
         </div>
       </div>
@@ -132,6 +106,30 @@ const EventCard = ({ event, onSelect }) => {
             </div>
           </div>
 
+          {/* Registration Status Indicator (Inside Card Body) */}
+          {event.user_request_status && (
+            <div className="mb-2.5">
+              {event.user_request_status === 'approved' && (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-mono font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 shadow-2xs">
+                  <span className="w-2 h-2 rounded-full bg-emerald-600" />
+                  <span>Registered ✓ (Confirmed)</span>
+                </span>
+              )}
+              {event.user_request_status === 'pending' && (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-mono font-bold bg-amber-50 text-amber-800 border border-amber-200 shadow-2xs">
+                  <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+                  <span>Request Pending · Can update details</span>
+                </span>
+              )}
+              {event.user_request_status === 'rejected' && (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-mono font-bold bg-rose-50 text-rose-800 border border-rose-200 shadow-2xs">
+                  <span className="w-2 h-2 rounded-full bg-rose-500" />
+                  <span>Registration Rejected</span>
+                </span>
+              )}
+            </div>
+          )}
+
           {/* Title with Space Grotesk / Display font */}
           <h3 className="font-display font-extrabold text-slate-900 text-base sm:text-lg group-hover:text-blue-600 transition-colors line-clamp-2 leading-snug">
             {event.title}
@@ -139,7 +137,9 @@ const EventCard = ({ event, onSelect }) => {
 
           {/* Description snippet */}
           <p className="mt-2 text-xs sm:text-sm text-slate-500 line-clamp-2 leading-relaxed font-sans">
-            {event.description}
+            {event.description
+              ? event.description.replace(/^#{2,4}\s*[^\n]+\n*/gm, '').replace(/[-*•]\s*/g, '').replace(/\s+/g, ' ').trim()
+              : ''}
           </p>
         </div>
 

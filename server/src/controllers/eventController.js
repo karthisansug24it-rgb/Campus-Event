@@ -1,4 +1,44 @@
 const { pool } = require('../config/db');
+const { extractPosterDetails } = require('../services/posterParser');
+
+/**
+ * POST /api/events/extract-poster
+ * Admin only: Upload poster image and auto-extract structured event specifications.
+ */
+async function extractPoster(req, res) {
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: 'No poster image file provided. Please upload a JPG, PNG, or WebP poster.'
+      });
+    }
+
+    const customApiKey = req.body.apiKey ? String(req.body.apiKey).trim() : null;
+    const result = await extractPosterDetails(req.file.path, customApiKey);
+
+    // Provide the uploaded poster URL so it can be previewed and reused
+    const posterUrl = `/uploads/${req.file.filename}`;
+
+    return res.json({
+      success: true,
+      message: 'Poster analyzed successfully.',
+      method: result.method, // 'gemini' or 'ocr'
+      poster_url: posterUrl,
+      temp_filename: req.file.filename,
+      data: {
+        ...result.data,
+        poster_url: posterUrl
+      }
+    });
+  } catch (error) {
+    console.error('[extractPoster Error]:', error);
+    return res.status(500).json({
+      success: false,
+      message: `Failed to analyze poster: ${error.message}`
+    });
+  }
+}
 
 /**
  * GET /api/events
@@ -68,7 +108,10 @@ async function getAllEvents(req, res) {
       query += ' AND e.event_date >= NOW()';
     }
 
-    query += ' GROUP BY e.id ORDER BY e.event_date ASC';
+    query += ` GROUP BY e.id ORDER BY 
+      CASE WHEN e.event_date >= NOW() THEN 0 ELSE 1 END ASC,
+      CASE WHEN e.event_date >= NOW() THEN e.event_date END ASC,
+      e.event_date DESC`;
 
     const [rows] = await pool.execute(query, params);
 
@@ -188,6 +231,16 @@ async function getEventById(req, res) {
 }
 
 /**
+ * Helper to convert ISO string or date inputs to MySQL compliant YYYY-MM-DD HH:MM:SS
+ */
+function toMySQLDateTime(dateVal) {
+  if (!dateVal) return null;
+  const d = new Date(dateVal);
+  if (isNaN(d.getTime())) return dateVal;
+  return d.toISOString().slice(0, 19).replace('T', ' ');
+}
+
+/**
  * POST /api/events
  * Admin only: Create a new event with optional poster upload.
  */
@@ -208,6 +261,9 @@ async function createEvent(req, res) {
     } = req.body;
 
     const posterUrl = req.file ? `/uploads/${req.file.filename}` : (req.body.poster_url || null);
+    const formattedEventDate = toMySQLDateTime(event_date);
+    const deadlineValue = registration_deadline || event_date;
+    const formattedDeadline = toMySQLDateTime(deadlineValue);
 
     const [result] = await pool.execute(
       `INSERT INTO events (
@@ -223,8 +279,8 @@ async function createEvent(req, res) {
         category,
         venue.trim(),
         organizer.trim(),
-        event_date,
-        registration_deadline,
+        formattedEventDate,
+        formattedDeadline,
         max_seats ? parseInt(max_seats, 10) : null,
         reward_points ? parseInt(reward_points, 10) : 0,
         external_link ? external_link.trim() : null,
@@ -315,8 +371,8 @@ async function updateEvent(req, res) {
         category || existing[0].category,
         venue ? venue.trim() : existing[0].venue,
         organizer ? organizer.trim() : existing[0].organizer,
-        event_date || existing[0].event_date,
-        registration_deadline || existing[0].registration_deadline,
+        event_date ? toMySQLDateTime(event_date) : existing[0].event_date,
+        registration_deadline ? toMySQLDateTime(registration_deadline) : (event_date ? toMySQLDateTime(event_date) : existing[0].registration_deadline),
         max_seats !== undefined ? (max_seats ? parseInt(max_seats, 10) : null) : existing[0].max_seats,
         reward_points !== undefined ? parseInt(reward_points, 10) : existing[0].reward_points,
         external_link !== undefined ? (external_link ? external_link.trim() : null) : existing[0].external_link,
@@ -383,5 +439,6 @@ module.exports = {
   getEventById,
   createEvent,
   updateEvent,
-  deleteEvent
+  deleteEvent,
+  extractPoster
 };
