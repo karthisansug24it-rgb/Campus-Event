@@ -166,6 +166,7 @@ npm run dev
 | `GET` | `/api/auth/me` | Authenticated | Current user profile |
 | `GET` | `/api/events` | Public / Optional Auth | List events with search, category, upcoming, and student status |
 | `GET` | `/api/events/:id` | Public / Optional Auth | Single event specifications and seat availability |
+| `POST` | `/api/events/parse-poster` | Admin | AI & OCR auto-extraction of event fields from poster visual |
 | `POST` | `/api/events` | Admin | Create event with poster image upload |
 | `PUT` | `/api/events/:id` | Admin | Update event details & replace poster |
 | `DELETE` | `/api/events/:id` | Admin | Delete event |

@@ -1,6 +1,7 @@
 const { pool } = require('../config/db');
 const path = require('path');
 const fs = require('fs');
+const { extractDetailsFromPoster } = require('../utils/posterParser');
 
 /**
  * Safely format any valid date string or Date object to MySQL DATETIME format (YYYY-MM-DD HH:MM:SS)
@@ -428,10 +429,70 @@ async function deleteEvent(req, res) {
   }
 }
 
+/**
+ * POST /api/events/parse-poster
+ * Admin only: Extract event details from uploaded poster image or poster_url
+ */
+async function parsePoster(req, res) {
+  try {
+    let targetPath = null;
+    let posterUrl = null;
+    let posterFilename = null;
+
+    if (req.file) {
+      targetPath = req.file.path;
+      posterFilename = req.file.filename;
+      posterUrl = `/uploads/${posterFilename}`;
+
+      // Sync to client/public/uploads if it exists
+      const clientPublicUploads = path.join(__dirname, '../../../client/public/uploads');
+      if (fs.existsSync(clientPublicUploads)) {
+        try {
+          fs.copyFileSync(targetPath, path.join(clientPublicUploads, posterFilename));
+        } catch (e) {
+          console.warn('[Poster Sync Warning]:', e.message);
+        }
+      }
+    } else if (req.body.poster_url) {
+      const cleanName = path.basename(req.body.poster_url);
+      targetPath = path.join(__dirname, '../../uploads', cleanName);
+      posterUrl = req.body.poster_url;
+      posterFilename = cleanName;
+    }
+
+    if (!targetPath || !fs.existsSync(targetPath)) {
+      return res.status(400).json({
+        success: false,
+        message: 'No poster file uploaded or found on server.'
+      });
+    }
+
+    const extracted = await extractDetailsFromPoster(targetPath);
+
+    return res.json({
+      success: true,
+      message: 'Poster details successfully extracted.',
+      data: {
+        ...extracted,
+        poster_url: posterUrl,
+        poster_filename: posterFilename
+      }
+    });
+  } catch (error) {
+    console.error('[parsePoster Error]:', error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || 'Failed to auto-extract details from poster.'
+    });
+  }
+}
+
 module.exports = {
   getAllEvents,
   getEventById,
   createEvent,
   updateEvent,
-  deleteEvent
+  deleteEvent,
+  parsePoster
 };
+

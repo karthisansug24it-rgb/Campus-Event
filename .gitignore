@@ -31,3 +31,7 @@ Thumbs.db
 
 # Local agent configurations / skills
 .agents/
+
+# OCR Traineddata cache
+*.traineddata
+

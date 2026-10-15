@@ -18,7 +18,10 @@ import {
   Search,
   CheckCircle2,
   Sparkles,
-  Image as ImageIcon
+  Image as ImageIcon,
+  ChevronDown,
+  ChevronUp,
+  RefreshCw
 } from 'lucide-react';
 import { 
   PageHeader, 
@@ -70,6 +73,14 @@ const Events = () => {
   const [modalError, setModalError] = useState('');
   const [isDragging, setIsDragging] = useState(false);
 
+  // AI Poster Auto-Extraction states
+  const [isScanningPoster, setIsScanningPoster] = useState(false);
+  const [scanMessage, setScanMessage] = useState('');
+  const [autoFetchedFields, setAutoFetchedFields] = useState([]);
+  const [rawDetectedText, setRawDetectedText] = useState('');
+  const [showRawText, setShowRawText] = useState(false);
+  const [uploadedPosterUrl, setUploadedPosterUrl] = useState(null);
+
   // Delete confirmation dialog state
   const [deletingEvent, setDeletingEvent] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -110,6 +121,11 @@ const Events = () => {
     setFormData(initialForm);
     setPosterFile(null);
     setPosterPreview(null);
+    setUploadedPosterUrl(null);
+    setIsScanningPoster(false);
+    setAutoFetchedFields([]);
+    setRawDetectedText('');
+    setShowRawText(false);
     setModalError('');
     setIsModalOpen(true);
   };
@@ -131,6 +147,11 @@ const Events = () => {
     });
     setPosterFile(null);
     setPosterPreview(event.poster_url || null);
+    setUploadedPosterUrl(event.poster_url || null);
+    setIsScanningPoster(false);
+    setAutoFetchedFields([]);
+    setRawDetectedText('');
+    setShowRawText(false);
     setModalError('');
     setIsModalOpen(true);
   };
@@ -141,7 +162,108 @@ const Events = () => {
     setFormData(initialForm);
     setPosterFile(null);
     setPosterPreview(null);
+    setUploadedPosterUrl(null);
+    setIsScanningPoster(false);
+    setAutoFetchedFields([]);
+    setRawDetectedText('');
+    setShowRawText(false);
     setModalError('');
+  };
+
+  /**
+   * Auto-extracts event information from poster visual using backend OCR & heuristics
+   */
+  const autoExtractPosterDetails = async (file, existingUrl = null) => {
+    setIsScanningPoster(true);
+    setScanMessage('AI Analyzing poster visual & detecting text...');
+    try {
+      const uploadData = new FormData();
+      if (file) {
+        uploadData.append('poster', file);
+      } else if (existingUrl) {
+        uploadData.append('poster_url', existingUrl);
+      } else {
+        return;
+      }
+
+      const res = await api.post('/events/parse-poster', uploadData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+
+      if (res.data?.success && res.data?.data) {
+        const ext = res.data.data;
+        const autoFilledList = [];
+
+        if (ext.poster_url) {
+          setUploadedPosterUrl(ext.poster_url);
+        }
+
+        setFormData(prev => {
+          const next = { ...prev };
+          if (ext.title) {
+            next.title = ext.title;
+            autoFilledList.push('title');
+          }
+          if (ext.description) {
+            next.description = ext.description;
+            autoFilledList.push('description');
+          }
+          if (ext.category) {
+            next.category = ext.category;
+            autoFilledList.push('category');
+          }
+          if (ext.event_type) {
+            next.event_type = ext.event_type;
+            autoFilledList.push('event_type');
+          }
+          if (ext.venue) {
+            next.venue = ext.venue;
+            autoFilledList.push('venue');
+          }
+          if (ext.organizer) {
+            next.organizer = ext.organizer;
+            autoFilledList.push('organizer');
+          }
+          if (ext.event_date) {
+            next.event_date = ext.event_date;
+            autoFilledList.push('event_date');
+          }
+          if (ext.registration_deadline) {
+            next.registration_deadline = ext.registration_deadline;
+            autoFilledList.push('registration_deadline');
+          }
+          if (ext.max_seats) {
+            next.max_seats = String(ext.max_seats);
+            autoFilledList.push('max_seats');
+          }
+          if (ext.reward_points) {
+            next.reward_points = String(ext.reward_points);
+            autoFilledList.push('reward_points');
+          }
+          if (ext.external_link) {
+            next.external_link = ext.external_link;
+            autoFilledList.push('external_link');
+          }
+          return next;
+        });
+
+        setAutoFetchedFields(autoFilledList);
+        setRawDetectedText(ext.raw_text || '');
+        showToast(
+          `✨ Extracted ${autoFilledList.length} details from poster! You can edit any box below.`,
+          'success'
+        );
+      }
+    } catch (err) {
+      console.warn('Auto poster extraction warning:', err);
+      showToast(
+        'Poster uploaded. AI auto-extraction could not extract all fields, you can fill them manually.',
+        'info'
+      );
+    } finally {
+      setIsScanningPoster(false);
+      setScanMessage('');
+    }
   };
 
   const processFile = (file) => {
@@ -164,6 +286,9 @@ const Events = () => {
       setPosterPreview(reader.result);
     };
     reader.readAsDataURL(file);
+
+    // Auto-fetch details from poster
+    autoExtractPosterDetails(file);
   };
 
   const handleFileChange = (e) => {
@@ -260,6 +385,8 @@ const Events = () => {
 
       if (posterFile) {
         data.append('poster', posterFile);
+      } else if (uploadedPosterUrl) {
+        data.append('poster_url', uploadedPosterUrl);
       }
 
       if (editingEventId) {
@@ -618,18 +745,40 @@ const Events = () => {
 
               {/* Poster Upload Zone (Drag & Drop + Click) */}
               <div>
-                <label className="block text-xs font-mono font-bold text-slate-600 mb-1.5 uppercase tracking-wide">
-                  Event Poster Visual (JPG, PNG, WebP · Max 2MB)
-                </label>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="block text-xs font-mono font-bold text-slate-600 uppercase tracking-wide">
+                    Event Poster Visual (JPG, PNG, WebP · Max 2MB)
+                  </label>
+                  {posterPreview && !isScanningPoster && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (posterFile) {
+                          autoExtractPosterDetails(posterFile);
+                        } else if (uploadedPosterUrl) {
+                          autoExtractPosterDetails(null, uploadedPosterUrl);
+                        }
+                      }}
+                      className="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-600 hover:text-blue-700 hover:bg-blue-50 px-2 py-0.5 rounded-lg transition-colors cursor-pointer"
+                      title="Re-run AI auto-extraction on poster image"
+                    >
+                      <Sparkles className="w-3.5 h-3.5 text-blue-600" />
+                      <span>Re-scan Details</span>
+                    </button>
+                  )}
+                </div>
                 
                 <div
                   onDragOver={handleDragOver}
                   onDragLeave={handleDragLeave}
                   onDrop={handleDrop}
-                  onClick={() => fileInputRef.current?.click()}
+                  onClick={() => !isScanningPoster && fileInputRef.current?.click()}
                   className={`relative aspect-[16/7] rounded-2xl border-2 border-dashed transition-all duration-200 cursor-pointer overflow-hidden flex flex-col items-center justify-center p-4 text-center ${
                     isDragging
                       ? 'border-blue-500 bg-blue-50/80'
+                      : isScanningPoster
+                      ? 'border-blue-400 bg-blue-50/40 ring-2 ring-blue-400/20'
                       : 'border-slate-300 hover:border-blue-400 bg-slate-50/60 hover:bg-blue-50/30'
                   }`}
                 >
@@ -638,14 +787,38 @@ const Events = () => {
                       <img
                         src={getPosterUrl(posterPreview)}
                         alt="Poster Preview"
-                        className="w-full h-full object-cover absolute inset-0"
+                        className={`w-full h-full object-cover absolute inset-0 transition-all ${
+                          isScanningPoster ? 'brightness-75 blur-xs scale-102' : ''
+                        }`}
                         onError={(e) => handleImageError(e, posterPreview)}
                       />
-                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
-                        <span className="px-3 py-1.5 rounded-xl bg-white text-slate-900 font-bold text-xs shadow-md">
-                          Change Poster
-                        </span>
-                      </div>
+                      
+                      {/* Scanning state overlay */}
+                      {isScanningPoster ? (
+                        <div className="absolute inset-0 bg-blue-900/60 backdrop-blur-xs flex flex-col items-center justify-center p-4 text-white z-10 animate-fadeIn">
+                          <div className="relative mb-2">
+                            <div className="w-12 h-12 rounded-2xl bg-blue-500/30 border border-blue-400/50 flex items-center justify-center">
+                              <Sparkles className="w-6 h-6 text-blue-200 animate-spin" />
+                            </div>
+                            <div className="absolute -inset-1 rounded-2xl bg-blue-400/20 blur-sm -z-10 animate-ping" />
+                          </div>
+                          <h4 className="font-extrabold text-sm tracking-wide flex items-center gap-2 text-white">
+                            AI Analyzing Poster Details...
+                          </h4>
+                          <p className="text-xs text-blue-100/90 font-mono mt-0.5">
+                            Auto-detecting title, dates, venue & organizer
+                          </p>
+                          <div className="mt-2.5 flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 text-[11px] font-mono text-blue-200 border border-white/20">
+                            <Loader2 className="w-3 h-3 animate-spin" /> Auto-filling form boxes...
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                          <span className="px-3 py-1.5 rounded-xl bg-white text-slate-900 font-bold text-xs shadow-md">
+                            Change Poster
+                          </span>
+                        </div>
+                      )}
                     </>
                   ) : (
                     <div className="space-y-2 pointer-events-none">
@@ -655,8 +828,8 @@ const Events = () => {
                       <p className="text-xs font-bold text-slate-800">
                         Drag and drop poster image here, or <span className="text-blue-600 underline">browse</span>
                       </p>
-                      <p className="text-[11px] text-slate-400 font-mono">
-                        Recommended aspect ratio 16:9 or 16:10
+                      <p className="text-[11px] text-blue-600 font-semibold flex items-center justify-center gap-1">
+                        <Sparkles className="w-3.5 h-3.5" /> Details in poster will be auto-fetched & filled into the boxes
                       </p>
                     </div>
                   )}
@@ -669,13 +842,60 @@ const Events = () => {
                     className="hidden"
                   />
                 </div>
+
+                {/* Auto-extracted summary banner */}
+                {autoFetchedFields.length > 0 && (
+                  <div className="mt-2.5 p-3 bg-gradient-to-r from-blue-50/90 via-indigo-50/80 to-blue-50/90 border border-blue-200/90 rounded-xl text-xs text-blue-900 shadow-xs">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <div className="w-5 h-5 rounded-lg bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-2xs">
+                          <Sparkles className="w-3 h-3" />
+                        </div>
+                        <div>
+                          <span className="font-bold text-blue-950">
+                            {autoFetchedFields.length} details auto-fetched from poster!
+                          </span>
+                          <span className="text-blue-700/80 ml-1">
+                            Review and alter any box below.
+                          </span>
+                        </div>
+                      </div>
+                      {rawDetectedText && (
+                        <button
+                          type="button"
+                          onClick={() => setShowRawText(!showRawText)}
+                          className="text-[11px] font-mono text-blue-700 hover:text-blue-900 font-semibold underline shrink-0 cursor-pointer flex items-center gap-1"
+                        >
+                          {showRawText ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                          {showRawText ? 'Hide OCR' : 'View OCR Text'}
+                        </button>
+                      )}
+                    </div>
+
+                    {showRawText && rawDetectedText && (
+                      <div className="mt-2.5 pt-2 border-t border-blue-200/60">
+                        <p className="text-[10px] font-mono font-bold text-blue-800 uppercase mb-1">
+                          Detected Text On Poster:
+                        </p>
+                        <pre className="p-2 rounded-lg bg-white/80 border border-blue-100 text-[11px] font-mono text-slate-700 max-h-36 overflow-y-auto whitespace-pre-wrap leading-relaxed select-text">
+                          {rawDetectedText}
+                        </pre>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Title & Description */}
               <div className="space-y-4">
                 <div>
-                  <label className="block text-xs font-mono font-bold text-slate-600 mb-1.5 uppercase tracking-wide">
-                    Event Title <span className="text-rose-500">*</span>
+                  <label className="flex items-center justify-between text-xs font-mono font-bold text-slate-600 mb-1.5 uppercase tracking-wide">
+                    <span>Event Title <span className="text-rose-500">*</span></span>
+                    {autoFetchedFields.includes('title') && (
+                      <span className="inline-flex items-center gap-1 text-[10px] text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full font-mono font-bold border border-blue-200/60 lowercase">
+                        ✨ auto-filled
+                      </span>
+                    )}
                   </label>
                   <input
                     type="text"
@@ -688,8 +908,13 @@ const Events = () => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-mono font-bold text-slate-600 mb-1.5 uppercase tracking-wide">
-                    Full Description <span className="text-rose-500">*</span>
+                  <label className="flex items-center justify-between text-xs font-mono font-bold text-slate-600 mb-1.5 uppercase tracking-wide">
+                    <span>Full Description <span className="text-rose-500">*</span></span>
+                    {autoFetchedFields.includes('description') && (
+                      <span className="inline-flex items-center gap-1 text-[10px] text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full font-mono font-bold border border-blue-200/60 lowercase">
+                        ✨ auto-filled
+                      </span>
+                    )}
                   </label>
                   <textarea
                     name="description"
@@ -705,8 +930,13 @@ const Events = () => {
               {/* Type & Category */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-mono font-bold text-slate-600 mb-1.5 uppercase tracking-wide">
-                    Event Type
+                  <label className="flex items-center justify-between text-xs font-mono font-bold text-slate-600 mb-1.5 uppercase tracking-wide">
+                    <span>Event Type</span>
+                    {autoFetchedFields.includes('event_type') && (
+                      <span className="inline-flex items-center gap-1 text-[10px] text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full font-mono font-bold border border-blue-200/60 lowercase">
+                        ✨ auto-filled
+                      </span>
+                    )}
                   </label>
                   <select
                     name="event_type"
@@ -720,8 +950,13 @@ const Events = () => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-mono font-bold text-slate-600 mb-1.5 uppercase tracking-wide">
-                    Category
+                  <label className="flex items-center justify-between text-xs font-mono font-bold text-slate-600 mb-1.5 uppercase tracking-wide">
+                    <span>Category</span>
+                    {autoFetchedFields.includes('category') && (
+                      <span className="inline-flex items-center gap-1 text-[10px] text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full font-mono font-bold border border-blue-200/60 lowercase">
+                        ✨ auto-filled
+                      </span>
+                    )}
                   </label>
                   <select
                     name="category"
@@ -742,8 +977,13 @@ const Events = () => {
               {/* Venue & Organizer */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-mono font-bold text-slate-600 mb-1.5 uppercase tracking-wide">
-                    Venue / Location <span className="text-rose-500">*</span>
+                  <label className="flex items-center justify-between text-xs font-mono font-bold text-slate-600 mb-1.5 uppercase tracking-wide">
+                    <span>Venue / Location <span className="text-rose-500">*</span></span>
+                    {autoFetchedFields.includes('venue') && (
+                      <span className="inline-flex items-center gap-1 text-[10px] text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full font-mono font-bold border border-blue-200/60 lowercase">
+                        ✨ auto-filled
+                      </span>
+                    )}
                   </label>
                   <input
                     type="text"
@@ -756,8 +996,13 @@ const Events = () => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-mono font-bold text-slate-600 mb-1.5 uppercase tracking-wide">
-                    Organizer Department / Cell <span className="text-rose-500">*</span>
+                  <label className="flex items-center justify-between text-xs font-mono font-bold text-slate-600 mb-1.5 uppercase tracking-wide">
+                    <span>Organizer Department / Cell <span className="text-rose-500">*</span></span>
+                    {autoFetchedFields.includes('organizer') && (
+                      <span className="inline-flex items-center gap-1 text-[10px] text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full font-mono font-bold border border-blue-200/60 lowercase">
+                        ✨ auto-filled
+                      </span>
+                    )}
                   </label>
                   <input
                     type="text"
@@ -773,8 +1018,13 @@ const Events = () => {
               {/* Dates: Event Date & Registration Deadline */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-mono font-bold text-slate-600 mb-1.5 uppercase tracking-wide">
-                    Event Date & Time <span className="text-rose-500">*</span>
+                  <label className="flex items-center justify-between text-xs font-mono font-bold text-slate-600 mb-1.5 uppercase tracking-wide">
+                    <span>Event Date & Time <span className="text-rose-500">*</span></span>
+                    {autoFetchedFields.includes('event_date') && (
+                      <span className="inline-flex items-center gap-1 text-[10px] text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full font-mono font-bold border border-blue-200/60 lowercase">
+                        ✨ auto-filled
+                      </span>
+                    )}
                   </label>
                   <input
                     type="datetime-local"
@@ -786,8 +1036,13 @@ const Events = () => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-mono font-bold text-slate-600 mb-1.5 uppercase tracking-wide">
-                    Registration Deadline <span className="text-rose-500">*</span>
+                  <label className="flex items-center justify-between text-xs font-mono font-bold text-slate-600 mb-1.5 uppercase tracking-wide">
+                    <span>Registration Deadline <span className="text-rose-500">*</span></span>
+                    {autoFetchedFields.includes('registration_deadline') && (
+                      <span className="inline-flex items-center gap-1 text-[10px] text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full font-mono font-bold border border-blue-200/60 lowercase">
+                        ✨ auto-filled
+                      </span>
+                    )}
                   </label>
                   <input
                     type="datetime-local"
@@ -802,8 +1057,13 @@ const Events = () => {
               {/* Seats, Points & External Link */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-xs font-mono font-bold text-slate-600 mb-1.5 uppercase tracking-wide">
-                    Max Seats (Leave empty if unlimited)
+                  <label className="flex items-center justify-between text-xs font-mono font-bold text-slate-600 mb-1.5 uppercase tracking-wide">
+                    <span>Max Seats</span>
+                    {autoFetchedFields.includes('max_seats') && (
+                      <span className="inline-flex items-center gap-1 text-[10px] text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full font-mono font-bold border border-blue-200/60 lowercase">
+                        ✨ auto-filled
+                      </span>
+                    )}
                   </label>
                   <input
                     type="number"
@@ -817,8 +1077,13 @@ const Events = () => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-mono font-bold text-slate-600 mb-1.5 uppercase tracking-wide">
-                    Reward Points
+                  <label className="flex items-center justify-between text-xs font-mono font-bold text-slate-600 mb-1.5 uppercase tracking-wide">
+                    <span>Reward Points</span>
+                    {autoFetchedFields.includes('reward_points') && (
+                      <span className="inline-flex items-center gap-1 text-[10px] text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full font-mono font-bold border border-blue-200/60 lowercase">
+                        ✨ auto-filled
+                      </span>
+                    )}
                   </label>
                   <input
                     type="number"
@@ -832,8 +1097,13 @@ const Events = () => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-mono font-bold text-slate-600 mb-1.5 uppercase tracking-wide">
-                    External Link (Optional)
+                  <label className="flex items-center justify-between text-xs font-mono font-bold text-slate-600 mb-1.5 uppercase tracking-wide">
+                    <span>External Link</span>
+                    {autoFetchedFields.includes('external_link') && (
+                      <span className="inline-flex items-center gap-1 text-[10px] text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full font-mono font-bold border border-blue-200/60 lowercase">
+                        ✨ auto-filled
+                      </span>
+                    )}
                   </label>
                   <input
                     type="url"
@@ -845,6 +1115,7 @@ const Events = () => {
                   />
                 </div>
               </div>
+
 
               {/* Action Buttons in Modal */}
               <div className="pt-4 border-t border-slate-100 flex items-center justify-end gap-3">
