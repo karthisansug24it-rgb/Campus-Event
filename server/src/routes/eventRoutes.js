@@ -5,8 +5,7 @@ const {
   getEventById,
   createEvent,
   updateEvent,
-  deleteEvent,
-  parsePoster
+  deleteEvent
 } = require('../controllers/eventController');
 const { authenticateToken, optionalAuth } = require('../middleware/auth');
 const { requireRole } = require('../middleware/role');
@@ -28,15 +27,6 @@ const eventValidationRules = [
   body('max_seats').optional({ checkFalsy: true }).isInt({ min: 1 }).withMessage('Max seats must be a positive number'),
   body('reward_points').optional().isInt({ min: 0 }).withMessage('Reward points must be non-negative')
 ];
-
-// POST /api/events/parse-poster (Admin only, auto-extract details from poster)
-router.post(
-  '/parse-poster',
-  authenticateToken,
-  requireRole('admin'),
-  handlePosterUpload('poster'),
-  parsePoster
-);
 
 // GET /api/events (Public / optional auth to include user status)
 router.get('/', optionalAuth, getAllEvents);
