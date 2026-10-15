@@ -1,6 +1,7 @@
 const { pool } = require('../config/db');
 const path = require('path');
 const fs = require('fs');
+const { extractPosterDetails } = require('../services/posterParser');
 
 /**
  * Safely format any valid date string or Date object to MySQL DATETIME format (YYYY-MM-DD HH:MM:SS)
@@ -25,6 +26,46 @@ function toMySQLDateTime(dateInput) {
 }
 
 /**
+ * POST /api/events/extract-poster
+ * Admin only: Upload poster image and auto-extract structured event specifications.
+ */
+async function extractPoster(req, res) {
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: 'No poster image file provided. Please upload a JPG, PNG, or WebP poster.'
+      });
+    }
+
+    const customApiKey = req.body.apiKey ? String(req.body.apiKey).trim() : null;
+    const result = await extractPosterDetails(req.file.path, customApiKey);
+
+    // Provide the uploaded poster URL so it can be previewed and reused
+    const posterUrl = `/uploads/${req.file.filename}`;
+
+    return res.json({
+      success: true,
+      message: 'Poster analyzed successfully.',
+      method: result.method, // 'gemini' or 'ocr'
+      poster_url: posterUrl,
+      temp_filename: req.file.filename,
+      data: {
+        ...result.data,
+        poster_url: posterUrl
+      }
+    });
+  } catch (error) {
+    console.error('[extractPoster Error]:', error);
+    return res.status(500).json({
+      success: false,
+      message: `Failed to analyze poster: ${error.message}`
+    });
+  }
+}
+
+/**
+
  * GET /api/events
  * List events with optional filters (type, category, q, upcoming)
  * Returns seat availability and logged-in student request status.
@@ -92,7 +133,10 @@ async function getAllEvents(req, res) {
       query += ' AND e.event_date >= NOW()';
     }
 
-    query += ' GROUP BY e.id ORDER BY e.event_date ASC';
+    query += ` GROUP BY e.id ORDER BY 
+      CASE WHEN e.event_date >= NOW() THEN 0 ELSE 1 END ASC,
+      CASE WHEN e.event_date >= NOW() THEN e.event_date END ASC,
+      e.event_date DESC`;
 
     const [rows] = await pool.execute(query, params);
 
@@ -212,6 +256,16 @@ async function getEventById(req, res) {
 }
 
 /**
+ * Helper to convert ISO string or date inputs to MySQL compliant YYYY-MM-DD HH:MM:SS
+ */
+function toMySQLDateTime(dateVal) {
+  if (!dateVal) return null;
+  const d = new Date(dateVal);
+  if (isNaN(d.getTime())) return dateVal;
+  return d.toISOString().slice(0, 19).replace('T', ' ');
+}
+
+/**
  * POST /api/events
  * Admin only: Create a new event with optional poster upload.
  */
@@ -245,7 +299,9 @@ async function createEvent(req, res) {
     }
 
     const formattedEventDate = toMySQLDateTime(event_date);
-    const formattedDeadline = toMySQLDateTime(registration_deadline);
+    const deadlineValue = registration_deadline || event_date;
+    const formattedDeadline = toMySQLDateTime(deadlineValue);
+
 
     const [result] = await pool.execute(
       `INSERT INTO events (
@@ -367,6 +423,7 @@ async function updateEvent(req, res) {
         organizer ? organizer.trim() : existing[0].organizer,
         formattedEventDate,
         formattedDeadline,
+
         max_seats !== undefined ? (max_seats ? parseInt(max_seats, 10) : null) : existing[0].max_seats,
         reward_points !== undefined ? parseInt(reward_points, 10) : existing[0].reward_points,
         external_link !== undefined ? (external_link ? external_link.trim() : null) : existing[0].external_link,
@@ -433,5 +490,6 @@ module.exports = {
   getEventById,
   createEvent,
   updateEvent,
-  deleteEvent
+  deleteEvent,
+  extractPoster
 };

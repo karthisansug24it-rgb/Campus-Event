@@ -11,7 +11,8 @@ import {
   Menu,
   X,
   ChevronRight,
-  Layers
+  Layers,
+  Plus
 } from 'lucide-react';
 
 const AdminLayout = () => {
@@ -35,9 +36,11 @@ const AdminLayout = () => {
       {/* Mobile Top Header for Admin Drawer */}
       <div className="md:hidden flex items-center justify-between px-4 py-3 bg-white border-b border-slate-200">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-sm">
-            <ShieldCheck className="w-4 h-4 text-white" />
-          </div>
+          <img
+            src="/fxec-logo.png"
+            alt="FXEC Logo"
+            className="w-8 h-8 rounded-full object-contain bg-white shadow-xs"
+          />
           <div>
             <span className="font-extrabold font-display text-sm tracking-tight text-slate-900">
               FXEC ADMIN
@@ -48,13 +51,24 @@ const AdminLayout = () => {
           </div>
         </div>
 
-        <button
-          onClick={() => setMobileDrawerOpen(!mobileDrawerOpen)}
-          className="p-2 rounded-xl text-slate-600 hover:text-blue-600 hover:bg-slate-100 transition-colors"
-          aria-label="Toggle admin menu"
-        >
-          {mobileDrawerOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => {
+              navigate('/admin/events?create=true');
+            }}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-600 text-white font-bold text-xs shadow-xs"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>Create Event</span>
+          </button>
+          <button
+            onClick={() => setMobileDrawerOpen(!mobileDrawerOpen)}
+            className="p-2 rounded-xl text-slate-600 hover:text-blue-600 hover:bg-slate-100 transition-colors"
+            aria-label="Toggle admin menu"
+          >
+            {mobileDrawerOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          </button>
+        </div>
       </div>
 
       {/* Desktop Admin Sidebar */}
@@ -67,9 +81,11 @@ const AdminLayout = () => {
           {/* Sidebar Header */}
           <div className="p-6 border-b border-slate-100">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-blue-600 to-blue-700 text-white flex items-center justify-center shadow-md shadow-blue-600/25">
-                <ShieldCheck className="w-5 h-5 text-white" />
-              </div>
+              <img
+                src="/fxec-logo.png"
+                alt="FXEC Logo"
+                className="w-10 h-10 rounded-full object-contain bg-white shadow-sm shrink-0"
+              />
               <div>
                 <h2 className="text-sm font-extrabold font-display text-slate-900 tracking-tight">
                   Admin Console
@@ -85,8 +101,8 @@ const AdminLayout = () => {
           </div>
 
           {/* Navigation Links */}
-          <nav className="p-4 space-y-1.5 flex-1">
-            <div className="px-3 py-1.5 text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400">
+          <nav className="p-4 space-y-2 flex-1">
+            <div className="px-3 py-1 text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400">
               CORE MODULES
             </div>
             {navItems.map((item) => {

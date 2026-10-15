@@ -218,9 +218,11 @@ const Login = () => {
         
         {/* Brand Header */}
         <AnimatedSection className="text-center space-y-2" delay={0.05}>
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-3xl bg-gradient-to-tr from-blue-700 via-blue-600 to-blue-500 text-white shadow-xl shadow-blue-600/25 mb-1 group hover:scale-105 transition-transform duration-300">
-            <GraduationCap className="w-7 h-7" />
-          </div>
+          <img 
+            src="/fxec-logo.png" 
+            alt="FXEC Official Logo" 
+            className="w-20 h-20 mx-auto rounded-full object-contain bg-white shadow-xl shadow-blue-600/15 mb-2 hover:scale-105 transition-transform duration-300"
+          />
           <h1 className="text-2xl sm:text-3xl font-extrabold font-display text-slate-900 tracking-tight">
             Francis Xavier Engineering College
           </h1>

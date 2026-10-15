@@ -31,3 +31,6 @@ Thumbs.db
 
 # Local agent configurations / skills
 .agents/
+
+# Local MySQL data
+mysql-data/

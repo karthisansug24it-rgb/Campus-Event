@@ -40,9 +40,11 @@ const Navbar = () => {
             to={isAdmin ? '/admin' : '/events'} 
             className="flex items-center gap-3.5 group select-none"
           >
-            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-gradient-to-tr from-blue-700 via-blue-600 to-blue-500 text-white shadow-md shadow-blue-600/20 flex items-center justify-center transition-all duration-300 group-hover:scale-105 group-hover:shadow-lg group-hover:shadow-blue-600/30">
-              <Calendar className="w-5 h-5 text-white" />
-            </div>
+            <img 
+              src="/fxec-logo.png" 
+              alt="FXEC Logo" 
+              className="w-10 h-10 sm:w-11 sm:h-11 rounded-full object-contain bg-white shadow-sm transition-all duration-300 group-hover:scale-105 shrink-0" 
+            />
             <div>
               <div className="flex items-center gap-2">
                 <span className="font-extrabold font-display text-slate-900 tracking-tight text-lg sm:text-xl leading-none">
@@ -62,124 +64,62 @@ const Navbar = () => {
             </div>
           </Link>
 
-          {/* Desktop Navigation Links */}
-          <nav className="hidden md:flex items-center gap-1.5 bg-slate-100/70 p-1.5 rounded-2xl border border-slate-200/80">
-            {isStudent && (
-              <>
-                <Link
-                  to="/events"
-                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all duration-200 ${
-                    isActive('/events')
-                      ? 'bg-white text-blue-700 shadow-sm border border-slate-200 font-extrabold'
-                      : 'text-slate-600 hover:text-blue-600 hover:bg-white/60'
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    <Calendar className="w-3.5 h-3.5" />
-                    <span>Browse Events</span>
-                  </div>
-                </Link>
-                <Link
-                  to="/my/requests"
-                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all duration-200 ${
-                    isActive('/my/requests')
-                      ? 'bg-white text-blue-700 shadow-sm border border-slate-200 font-extrabold'
-                      : 'text-slate-600 hover:text-blue-600 hover:bg-white/60'
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    <FileText className="w-3.5 h-3.5" />
-                    <span>My Requests</span>
-                  </div>
-                </Link>
-              </>
-            )}
-
-            {isAdmin && (
-              <>
-                <Link
-                  to="/admin"
-                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all duration-200 ${
-                    isActive('/admin')
-                      ? 'bg-white text-blue-700 shadow-sm border border-slate-200 font-extrabold'
-                      : 'text-slate-600 hover:text-blue-600 hover:bg-white/60'
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    <LayoutDashboard className="w-3.5 h-3.5" />
-                    <span>Dashboard</span>
-                  </div>
-                </Link>
-                <Link
-                  to="/admin/events"
-                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all duration-200 ${
-                    isActive('/admin/events')
-                      ? 'bg-white text-blue-700 shadow-sm border border-slate-200 font-extrabold'
-                      : 'text-slate-600 hover:text-blue-600 hover:bg-white/60'
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    <Calendar className="w-3.5 h-3.5" />
-                    <span>Events Manager</span>
-                  </div>
-                </Link>
-                <Link
-                  to="/admin/requests"
-                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all duration-200 ${
-                    isActive('/admin/requests')
-                      ? 'bg-white text-blue-700 shadow-sm border border-slate-200 font-extrabold'
-                      : 'text-slate-600 hover:text-blue-600 hover:bg-white/60'
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    <FileText className="w-3.5 h-3.5" />
-                    <span>Requests Queue</span>
-                  </div>
-                </Link>
-              </>
-            )}
-
-            {!isAuthenticated && (
+          {/* Desktop Navigation Links (Admin Only - Student has dedicated left sidebar) */}
+          {isAdmin && (
+            <nav className="hidden md:flex items-center gap-1.5 bg-slate-100/70 p-1.5 rounded-2xl border border-slate-200/80">
               <Link
-                to="/events"
-                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-                  isActive('/events')
-                    ? 'bg-white text-blue-700 shadow-sm border border-slate-200'
+                to="/admin"
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all duration-200 ${
+                  isActive('/admin')
+                    ? 'bg-white text-blue-700 shadow-sm border border-slate-200 font-extrabold'
                     : 'text-slate-600 hover:text-blue-600 hover:bg-white/60'
                 }`}
               >
-                Browse Events
+                <div className="flex items-center gap-2">
+                  <LayoutDashboard className="w-3.5 h-3.5" />
+                  <span>Dashboard</span>
+                </div>
               </Link>
-            )}
-          </nav>
+              <Link
+                to="/admin/events"
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all duration-200 ${
+                  isActive('/admin/events')
+                    ? 'bg-white text-blue-700 shadow-sm border border-slate-200 font-extrabold'
+                    : 'text-slate-600 hover:text-blue-600 hover:bg-white/60'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <Calendar className="w-3.5 h-3.5" />
+                  <span>Events Manager</span>
+                </div>
+              </Link>
+              <Link
+                to="/admin/requests"
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all duration-200 ${
+                  isActive('/admin/requests')
+                    ? 'bg-white text-blue-700 shadow-sm border border-slate-200 font-extrabold'
+                    : 'text-slate-600 hover:text-blue-600 hover:bg-white/60'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <FileText className="w-3.5 h-3.5" />
+                  <span>Requests Queue</span>
+                </div>
+              </Link>
+            </nav>
+          )}
 
-          {/* User Profile / Auth Actions */}
+          {/* User Profile / Auth Actions - Hidden for students because student details are in the left bottom corner like ChatGPT */}
           <div className="hidden md:flex items-center gap-3">
-            {isAuthenticated ? (
+            {isAdmin ? (
               <div className="flex items-center gap-3">
-                {/* Student specific badges: Year & Points */}
-                {isStudent && (
-                  <div className="flex items-center gap-2">
-                    {user?.yearOfStudyRoman && (
-                      <span className="text-[11px] font-mono font-bold px-2.5 py-1 rounded-xl bg-blue-50 text-blue-700 border border-blue-200">
-                        {user.yearOfStudyRoman} Year
-                      </span>
-                    )}
-                    <div className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-blue-600 text-white text-[11px] font-mono font-black shadow-sm shadow-blue-600/25">
-                      <Award className="w-3.5 h-3.5" />
-                      <span>{user?.total_points || 0} PTS</span>
-                    </div>
-                  </div>
-                )}
-
-                {/* Profile Pill */}
                 <div className="flex items-center gap-2.5 pl-3 border-l border-slate-200">
-                  <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-50 to-blue-100 text-blue-700 border border-blue-200 flex items-center justify-center font-extrabold text-xs font-mono shadow-xs">
-                    {user?.name?.charAt(0)?.toUpperCase() || 'U'}
+                  <div className="w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center font-extrabold text-xs font-mono shadow-xs">
+                    A
                   </div>
                   <div className="text-left">
                     <p className="text-xs font-extrabold text-slate-900 leading-tight">
-                      {user?.name}
+                      Admin
                     </p>
                     <p className="text-[10px] text-slate-500 font-mono truncate max-w-[130px]">
                       {user?.email}
@@ -196,7 +136,7 @@ const Navbar = () => {
                   <LogOut className="w-4 h-4" />
                 </button>
               </div>
-            ) : (
+            ) : !isAuthenticated ? (
               <div className="flex items-center gap-2.5">
                 <Link
                   to="/login"
@@ -211,7 +151,7 @@ const Navbar = () => {
                   Register
                 </Link>
               </div>
-            )}
+            ) : null}
           </div>
 
           {/* Mobile Menu Trigger */}
@@ -305,7 +245,7 @@ const Navbar = () => {
                 >
                   <div className="flex items-center gap-2.5">
                     <FileText className="w-4 h-4 text-blue-600" />
-                    <span>My Requests</span>
+                    <span>Applied Events</span>
                   </div>
                   <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
                 </Link>

@@ -131,7 +131,7 @@ const MyRequests = () => {
         <AnimatedSection delay={0.05}>
           <PageHeader
             badge="STUDENT PORTAL"
-            title="My Event Registrations"
+            title="Applied Events"
             subtitle="Track your campus application approvals, review administrator notes, and confirm your seats."
             actions={
               <Button
@@ -241,22 +241,32 @@ const MyRequests = () => {
                 className="bg-white rounded-3xl border border-slate-200/90 p-5 sm:p-6 shadow-xs hover:border-blue-300 hover:shadow-md transition-all duration-300 flex flex-col md:flex-row gap-5 items-start"
               >
                 {/* Event Poster Thumbnail */}
-                <div className="w-full md:w-52 aspect-[16/10] md:h-36 rounded-2xl bg-slate-100 overflow-hidden shrink-0 relative border border-slate-200/80">
-                  {req.poster_url ? (
-                    <img 
-                      src={getPosterUrl(req.poster_url)} 
-                      alt={req.event_title} 
-                      className="w-full h-full object-cover"
-                      onError={(e) => handleImageError(e, req.poster_url)}
-                    />
-                  ) : null}
-                  <div className={`w-full h-full flex flex-col items-center justify-center bg-blue-50/70 text-blue-900 p-3 text-center ${req.poster_url ? 'hidden' : 'flex'}`}>
-                    <Calendar className="w-8 h-8 text-blue-600 mb-1" />
-                    <span className="text-xs font-bold leading-snug line-clamp-2">{req.event_title}</span>
-                  </div>
-                  <span className={`absolute top-2.5 left-2.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold text-white shadow-xs ${
-                    req.event_type === 'internal' ? 'bg-blue-600' : 'bg-slate-900'
-                  }`}>
+                <div className="w-full md:w-52 aspect-[16/10] md:h-36 rounded-2xl bg-slate-900 overflow-hidden shrink-0 relative border border-slate-200/80 flex items-center justify-center p-1.5">                    {req.poster_url ? (
+                      <>
+                        <img 
+                          src={getPosterUrl(req.poster_url)} 
+                          alt="" 
+                          aria-hidden="true" 
+                          className="absolute inset-0 w-full h-full object-cover blur-xl opacity-35 scale-125 pointer-events-none" 
+                          onError={(e) => handleImageError(e, req.poster_url)}
+                        />
+                        <img 
+                          src={getPosterUrl(req.poster_url)} 
+                          alt={req.event_title} 
+                          className="relative z-10 w-auto h-auto max-w-full max-h-full object-contain rounded-xl"
+                          onError={(e) => handleImageError(e, req.poster_url)}
+                        />
+                      </>
+                    ) : (
+                      <div className="w-full h-full flex flex-col items-center justify-center bg-blue-50/70 text-blue-900 p-3 text-center">
+                        <Calendar className="w-8 h-8 text-blue-600 mb-1" />
+                        <span className="text-xs font-bold leading-snug line-clamp-2">{req.event_title}</span>
+                      </div>
+                    )}
+                    <span className={`absolute top-2.5 left-2.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold text-white shadow-xs z-20 ${
+                      req.event_type === 'internal' ? 'bg-blue-600' : 'bg-slate-900'
+                    }`}>
+
                     {req.event_type === 'internal' ? 'Inside' : 'Outside'}
                   </span>
                 </div>
@@ -298,32 +308,49 @@ const MyRequests = () => {
                     <span className="text-slate-400">· Applied {formatDate(req.requested_at)}</span>
                   </div>
 
-                  {/* Admin Rejection Feedback Box with Re-register Action */}
+                  {/* Pending Request: Allow update before admin approval */}
+                  {req.status === 'pending' && (
+                    <div className="p-3.5 rounded-2xl bg-amber-50/70 border border-amber-200 text-amber-900 text-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
+                      <div className="flex items-center gap-2">
+                        <Clock className="w-4 h-4 text-amber-600 animate-pulse shrink-0" />
+                        <span className="font-medium">
+                          Application under review by administrator. You can update your details before decision.
+                        </span>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="xs"
+                        className="border-amber-400 text-amber-900 hover:bg-amber-100 font-bold shrink-0"
+                        onClick={() => setReapplyEvent({
+                          id: req.event_id,
+                          title: req.event_title,
+                          event_type: req.event_type,
+                          isUpdate: true,
+                          user_request_status: 'pending'
+                        })}
+                      >
+                        Update Details
+                      </Button>
+                    </div>
+                  )}
+
+                  {/* Admin Rejection Feedback Box (No Re-registration allowed) */}
                   {req.status === 'rejected' && (
-                    <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-slate-700 text-xs space-y-3">
+                    <div className="p-4 rounded-2xl bg-rose-50/60 border border-rose-200 text-slate-700 text-xs space-y-2.5">
                       <div className="flex items-start gap-2.5">
-                        <AlertCircle className="w-4 h-4 text-slate-500 shrink-0 mt-0.5" />
+                        <AlertCircle className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
                         <div>
-                          <p className="font-bold font-mono text-slate-800 uppercase tracking-wide text-[10px]">
-                            Administrator Note:
+                          <p className="font-bold font-mono text-rose-800 uppercase tracking-wide text-[10px]">
+                            Administrator Rejection Note:
                           </p>
-                          <p className="mt-0.5 text-slate-600 leading-relaxed font-sans">
-                            {req.admin_note || 'No specific note provided by administrator.'}
+                          <p className="mt-0.5 text-slate-700 leading-relaxed font-sans">
+                            {req.admin_note || 'Registration rejected by administrator.'}
                           </p>
                         </div>
                       </div>
-                      <div className="pt-2 border-t border-slate-200 flex justify-end">
-                        <Button
-                          variant="primary"
-                          size="xs"
-                          onClick={() => setReapplyEvent({
-                            id: req.event_id,
-                            title: req.event_title,
-                            event_type: req.event_type
-                          })}
-                        >
-                          Register Again
-                        </Button>
+                      <div className="pt-2 border-t border-rose-200/60 flex items-center justify-between text-[11px] font-mono text-rose-700 font-semibold">
+                        <span>Decision Finalized</span>
+                        <span>Re-registration is not permitted</span>
                       </div>
                     </div>
                   )}

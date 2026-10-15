@@ -19,6 +19,8 @@ import {
 import { Button } from './ui/Button';
 import { Badge } from './ui/Badge';
 import { getPosterUrl, handleImageError } from '../utils/imageUrl';
+import StructuredEventGuide from './StructuredEventGuide';
+
 
 const EventModal = ({ eventId, onClose, onOpenRegister }) => {
   const { isAuthenticated, isAdmin } = useAuth();
@@ -122,18 +124,28 @@ const EventModal = ({ eventId, onClose, onOpenRegister }) => {
 
     if (userStatus === 'approved') {
       return (
-        <div className="w-full py-3.5 px-4 rounded-2xl bg-blue-50 border border-blue-200 flex items-center justify-center gap-2.5 text-blue-800 text-sm font-bold shadow-xs">
-          <CheckCircle2 className="w-5 h-5 text-blue-600" />
-          <span>Registered ✓ (Confirmed Attendance)</span>
+        <div className="w-full py-3.5 px-4 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-center gap-2.5 text-emerald-900 text-sm font-bold shadow-xs">
+          <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+          <span>Registered ✓ (Confirmed Attendance - Registration Finalized)</span>
         </div>
       );
     }
 
     if (userStatus === 'pending') {
       return (
-        <div className="w-full py-3.5 px-4 rounded-2xl bg-blue-50/80 border border-blue-200 flex items-center justify-center gap-2.5 text-blue-800 text-sm font-bold shadow-xs">
-          <Clock className="w-5 h-5 text-blue-500 animate-pulse" />
-          <span>Request Pending (Under Admin Review)</span>
+        <div className="space-y-3 w-full">
+          <div className="w-full py-3 px-4 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-center gap-2.5 text-amber-900 text-xs font-bold shadow-xs">
+            <Clock className="w-4 h-4 text-amber-600 animate-pulse" />
+            <span>Registration Pending (Under Admin Review)</span>
+          </div>
+          <Button
+            variant="outline"
+            size="lg"
+            className="w-full border-blue-400 text-blue-700 hover:bg-blue-50 font-bold"
+            onClick={() => onOpenRegister(event)}
+          >
+            Update Registration Details
+          </Button>
         </div>
       );
     }
@@ -149,14 +161,9 @@ const EventModal = ({ eventId, onClose, onOpenRegister }) => {
               <span>{event.user_admin_note}</span>
             </div>
           )}
-          <Button
-            variant="primary"
-            size="lg"
-            className="w-full"
-            onClick={() => onOpenRegister(event)}
-          >
-            Register Again
-          </Button>
+          <div className="w-full py-3 px-4 rounded-2xl bg-rose-50 border border-rose-200 text-center text-rose-800 text-xs font-mono font-bold">
+            Registration Rejected by Administrator (Cannot Register Again)
+          </div>
         </div>
       );
     }
@@ -206,13 +213,13 @@ const EventModal = ({ eventId, onClose, onOpenRegister }) => {
       aria-labelledby="event-modal-title"
     >
       <div 
-        className="relative bg-white text-slate-800 rounded-3xl max-w-2xl w-full shadow-2xl border border-slate-200 overflow-hidden animate-modal-pop my-auto max-h-[92vh] flex flex-col"
+        className="relative bg-white text-slate-800 rounded-3xl max-w-3xl w-full shadow-2xl border border-slate-200 overflow-hidden animate-modal-pop my-auto max-h-[92vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Floating Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 z-20 p-2.5 rounded-full bg-white/90 hover:bg-white text-slate-700 hover:text-slate-900 transition-all shadow-md border border-slate-200/80 backdrop-blur-md"
+          className="absolute top-4 right-4 z-30 p-2.5 rounded-full bg-white/95 hover:bg-white text-slate-700 hover:text-slate-900 transition-all shadow-md border border-slate-200/80 backdrop-blur-md cursor-pointer"
           aria-label="Close modal"
         >
           <X className="w-5 h-5" />
@@ -239,52 +246,70 @@ const EventModal = ({ eventId, onClose, onOpenRegister }) => {
             {/* Scrollable Content Container */}
             <div className="overflow-y-auto flex-1">
               
-              {/* Event Poster Banner */}
-              <div className="relative aspect-[16/9] w-full bg-slate-100 overflow-hidden">
-                {event.poster_url ? (
-                  <img
-                    src={getPosterUrl(event.poster_url)}
-                    alt={event.title}
-                    className="w-full h-full object-cover"
-                    onError={(e) => handleImageError(e, event.poster_url)}
-                  />
-                ) : null}
-                <div className={`w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100/60 text-blue-900 p-6 text-center ${event.poster_url ? 'hidden' : 'flex'}`}>
+              {/* Full Event Poster Display (Uncropped) */}
+              {event.poster_url ? (
+                <div className="w-full bg-slate-950/5 p-3 sm:p-5 flex flex-col items-center justify-center border-b border-slate-100">
+                  <div className="relative w-full rounded-2xl overflow-hidden shadow-sm border border-slate-200/80 bg-white flex items-center justify-center">
+                    <img
+                      src={getPosterUrl(event.poster_url)}
+                      alt={event.title}
+                      className="w-full h-auto max-h-[75vh] object-contain block mx-auto"
+                      onError={(e) => handleImageError(e, event.poster_url)}
+                    />
+                  </div>
+                  <div className="mt-2.5 flex items-center justify-between w-full px-1">
+                    <span className="text-[11px] font-mono text-slate-500 font-bold flex items-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5 text-blue-600" />
+                      <span>Official Event Poster (Full Uncropped View)</span>
+                    </span>
+                    <a
+                      href={getPosterUrl(event.poster_url)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-[11px] font-mono font-bold text-blue-600 hover:text-blue-800 hover:underline bg-white px-2.5 py-1 rounded-lg border border-slate-200 shadow-xs transition-colors"
+                    >
+                      <ExternalLink className="w-3 h-3" />
+                      <span>View Full Size</span>
+                    </a>
+                  </div>
+                </div>
+              ) : (
+                <div className="w-full py-12 px-6 flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100/60 text-blue-900 text-center border-b border-slate-100">
                   <Calendar className="w-16 h-16 text-blue-600 mb-2 opacity-80" />
                   <span className="font-display font-extrabold text-lg">{event.title}</span>
                 </div>
+              )}
 
-                {/* Gradient vignette for badges readability */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20 pointer-events-none" />
 
-                {/* Overlaid Badges */}
-                <div className="absolute bottom-4 left-4 right-4 flex flex-wrap items-center justify-between gap-2 z-10 pointer-events-none">
-                  <div className="flex flex-wrap gap-2">
+              {/* Event Details Body - Positioned At the Bottom of the Full Image */}
+              <div className="p-6 sm:p-8 space-y-6">
+                
+                {/* Badges Row - Cleanly Placed Under Image */}
+                <div className="flex flex-wrap items-center justify-between gap-2.5">
+                  <div className="flex flex-wrap items-center gap-2">
                     <span
-                      className={`px-3 py-1 rounded-full text-xs font-mono font-bold tracking-wide shadow-md backdrop-blur-md border ${
+                      className={`px-3 py-1 rounded-full text-xs font-mono font-bold tracking-wide border shadow-xs ${
                         isInternal
                           ? 'bg-blue-600 text-white border-blue-500'
-                          : 'bg-white/95 text-slate-900 border-white/80'
+                          : 'bg-slate-100 text-slate-800 border-slate-300'
                       }`}
                     >
                       {isInternal ? 'Inside College' : 'Outside College'}
                     </span>
-                    <span className="px-3 py-1 rounded-full text-xs font-mono font-bold bg-white/95 text-blue-800 shadow-md backdrop-blur-md border border-white/80">
+                    <span className="px-3 py-1 rounded-full text-xs font-mono font-bold bg-blue-50 text-blue-800 border border-blue-200 shadow-xs">
                       {event.category}
                     </span>
                   </div>
 
                   {event.reward_points > 0 && (
-                    <span className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-black bg-blue-600 text-white border border-blue-400 shadow-md backdrop-blur-md">
+                    <span className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-black bg-blue-600 text-white border border-blue-400 shadow-xs">
                       <Award className="w-3.5 h-3.5 text-white fill-current" />
                       <span>+{event.reward_points} Reward Points</span>
                     </span>
                   )}
                 </div>
-              </div>
 
-              {/* Event Details Body */}
-              <div className="p-6 sm:p-8 space-y-6">
+                {/* Title and Organizer */}
                 <div>
                   <h2 
                     id="event-modal-title"
@@ -297,7 +322,7 @@ const EventModal = ({ eventId, onClose, onOpenRegister }) => {
                   </p>
                 </div>
 
-                {/* 2x2 Info Grid */}
+                {/* 2x2 Info Grid for Schedule and Venue */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-xs">
                   <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-start gap-3">
                     <div className="p-2 rounded-xl bg-blue-50 text-blue-600 shrink-0 border border-blue-200/70">
@@ -315,21 +340,6 @@ const EventModal = ({ eventId, onClose, onOpenRegister }) => {
 
                   <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-start gap-3">
                     <div className="p-2 rounded-xl bg-blue-50 text-blue-600 shrink-0 border border-blue-200/70">
-                      <Clock className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <p className="font-mono font-bold text-slate-500 uppercase tracking-wider text-[10px]">
-                        Registration Closes
-                      </p>
-                      <p className={`font-semibold text-xs mt-0.5 ${isPastDeadline ? 'text-rose-600' : 'text-slate-900'}`}>
-                        {formatDateTime(event.registration_deadline)}
-                        {isPastDeadline && ' (Closed)'}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-start gap-3">
-                    <div className="p-2 rounded-xl bg-blue-50 text-blue-600 shrink-0 border border-blue-200/70">
                       <MapPin className="w-4 h-4" />
                     </div>
                     <div>
@@ -341,32 +351,20 @@ const EventModal = ({ eventId, onClose, onOpenRegister }) => {
                       </p>
                     </div>
                   </div>
-
-                  <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-start gap-3">
-                    <div className="p-2 rounded-xl bg-blue-50 text-blue-600 shrink-0 border border-blue-200/70">
-                      <Users className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <p className="font-mono font-bold text-slate-500 uppercase tracking-wider text-[10px]">
-                        Seat Availability
-                      </p>
-                      <p className="font-semibold text-slate-900 text-xs mt-0.5">
-                        {event.max_seats 
-                          ? `${seatsLeft} available / ${event.max_seats} limit`
-                          : 'Open for all eligible students'}
-                      </p>
-                    </div>
-                  </div>
                 </div>
 
-                {/* Description */}
+                {/* Structured Student Event Guide (Separated Sections) */}
                 <div>
-                  <h4 className="text-xs font-mono font-bold text-slate-500 uppercase tracking-wider mb-2">
-                    Event Description & Syllabus
-                  </h4>
-                  <div className="text-xs sm:text-sm text-slate-700 leading-relaxed whitespace-pre-line bg-slate-50/70 p-4 sm:p-5 rounded-2xl border border-slate-200/80 font-sans">
-                    {event.description}
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="text-xs font-mono font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5 text-blue-600" />
+                      <span>Student Event Guide & Breakdown</span>
+                    </h4>
+                    <span className="text-[10px] font-mono text-blue-600 font-bold bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-200">
+                      Step-by-Step Overview
+                    </span>
                   </div>
+                  <StructuredEventGuide description={event.description} />
                 </div>
 
                 {/* External Link */}
