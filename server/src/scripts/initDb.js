@@ -86,6 +86,22 @@ async function initDatabase() {
     );
     console.log(`[Database Init] Seeded Admin account: ${adminEmail} (password: ${adminPassword})`);
 
+    // Step 4b: Seed Faculty / Department Admin Accounts
+    const facultyList = [
+      { id: 201, name: 'Dr. David Ayling', email: 'davidayling@francisxavier.ac.in', dept: 'cse' },
+      { id: 202, name: 'HOD - Information Technology', email: 'ithod@francisxavier.ac.in', dept: 'it' }
+    ];
+
+    for (const f of facultyList) {
+      await dbConn.execute(
+        `INSERT INTO users (id, name, email, password_hash, role, department_code, total_points)
+         VALUES (?, ?, ?, ?, 'admin', ?, 0)
+         ON DUPLICATE KEY UPDATE name = VALUES(name), password_hash = VALUES(password_hash), role = 'admin', department_code = VALUES(department_code)`,
+        [f.id, f.name, f.email, adminHash, f.dept]
+      );
+      console.log(`[Database Init] Seeded Faculty/Admin account: ${f.email} (password: ${adminPassword})`);
+    }
+
     // Step 5: Seed Sample Student User
     const studentEmail = 'karthisans.ug.24.it@francisxavier.ac.in';
     const studentPassword = 'Student@123';

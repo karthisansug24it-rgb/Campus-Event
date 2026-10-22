@@ -68,6 +68,14 @@ async function signup(req, res) {
     });
   }
 
+  // Ensure this is a student email
+  if (parseResult.accountType !== 'student') {
+    return res.status(400).json({
+      success: false,
+      message: 'Student self-registration requires student email format (<name>.<ug|pg>.<yy>.<dept>@francisxavier.ac.in). Faculty and staff accounts (e.g. davidayling@francisxavier.ac.in, ithod@francisxavier.ac.in) are pre-provisioned. Please sign in via the Faculty / Admin login.'
+    });
+  }
+
   // 2. Validate Password Length
   if (!password || password.length < 6) {
     return res.status(400).json({
@@ -221,8 +229,8 @@ async function login(req, res) {
       return res.status(403).json({
         success: false,
         message: requestedRole === 'admin'
-          ? 'Access denied. This account does not possess administrator privileges.'
-          : 'This account is an Administrator. Please toggle to "Admin Login".'
+          ? 'Access denied. This is a student account. Please switch to "Student Login".'
+          : 'This is a Faculty / Administrator account. Please switch to "Faculty / Admin Login".'
       });
     }
 

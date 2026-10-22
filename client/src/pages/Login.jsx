@@ -114,12 +114,38 @@ const Login = () => {
     setFormError('');
   };
 
-  const handleQuickFill = (role) => {
-    if (role === 'admin') {
+  const handleQuickFill = (type) => {
+    if (type === 'faculty' || type === 'davidayling') {
       setIsSignUpMode(false);
       setSelectedRole('admin');
       setFormData({
-        name: '',
+        name: 'Dr. David Ayling',
+        email: 'davidayling@francisxavier.ac.in',
+        password: 'Admin@123',
+        confirmPassword: '',
+        section: 'A',
+        registerNumber: ''
+      });
+      setFormError('');
+      showToast('Filled Faculty (Dr. David Ayling) credentials', 'info');
+    } else if (type === 'ithod') {
+      setIsSignUpMode(false);
+      setSelectedRole('admin');
+      setFormData({
+        name: 'HOD - Information Technology',
+        email: 'ithod@francisxavier.ac.in',
+        password: 'Admin@123',
+        confirmPassword: '',
+        section: 'A',
+        registerNumber: ''
+      });
+      setFormError('');
+      showToast('Filled IT HOD credentials', 'info');
+    } else if (type === 'admin') {
+      setIsSignUpMode(false);
+      setSelectedRole('admin');
+      setFormData({
+        name: 'FXEC Event Admin',
         email: 'admin@francisxavier.ac.in',
         password: 'Admin@123',
         confirmPassword: '',
@@ -127,6 +153,7 @@ const Login = () => {
         registerNumber: ''
       });
       setFormError('');
+      showToast('Filled Admin demo credentials', 'info');
     } else {
       setIsSignUpMode(false);
       setSelectedRole('student');
@@ -139,8 +166,8 @@ const Login = () => {
         registerNumber: '953624104001'
       });
       setFormError('');
+      showToast('Filled Student demo credentials', 'info');
     }
-    showToast(`Filled ${role} demo credentials`, 'info');
   };
 
   const handleSubmit = async (e) => {
@@ -235,7 +262,7 @@ const Login = () => {
         {/* Login Card */}
         <AnimatedSection className="bg-white rounded-3xl border border-slate-200/90 shadow-xl shadow-blue-600/5 p-6 sm:p-8" delay={0.15}>
           
-          {/* Student vs Admin Segmented Toggle (Only in Sign In mode) */}
+          {/* Student vs Faculty/Admin Segmented Toggle (Only in Sign In mode) */}
           {!isSignUpMode ? (
             <div className="flex bg-slate-100/80 p-1 rounded-2xl mb-6 border border-slate-200/80 gap-1">
               <button
@@ -260,7 +287,7 @@ const Login = () => {
                 }`}
               >
                 <Shield className="w-4 h-4" />
-                <span>Admin</span>
+                <span>Faculty / Admin</span>
               </button>
             </div>
           ) : (
@@ -287,9 +314,14 @@ const Login = () => {
             
             {/* Email Field */}
             <div>
-              <label className="block text-xs font-mono font-bold text-slate-600 mb-1.5 uppercase tracking-wide">
-                {selectedRole === 'admin' && !isSignUpMode ? 'Institutional Admin Email' : 'Official College Email'}
-              </label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-xs font-mono font-bold text-slate-600 uppercase tracking-wide">
+                  {selectedRole === 'admin' && !isSignUpMode ? 'Institutional Faculty / Admin Email' : 'Official Student Email'}
+                </label>
+                <span className="text-[10px] font-mono text-slate-400">
+                  {selectedRole === 'admin' && !isSignUpMode ? 'Staff / HOD / Admin' : 'Student UG / PG'}
+                </span>
+              </div>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
                   <Mail className="w-4 h-4" />
@@ -301,7 +333,7 @@ const Login = () => {
                   onChange={handleChange}
                   placeholder={
                     selectedRole === 'admin' && !isSignUpMode 
-                      ? 'admin@francisxavier.ac.in' 
+                      ? 'davidayling@francisxavier.ac.in or ithod@francisxavier.ac.in' 
                       : 'karthisans.ug.24.it@francisxavier.ac.in'
                   }
                   required
@@ -323,8 +355,8 @@ const Login = () => {
                 </p>
               )}
 
-              {/* Live Derived Department / Academic Chip Card */}
-              {parsedData && (
+              {/* Student Verified Chip Card */}
+              {parsedData && parsedData.accountType === 'student' && (
                 <div className="mt-2.5 p-3 rounded-2xl bg-blue-50/80 border border-blue-200 text-blue-900 space-y-1.5 shadow-xs">
                   <div className="flex items-center justify-between text-xs font-bold">
                     <span className="flex items-center gap-1.5 text-blue-700 font-mono text-[11px]">
@@ -346,6 +378,55 @@ const Login = () => {
                     </div>
                   </div>
                 </div>
+              )}
+
+              {/* Faculty / Admin Verified Chip Card */}
+              {parsedData && parsedData.accountType === 'faculty' && (
+                <div className="mt-2.5 p-3 rounded-2xl bg-indigo-50/90 border border-indigo-200 text-indigo-900 space-y-1.5 shadow-xs">
+                  <div className="flex items-center justify-between text-xs font-bold">
+                    <span className="flex items-center gap-1.5 text-indigo-700 font-mono text-[11px]">
+                      <Shield className="w-3.5 h-3.5 text-indigo-600" />
+                      Verified FXEC Faculty / Staff
+                    </span>
+                    <span className="px-2 py-0.5 rounded-md bg-indigo-200/80 text-indigo-900 text-[10px] font-mono font-bold uppercase border border-indigo-300">
+                      Faculty / Admin
+                    </span>
+                  </div>
+                  <div className="text-[11px] pt-1.5 border-t border-indigo-200/60 text-slate-700 font-mono flex items-center justify-between">
+                    <div>
+                      <span className="text-slate-500">Name:</span>{' '}
+                      <span className="font-bold text-slate-900">{parsedData.name}</span>
+                    </div>
+                    {parsedData.departmentName && (
+                      <div>
+                        <span className="text-slate-500">Dept:</span>{' '}
+                        <span className="font-bold text-slate-900">{parsedData.departmentName}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Context Switch Helper Alerts */}
+              {parsedData && parsedData.accountType === 'faculty' && selectedRole === 'student' && !isSignUpMode && (
+                <p className="text-[11px] font-semibold text-indigo-700 mt-1.5 flex items-center gap-1">
+                  <Info className="w-3.5 h-3.5 shrink-0 text-indigo-600" />
+                  <span>Faculty account detected. Please switch to the <strong>Faculty / Admin</strong> tab above to log in.</span>
+                </p>
+              )}
+
+              {parsedData && parsedData.accountType === 'student' && selectedRole === 'admin' && (
+                <p className="text-[11px] font-semibold text-blue-700 mt-1.5 flex items-center gap-1">
+                  <Info className="w-3.5 h-3.5 shrink-0 text-blue-600" />
+                  <span>Student account detected with department tag. Please switch to the <strong>Student</strong> tab above to log in.</span>
+                </p>
+              )}
+
+              {parsedData && parsedData.accountType === 'faculty' && isSignUpMode && (
+                <p className="text-[11px] font-semibold text-rose-600 mt-1.5 flex items-center gap-1">
+                  <AlertCircle className="w-3.5 h-3.5 shrink-0 text-rose-600" />
+                  <span>Faculty accounts are pre-provisioned by administration. Please switch to Sign In &gt; Faculty / Admin.</span>
+                </p>
               )}
             </div>
 
@@ -521,6 +602,7 @@ const Login = () => {
           </div>
 
           <div className="grid grid-cols-2 gap-2.5">
+            {/* Student Account */}
             <button
               type="button"
               onClick={() => handleQuickFill('student')}
@@ -533,6 +615,33 @@ const Login = () => {
               <div className="text-[10px] text-slate-500 truncate mt-0.5 font-mono">karthisans.ug.24.it</div>
             </button>
 
+            {/* Faculty - Dr. David Ayling */}
+            <button
+              type="button"
+              onClick={() => handleQuickFill('davidayling')}
+              className="py-2.5 px-3 rounded-2xl bg-white hover:bg-indigo-50 border border-indigo-200/90 text-left transition-all shadow-xs group"
+            >
+              <div className="text-[11px] font-bold text-indigo-700 flex items-center justify-between">
+                <span>Faculty (Dr. David)</span>
+                <span className="text-[10px] text-indigo-400 group-hover:text-indigo-700 font-mono font-bold">Auto-fill &rarr;</span>
+              </div>
+              <div className="text-[10px] text-slate-500 truncate mt-0.5 font-mono">davidayling@francis...</div>
+            </button>
+
+            {/* Faculty - IT HOD */}
+            <button
+              type="button"
+              onClick={() => handleQuickFill('ithod')}
+              className="py-2.5 px-3 rounded-2xl bg-white hover:bg-indigo-50 border border-indigo-200/90 text-left transition-all shadow-xs group"
+            >
+              <div className="text-[11px] font-bold text-indigo-700 flex items-center justify-between">
+                <span>Faculty (IT HOD)</span>
+                <span className="text-[10px] text-indigo-400 group-hover:text-indigo-700 font-mono font-bold">Auto-fill &rarr;</span>
+              </div>
+              <div className="text-[10px] text-slate-500 truncate mt-0.5 font-mono">ithod@francisxavier</div>
+            </button>
+
+            {/* Admin */}
             <button
               type="button"
               onClick={() => handleQuickFill('admin')}

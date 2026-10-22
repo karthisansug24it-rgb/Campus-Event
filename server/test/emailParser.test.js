@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { parseCollegeEmail } = require('../src/utils/emailParser');
+const { parseCollegeEmail, parseStudentEmail, isStudentEmail, isFacultyEmail } = require('../src/utils/emailParser');
 
 test('Email Parser - Valid UG student email in October 2026', () => {
   // Reference date: October 14, 2026
@@ -8,6 +8,8 @@ test('Email Parser - Valid UG student email in October 2026', () => {
   const result = parseCollegeEmail('karthisans.ug.24.it@francisxavier.ac.in', refDate);
 
   assert.equal(result.valid, true);
+  assert.equal(result.accountType, 'student');
+  assert.equal(result.role, 'student');
   assert.equal(result.name, 'Karthisans');
   assert.equal(result.level, 'ug');
   assert.equal(result.admissionYear, 2024);
@@ -16,6 +18,8 @@ test('Email Parser - Valid UG student email in October 2026', () => {
   assert.equal(result.departmentCode, 'it');
   assert.equal(result.departmentName, 'Information Technology');
   assert.equal(result.isAlumni, false);
+  assert.equal(isStudentEmail('karthisans.ug.24.it@francisxavier.ac.in'), true);
+  assert.equal(isFacultyEmail('karthisans.ug.24.it@francisxavier.ac.in'), false);
 });
 
 test('Email Parser - Valid PG student email in October 2026', () => {
@@ -23,6 +27,7 @@ test('Email Parser - Valid PG student email in October 2026', () => {
   const result = parseCollegeEmail('priya.pg.25.cse@francisxavier.ac.in', refDate);
 
   assert.equal(result.valid, true);
+  assert.equal(result.accountType, 'student');
   assert.equal(result.name, 'Priya');
   assert.equal(result.level, 'pg');
   assert.equal(result.admissionYear, 2025);
@@ -32,10 +37,52 @@ test('Email Parser - Valid PG student email in October 2026', () => {
   assert.equal(result.departmentName, 'Computer Science and Engineering');
 });
 
-test('Email Parser - Rejects wrong domain (e.g. gmail.com)', () => {
-  const result = parseCollegeEmail('karthisans.ug.24.it@gmail.com');
+test('Email Parser - Valid Faculty Email: davidayling@francisxavier.ac.in', () => {
+  const result = parseCollegeEmail('davidayling@francisxavier.ac.in');
+  assert.equal(result.valid, true);
+  assert.equal(result.accountType, 'faculty');
+  assert.equal(result.role, 'admin');
+  assert.equal(result.name, 'Dr. David Ayling');
+  assert.equal(result.level, null);
+  assert.equal(result.yearOfStudy, null);
+  assert.equal(isFacultyEmail('davidayling@francisxavier.ac.in'), true);
+  assert.equal(isStudentEmail('davidayling@francisxavier.ac.in'), false);
+});
+
+test('Email Parser - Valid Faculty Email: ithod@francisxavier.ac.in', () => {
+  const result = parseCollegeEmail('ithod@francisxavier.ac.in');
+  assert.equal(result.valid, true);
+  assert.equal(result.accountType, 'faculty');
+  assert.equal(result.role, 'admin');
+  assert.equal(result.name, 'HOD - Information Technology');
+  assert.equal(result.departmentCode, 'it');
+  assert.equal(result.departmentName, 'Information Technology');
+  assert.equal(isFacultyEmail('ithod@francisxavier.ac.in'), true);
+});
+
+test('Email Parser - Valid Admin Email: admin@francisxavier.ac.in', () => {
+  const result = parseCollegeEmail('admin@francisxavier.ac.in');
+  assert.equal(result.valid, true);
+  assert.equal(result.accountType, 'faculty');
+  assert.equal(result.role, 'admin');
+  assert.equal(result.name, 'FXEC Event Admin');
+});
+
+test('Email Parser - parseStudentEmail rejects faculty accounts from student signup', () => {
+  const result = parseStudentEmail('davidayling@francisxavier.ac.in');
   assert.equal(result.valid, false);
-  assert.match(result.error, /Only official @francisxavier\.ac\.in emails are accepted/);
+  assert.equal(result.accountType, 'faculty');
+  assert.match(result.error, /Faculty\/Admin/);
+});
+
+test('Email Parser - Rejects wrong domain (e.g. gmail.com)', () => {
+  const result1 = parseCollegeEmail('karthisans.ug.24.it@gmail.com');
+  assert.equal(result1.valid, false);
+  assert.match(result1.error, /Only official @francisxavier\.ac\.in emails are accepted/);
+
+  const result2 = parseCollegeEmail('davidayling@gmail.com');
+  assert.equal(result2.valid, false);
+  assert.match(result2.error, /Only official @francisxavier\.ac\.in emails are accepted/);
 });
 
 test('Email Parser - Rejects look-alike domain (notfrancisxavier.ac.in)', () => {
@@ -50,18 +97,12 @@ test('Email Parser - Rejects look-alike subdomain or suffix (francisxavier.ac.in
   assert.match(result.error, /Only official @francisxavier\.ac\.in emails are accepted/);
 });
 
-test('Email Parser - Rejects invalid pattern (missing level or year)', () => {
-  const result1 = parseCollegeEmail('karthisans@francisxavier.ac.in');
-  assert.equal(result1.valid, false);
-
-  const result2 = parseCollegeEmail('karthisans.it@francisxavier.ac.in');
-  assert.equal(result2.valid, false);
-
-  const result3 = parseCollegeEmail('karthisans.ug.twentyfour.it@francisxavier.ac.in');
-  assert.equal(result3.valid, false);
+test('Email Parser - Rejects malformed student email with invalid year or tokens', () => {
+  const result = parseCollegeEmail('karthisans.ug.twentyfour.it@francisxavier.ac.in');
+  assert.equal(result.valid, false);
 });
 
-test('Email Parser - Rejects unknown department code', () => {
+test('Email Parser - Rejects unknown department code for student', () => {
   const result = parseCollegeEmail('karthisans.ug.24.xyz@francisxavier.ac.in');
   assert.equal(result.valid, false);
   assert.match(result.error, /Unknown department code/);

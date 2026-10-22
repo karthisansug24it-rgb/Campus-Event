@@ -322,7 +322,7 @@ const EventModal = ({ eventId, onClose, onOpenRegister }) => {
                   </p>
                 </div>
 
-                {/* 2x2 Info Grid for Schedule and Venue */}
+                {/* Info Grid for Schedule, Venue, Seat Limits & Deadline */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-xs">
                   <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-start gap-3">
                     <div className="p-2 rounded-xl bg-blue-50 text-blue-600 shrink-0 border border-blue-200/70">
@@ -348,6 +348,40 @@ const EventModal = ({ eventId, onClose, onOpenRegister }) => {
                       </p>
                       <p className="font-semibold text-slate-900 text-xs mt-0.5">
                         {event.venue}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-start gap-3">
+                    <div className="p-2 rounded-xl bg-blue-50 text-blue-600 shrink-0 border border-blue-200/70">
+                      <Users className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <p className="font-mono font-bold text-slate-500 uppercase tracking-wider text-[10px]">
+                        Seat Limit & Capacity
+                      </p>
+                      <p className="font-semibold text-slate-900 text-xs mt-0.5">
+                        {event.max_seats ? (
+                          <span className={isSeatsFull ? 'text-rose-600 font-bold' : 'text-blue-700 font-bold'}>
+                            {isSeatsFull ? 'Seats Full' : `${seatsLeft} of ${event.max_seats} seats remaining`}
+                          </span>
+                        ) : (
+                          <span className="text-emerald-700 font-bold">Open (Unlimited Seats)</span>
+                        )}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-start gap-3">
+                    <div className="p-2 rounded-xl bg-amber-50 text-amber-600 shrink-0 border border-amber-200/70">
+                      <Clock className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <p className="font-mono font-bold text-slate-500 uppercase tracking-wider text-[10px]">
+                        Registration Deadline
+                      </p>
+                      <p className="font-semibold text-slate-900 text-xs mt-0.5">
+                        {event.registration_deadline ? formatDateTime(event.registration_deadline) : 'Same as event date'}
                       </p>
                     </div>
                   </div>

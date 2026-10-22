@@ -19,7 +19,9 @@ import {
   FileText,
   Check,
   PlusCircle,
-  Tag
+  Tag,
+  History,
+  UserCheck
 } from 'lucide-react';
 import { 
   PageHeader, 
@@ -32,6 +34,7 @@ import {
   AnimatedSection
 } from '../../components/ui';
 import { getPosterUrl, handleImageError } from '../../utils/imageUrl';
+import EventAttendeesModal from '../../components/admin/EventAttendeesModal';
 
 const CATEGORIES = [
   'All', 
@@ -56,6 +59,8 @@ const initialForm = {
   venue: '',
   organizer: '',
   event_date: '',
+  registration_deadline: '',
+  max_seats: '',
   reward_points: '' // Strictly provided by Admin only
 };
 
@@ -71,6 +76,10 @@ const Events = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedType, setSelectedType] = useState('all'); // 'all', 'internal', 'external'
   const [selectedCategory, setSelectedCategory] = useState('All');
+  const [selectedTimeline, setSelectedTimeline] = useState('all'); // 'all', 'upcoming', 'past'
+
+  // Registered Students Viewer Modal state
+  const [viewingAttendeesEvent, setViewingAttendeesEvent] = useState(null);
 
   // Modal states
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -201,6 +210,8 @@ const Events = () => {
       venue: event.venue || '',
       organizer: event.organizer || '',
       event_date: toDateTimeLocal(event.event_date),
+      registration_deadline: toDateTimeLocal(event.registration_deadline || event.event_date),
+      max_seats: event.max_seats !== undefined && event.max_seats !== null ? String(event.max_seats) : '',
       reward_points: event.reward_points !== undefined && event.reward_points !== null ? String(event.reward_points) : ''
     });
     setTopicCards(cards);
@@ -352,9 +363,7 @@ const Events = () => {
       data.append('event_date', formatLocalToMySQL(formData.event_date));
       data.append('registration_deadline', formatLocalToMySQL(formData.registration_deadline || formData.event_date));
       
-      if (formData.max_seats) {
-        data.append('max_seats', formData.max_seats);
-      }
+      data.append('max_seats', formData.max_seats ? formData.max_seats : '');
 
       data.append('reward_points', formData.reward_points || 0);
 
@@ -413,8 +422,31 @@ const Events = () => {
     }
   };
 
+  // Timeline counts
+  const timelineCounts = React.useMemo(() => {
+    const now = new Date();
+    let upcoming = 0;
+    let past = 0;
+    events.forEach((e) => {
+      const isPast = e.is_past_event !== undefined 
+        ? e.is_past_event 
+        : new Date(e.event_date) < now;
+      if (isPast) past++;
+      else upcoming++;
+    });
+    return { all: events.length, upcoming, past };
+  }, [events]);
+
   // Filtered events
   const filteredEvents = events.filter((evt) => {
+    const now = new Date();
+    const isPast = evt.is_past_event !== undefined 
+      ? evt.is_past_event 
+      : new Date(evt.event_date) < now;
+
+    if (selectedTimeline === 'upcoming' && isPast) return false;
+    if (selectedTimeline === 'past' && !isPast) return false;
+
     const matchesType = selectedType === 'all' || evt.event_type === selectedType;
     const matchesCat = selectedCategory === 'All' || evt.category === selectedCategory;
     const q = searchQuery.trim().toLowerCase();
@@ -459,40 +491,81 @@ const Events = () => {
             className="max-w-md"
           />
 
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0 scrollbar-none">
-            <button
-              type="button"
-              onClick={() => setSelectedType('all')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-mono font-bold whitespace-nowrap transition-all ${
-                selectedType === 'all'
-                  ? 'bg-blue-600 text-white shadow-xs'
-                  : 'bg-slate-50 text-slate-600 hover:text-blue-700 border border-slate-200'
-              }`}
-            >
-              All Types
-            </button>
-            <button
-              type="button"
-              onClick={() => setSelectedType('internal')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-mono font-bold whitespace-nowrap transition-all ${
-                selectedType === 'internal'
-                  ? 'bg-blue-600 text-white shadow-xs'
-                  : 'bg-slate-50 text-slate-600 hover:text-blue-700 border border-slate-200'
-              }`}
-            >
-              Inside College
-            </button>
-            <button
-              type="button"
-              onClick={() => setSelectedType('external')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-mono font-bold whitespace-nowrap transition-all ${
-                selectedType === 'external'
-                  ? 'bg-blue-600 text-white shadow-xs'
-                  : 'bg-slate-50 text-slate-600 hover:text-blue-700 border border-slate-200'
-              }`}
-            >
-              Outside College
-            </button>
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Timeline Filter: All / Upcoming / Past */}
+            <div className="flex items-center bg-slate-100 p-1 rounded-2xl border border-slate-200">
+              <button
+                type="button"
+                onClick={() => setSelectedTimeline('all')}
+                className={`px-3 py-1.5 rounded-xl text-xs font-mono font-bold whitespace-nowrap transition-all ${
+                  selectedTimeline === 'all'
+                    ? 'bg-blue-600 text-white shadow-xs'
+                    : 'text-slate-600 hover:text-blue-700'
+                }`}
+              >
+                All ({timelineCounts.all})
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedTimeline('upcoming')}
+                className={`px-3 py-1.5 rounded-xl text-xs font-mono font-bold whitespace-nowrap transition-all ${
+                  selectedTimeline === 'upcoming'
+                    ? 'bg-blue-600 text-white shadow-xs'
+                    : 'text-slate-600 hover:text-blue-700'
+                }`}
+              >
+                Upcoming ({timelineCounts.upcoming})
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedTimeline('past')}
+                className={`px-3 py-1.5 rounded-xl text-xs font-mono font-bold whitespace-nowrap transition-all flex items-center gap-1 ${
+                  selectedTimeline === 'past'
+                    ? 'bg-amber-600 text-white shadow-xs'
+                    : 'text-slate-600 hover:text-amber-700'
+                }`}
+              >
+                <History className="w-3 h-3" />
+                <span>Past Events ({timelineCounts.past})</span>
+              </button>
+            </div>
+
+            {/* Type Filter: All / Inside / Outside */}
+            <div className="flex items-center gap-1 overflow-x-auto">
+              <button
+                type="button"
+                onClick={() => setSelectedType('all')}
+                className={`px-2.5 py-1.5 rounded-xl text-xs font-mono font-bold whitespace-nowrap transition-all ${
+                  selectedType === 'all'
+                    ? 'bg-slate-900 text-white shadow-xs'
+                    : 'bg-slate-50 text-slate-600 hover:text-slate-900 border border-slate-200'
+                }`}
+              >
+                All Types
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedType('internal')}
+                className={`px-2.5 py-1.5 rounded-xl text-xs font-mono font-bold whitespace-nowrap transition-all ${
+                  selectedType === 'internal'
+                    ? 'bg-slate-900 text-white shadow-xs'
+                    : 'bg-slate-50 text-slate-600 hover:text-slate-900 border border-slate-200'
+                }`}
+              >
+                Inside
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedType('external')}
+                className={`px-2.5 py-1.5 rounded-xl text-xs font-mono font-bold whitespace-nowrap transition-all ${
+                  selectedType === 'external'
+                    ? 'bg-slate-900 text-white shadow-xs'
+                    : 'bg-slate-50 text-slate-600 hover:text-slate-900 border border-slate-200'
+                }`}
+              >
+                Outside
+              </button>
+            </div>
           </div>
         </div>
 
@@ -559,101 +632,150 @@ const Events = () => {
             <table className="w-full text-left text-xs sm:text-sm">
               <thead className="bg-slate-50/80 border-b border-slate-200/80 text-[11px] font-mono font-bold uppercase tracking-wider text-slate-500">
                 <tr>
-                  <th className="py-4 px-6">Event & Poster</th>
+                  <th className="py-4 px-6">Event & Timeline</th>
                   <th className="py-4 px-4">Category / Type</th>
                   <th className="py-4 px-4">Schedule & Venue</th>
+                  <th className="py-4 px-4">Registered Students</th>
                   <th className="py-4 px-4">Reward Points</th>
                   <th className="py-4 px-6 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {filteredEvents.map((evt) => (
-                  <tr key={evt.id} className="hover:bg-blue-50/30 transition-colors">
-                    {/* Poster & Title */}
-                    <td className="py-4 px-6">
-                      <div className="flex items-center gap-3.5">
-                        <div className="w-14 h-14 rounded-xl bg-slate-100 overflow-hidden shrink-0 border border-slate-200">
-                          {evt.poster_url ? (
-                            <img
-                              src={getPosterUrl(evt.poster_url)}
-                              alt={evt.title}
-                              className="w-full h-full object-cover"
-                              onError={(e) => handleImageError(e, evt.poster_url)}
-                            />
-                          ) : null}
-                          <div className={`w-full h-full flex items-center justify-center bg-blue-50 text-blue-600 ${evt.poster_url ? 'hidden' : 'flex'}`}>
-                            <Calendar className="w-5 h-5" />
+                {filteredEvents.map((evt) => {
+                  const isPast = evt.is_past_event !== undefined 
+                    ? evt.is_past_event 
+                    : new Date(evt.event_date) < new Date();
+
+                  return (
+                    <tr key={evt.id} className="hover:bg-blue-50/30 transition-colors">
+                      {/* Poster & Title with Past/Upcoming Badge */}
+                      <td className="py-4 px-6">
+                        <div className="flex items-center gap-3.5">
+                          <div className="w-14 h-14 rounded-xl bg-slate-100 overflow-hidden shrink-0 border border-slate-200 relative">
+                            {evt.poster_url ? (
+                              <img
+                                src={getPosterUrl(evt.poster_url)}
+                                alt={evt.title}
+                                className="w-full h-full object-cover"
+                                onError={(e) => handleImageError(e, evt.poster_url)}
+                              />
+                            ) : null}
+                            <div className={`w-full h-full flex items-center justify-center bg-blue-50 text-blue-600 ${evt.poster_url ? 'hidden' : 'flex'}`}>
+                              <Calendar className="w-5 h-5" />
+                            </div>
+                          </div>
+                          <div className="space-y-1 max-w-xs">
+                            <div className="flex items-center gap-1.5">
+                              {isPast ? (
+                                <span className="px-2 py-0.5 rounded-md text-[9px] font-mono font-bold bg-amber-100 text-amber-800 border border-amber-300">
+                                  Completed · Past Event
+                                </span>
+                              ) : (
+                                <span className="px-2 py-0.5 rounded-md text-[9px] font-mono font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                                  Upcoming Event
+                                </span>
+                              )}
+                            </div>
+                            <h4 className="font-extrabold font-display text-slate-900 text-sm line-clamp-1">
+                              {evt.title}
+                            </h4>
+                            <p className="text-xs text-slate-500 truncate">
+                              By {evt.organizer}
+                            </p>
                           </div>
                         </div>
-                        <div className="space-y-0.5 max-w-xs">
-                          <h4 className="font-extrabold font-display text-slate-900 text-sm line-clamp-1">
-                            {evt.title}
-                          </h4>
-                          <p className="text-xs text-slate-500 truncate">
-                            By {evt.organizer}
+                      </td>
+
+                      {/* Category & Type */}
+                      <td className="py-4 px-4">
+                        <div className="space-y-1">
+                          <Badge variant="blue" size="xs">
+                            {evt.category}
+                          </Badge>
+                          <p className="text-[11px] font-mono text-slate-500 font-medium">
+                            {evt.event_type === 'internal' ? 'Inside College' : 'Outside College'}
                           </p>
                         </div>
-                      </div>
-                    </td>
+                      </td>
 
-                    {/* Category & Type */}
-                    <td className="py-4 px-4">
-                      <div className="space-y-1">
-                        <Badge variant="blue" size="xs">
-                          {evt.category}
-                        </Badge>
-                        <p className="text-[11px] font-mono text-slate-500 font-medium">
-                          {evt.event_type === 'internal' ? 'Inside College' : 'Outside College'}
-                        </p>
-                      </div>
-                    </td>
+                      {/* Schedule & Venue */}
+                      <td className="py-4 px-4">
+                        <div className="space-y-0.5 text-xs">
+                          <p className="font-semibold text-slate-800">
+                            {new Date(evt.event_date).toLocaleDateString('en-IN', {
+                              weekday: 'short',
+                              day: 'numeric',
+                              month: 'short',
+                              year: 'numeric'
+                            })}
+                          </p>
+                          <p className="text-slate-500 truncate max-w-[200px]">
+                            {evt.venue}
+                          </p>
+                        </div>
+                      </td>
 
-                    {/* Schedule & Venue */}
-                    <td className="py-4 px-4">
-                      <div className="space-y-0.5 text-xs">
-                        <p className="font-semibold text-slate-800">
-                          {new Date(evt.event_date).toLocaleDateString('en-IN', {
-                            weekday: 'short',
-                            day: 'numeric',
-                            month: 'short',
-                            year: 'numeric'
-                          })}
-                        </p>
-                        <p className="text-slate-500 truncate max-w-[200px]">
-                          {evt.venue}
-                        </p>
-                      </div>
-                    </td>
+                      {/* Registered Students Quota */}
+                      <td className="py-4 px-4">
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-1.5 text-xs font-mono font-bold">
+                            <Users className="w-3.5 h-3.5 text-blue-600" />
+                            <span className="text-slate-900">
+                              {evt.approved_count || 0}
+                            </span>
+                            <span className="text-slate-400">
+                              / {evt.max_seats ? `${evt.max_seats} seats` : 'Unlimited'}
+                            </span>
+                          </div>
+                          {evt.pending_count > 0 && (
+                            <span className="inline-block px-1.5 py-0.2 rounded bg-amber-50 text-amber-700 border border-amber-200 text-[10px] font-mono font-bold">
+                              {evt.pending_count} pending review
+                            </span>
+                          )}
+                        </div>
+                      </td>
 
-                    {/* Reward Points */}
-                    <td className="py-4 px-4">
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-mono font-bold bg-blue-50 text-blue-700 border border-blue-200">
-                        <Award className="w-3.5 h-3.5 text-blue-600" />
-                        <span>+{evt.reward_points || 0} Pts</span>
-                      </span>
-                    </td>
+                      {/* Reward Points */}
+                      <td className="py-4 px-4">
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-mono font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                          <Award className="w-3.5 h-3.5 text-blue-600" />
+                          <span>+{evt.reward_points || 0} Pts</span>
+                        </span>
+                      </td>
 
-                    {/* Actions */}
-                    <td className="py-4 px-6 text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <IconButton
-                          icon={Edit3}
-                          variant="outline"
-                          size="sm"
-                          label="Edit event"
-                          onClick={() => handleOpenEditModal(evt)}
-                        />
-                        <IconButton
-                          icon={Trash2}
-                          variant="danger"
-                          size="sm"
-                          label="Delete event"
-                          onClick={() => setDeletingEvent(evt)}
-                        />
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                      {/* Actions */}
+                      <td className="py-4 px-6 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          {/* Dedicated View Registered Students Button */}
+                          <Button
+                            variant="outline"
+                            size="xs"
+                            onClick={() => setViewingAttendeesEvent(evt)}
+                            icon={Users}
+                            className="text-blue-700 border-blue-200 hover:bg-blue-50 font-bold"
+                          >
+                            <span>Students ({evt.approved_count || 0})</span>
+                          </Button>
+
+                          <IconButton
+                            icon={Edit3}
+                            variant="outline"
+                            size="sm"
+                            label="Edit event"
+                            onClick={() => handleOpenEditModal(evt)}
+                          />
+                          <IconButton
+                            icon={Trash2}
+                            variant="danger"
+                            size="sm"
+                            label="Delete event"
+                            onClick={() => setDeletingEvent(evt)}
+                          />
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -912,11 +1034,12 @@ const Events = () => {
                 </div>
               </div>
 
-              {/* Event Date & Reward Points (Side-by-Side in same style and color) */}
+              {/* Event Date & Registration Deadline */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-mono font-bold text-slate-600 mb-1.5 uppercase tracking-wide">
-                    Event Date & Time <span className="text-rose-500">*</span>
+                  <label className="block text-xs font-mono font-bold text-slate-600 mb-1.5 uppercase tracking-wide flex items-center gap-1.5">
+                    <Calendar className="w-3.5 h-3.5 text-blue-600" />
+                    <span>Event Date & Time <span className="text-rose-500">*</span></span>
                   </label>
                   <input
                     type="datetime-local"
@@ -928,17 +1051,64 @@ const Events = () => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-mono font-bold text-slate-600 mb-1.5 uppercase tracking-wide">
-                    Reward Points <span className="text-rose-500">*</span>
+                  <label className="block text-xs font-mono font-bold text-slate-600 mb-1.5 uppercase tracking-wide flex items-center gap-1.5">
+                    <Clock className="w-3.5 h-3.5 text-amber-600" />
+                    <span>Registration Deadline</span>
+                  </label>
+                  <input
+                    type="datetime-local"
+                    name="registration_deadline"
+                    value={formData.registration_deadline}
+                    onChange={handleInputChange}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm font-mono font-medium focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                  />
+                  <p className="text-[11px] text-slate-400 mt-1 font-sans">
+                    Defaults to event date if left blank.
+                  </p>
+                </div>
+              </div>
+
+              {/* Seat Limiting Quota & Reward Points */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="block text-xs font-mono font-bold text-slate-600 uppercase tracking-wide flex items-center gap-1.5">
+                      <Users className="w-3.5 h-3.5 text-blue-600" />
+                      <span>Seat Limit / Max Capacity</span>
+                    </label>
+                    <span className="text-[10px] font-mono text-slate-400">Optional</span>
+                  </div>
+                  <input
+                    type="number"
+                    name="max_seats"
+                    min="1"
+                    placeholder="e.g. 50, 100, 250 (Empty = Unlimited)"
+                    value={formData.max_seats}
+                    onChange={handleInputChange}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm font-mono font-medium focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 placeholder:text-slate-400"
+                  />
+                  <p className="text-[11px] text-slate-500 mt-1 font-sans">
+                    Limits maximum student approvals. Leave empty for unlimited seats.
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-mono font-bold text-slate-600 mb-1.5 uppercase tracking-wide flex items-center gap-1.5">
+                    <Award className="w-3.5 h-3.5 text-amber-500" />
+                    <span>Reward Points <span className="text-rose-500">*</span></span>
                   </label>
                   <input
                     type="number"
                     name="reward_points"
                     min="0"
+                    placeholder="e.g. 50, 100"
                     value={formData.reward_points}
                     onChange={handleInputChange}
                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm font-mono font-medium focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                   />
+                  <p className="text-[11px] text-slate-500 mt-1 font-sans">
+                    Activity points credited to student upon attendance.
+                  </p>
                 </div>
               </div>
 
@@ -987,6 +1157,13 @@ const Events = () => {
         description={`Are you sure you want to delete "${deletingEvent?.title}"? All existing registration requests associated with this event will also be removed. This operation is permanent.`}
         confirmText="Confirm Delete"
         loading={isDeleting}
+      />
+
+      {/* Registered Students Modal (Upcoming & Past Events) */}
+      <EventAttendeesModal
+        eventId={viewingAttendeesEvent?.id}
+        isOpen={Boolean(viewingAttendeesEvent)}
+        onClose={() => setViewingAttendeesEvent(null)}
       />
 
     </div>

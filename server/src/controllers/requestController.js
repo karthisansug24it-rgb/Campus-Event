@@ -31,10 +31,10 @@ async function submitRegistrationRequest(req, res) {
 
   // 3. Strict Server-side Email Parse (never trust client-sent department or year)
   const parsed = parseCollegeEmail(studentEmail);
-  if (!parsed.valid) {
+  if (!parsed.valid || parsed.accountType !== 'student') {
     return res.status(400).json({
       success: false,
-      message: parsed.error
+      message: parsed.error || 'Only verified students can submit registration requests for campus events.'
     });
   }
 
@@ -309,6 +309,22 @@ async function getAdminRequests(req, res) {
       params.push(parseInt(eventId, 10));
     }
 
+    if (req.query.department && req.query.department !== 'all') {
+      query += ' AND rr.department_code = ?';
+      params.push(req.query.department);
+    }
+
+    if (req.query.year && req.query.year !== 'all') {
+      query += ' AND (rr.year_of_study = ? OR CAST(rr.year_of_study AS CHAR) = ?)';
+      params.push(req.query.year, req.query.year);
+    }
+
+    if (req.query.timeline === 'past') {
+      query += ' AND e.event_date < NOW()';
+    } else if (req.query.timeline === 'upcoming') {
+      query += ' AND e.event_date >= NOW()';
+    }
+
     query += ' ORDER BY rr.created_at DESC';
 
     const [rows] = await pool.execute(query, params);
@@ -513,11 +529,353 @@ async function getAdminStats(req, res) {
   }
 }
 
+/**
+ * PATCH /api/admin/requests/bulk-approve
+ * Admin approves multiple registration requests in a transaction with seat limit checks.
+ */
+async function bulkApproveRequests(req, res) {
+  const { requestIds } = req.body;
+  if (!Array.isArray(requestIds) || requestIds.length === 0) {
+    return res.status(400).json({
+      success: false,
+      message: 'requestIds must be a non-empty array of registration request IDs.'
+    });
+  }
+
+  const connection = await pool.getConnection();
+  try {
+    await connection.beginTransaction();
+
+    const approved = [];
+    const skipped = [];
+
+    for (const rawId of requestIds) {
+      const reqId = parseInt(rawId, 10);
+      if (isNaN(reqId)) continue;
+
+      const [reqRows] = await connection.execute(
+        'SELECT id, event_id, user_id, status, name FROM registration_requests WHERE id = ? FOR UPDATE',
+        [reqId]
+      );
+
+      if (reqRows.length === 0) {
+        skipped.push({ id: reqId, reason: 'Request not found' });
+        continue;
+      }
+
+      const request = reqRows[0];
+      if (request.status === 'approved') {
+        skipped.push({ id: reqId, name: request.name, reason: 'Already approved' });
+        continue;
+      }
+
+      // Check event seat limit
+      const [eventRows] = await connection.execute(
+        `SELECT id, title, max_seats,
+                (SELECT COUNT(*) FROM registration_requests WHERE event_id = e.id AND status = 'approved') AS approved_count
+         FROM events e
+         WHERE e.id = ? FOR UPDATE`,
+        [request.event_id]
+      );
+
+      if (eventRows.length === 0) {
+        skipped.push({ id: reqId, name: request.name, reason: 'Associated event not found' });
+        continue;
+      }
+
+      const event = eventRows[0];
+      if (event.max_seats !== null && Number(event.approved_count) >= event.max_seats) {
+        skipped.push({
+          id: reqId,
+          name: request.name,
+          reason: `Event "${event.title}" is full (${event.max_seats} seats limit)`
+        });
+        continue;
+      }
+
+      await connection.execute(
+        `UPDATE registration_requests SET
+          status = 'approved',
+          admin_note = NULL,
+          reviewed_by = ?,
+          reviewed_at = NOW()
+         WHERE id = ?`,
+        [req.user.id, reqId]
+      );
+
+      approved.push({ id: reqId, name: request.name, eventId: request.event_id });
+    }
+
+    await connection.commit();
+
+    return res.json({
+      success: true,
+      message: `Approved ${approved.length} student request(s).${skipped.length > 0 ? ` (${skipped.length} skipped)` : ''}`,
+      data: {
+        approvedCount: approved.length,
+        skippedCount: skipped.length,
+        approved,
+        skipped
+      }
+    });
+  } catch (error) {
+    await connection.rollback();
+    console.error('[bulkApproveRequests Error]:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to complete bulk approval.'
+    });
+  } finally {
+    connection.release();
+  }
+}
+
+/**
+ * PATCH /api/admin/requests/bulk-reject
+ * Admin rejects multiple registration requests with an optional reason note.
+ */
+async function bulkRejectRequests(req, res) {
+  const { requestIds, admin_note, note } = req.body;
+  if (!Array.isArray(requestIds) || requestIds.length === 0) {
+    return res.status(400).json({
+      success: false,
+      message: 'requestIds must be a non-empty array of registration request IDs.'
+    });
+  }
+
+  const reason = (admin_note || note || '').trim() || 'Rejected by administration.';
+
+  try {
+    const validIds = requestIds.map(id => parseInt(id, 10)).filter(id => !isNaN(id));
+    if (validIds.length === 0) {
+      return res.status(400).json({ success: false, message: 'No valid request IDs provided.' });
+    }
+
+    const placeholders = validIds.map(() => '?').join(',');
+    const [result] = await pool.query(
+      `UPDATE registration_requests SET
+        status = 'rejected',
+        admin_note = ?,
+        reviewed_by = ?,
+        reviewed_at = NOW()
+       WHERE id IN (${placeholders})`,
+      [reason, req.user.id, ...validIds]
+    );
+
+    return res.json({
+      success: true,
+      message: `Rejected ${result.affectedRows} student request(s).`,
+      data: {
+        rejectedCount: result.affectedRows
+      }
+    });
+  } catch (error) {
+    console.error('[bulkRejectRequests Error]:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to complete bulk rejection.'
+    });
+  }
+}
+
+/**
+ * GET /api/admin/events/:id/attendees
+ * Retrieve all registered students for a specific event (Upcoming or Past).
+ */
+async function getEventAttendees(req, res) {
+  const eventId = parseInt(req.params.id, 10);
+  try {
+    const [eventRows] = await pool.execute(
+      `SELECT e.*, 
+              COUNT(CASE WHEN rr.status = 'approved' THEN 1 END) AS approved_count,
+              COUNT(CASE WHEN rr.status = 'pending' THEN 1 END) AS pending_count,
+              COUNT(CASE WHEN rr.status = 'rejected' THEN 1 END) AS rejected_count,
+              COUNT(CASE WHEN rr.attended = 1 THEN 1 END) AS attended_count
+       FROM events e
+       LEFT JOIN registration_requests rr ON e.id = rr.event_id
+       WHERE e.id = ?
+       GROUP BY e.id
+       LIMIT 1`,
+      [eventId]
+    );
+
+    if (eventRows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Event not found.'
+      });
+    }
+
+    const event = eventRows[0];
+    const now = new Date();
+    event.is_past = new Date(event.event_date) < now;
+
+    const [attendees] = await pool.execute(
+      `SELECT 
+        rr.id,
+        rr.user_id,
+        rr.name,
+        rr.email,
+        rr.department_code,
+        d.name AS department_name,
+        rr.section,
+        rr.register_number,
+        rr.admission_year,
+        rr.year_of_study,
+        rr.status,
+        rr.admin_note,
+        rr.reviewed_at,
+        rr.attended,
+        rr.created_at,
+        u_reviewer.name AS reviewer_name
+       FROM registration_requests rr
+       JOIN departments d ON rr.department_code = d.code
+       LEFT JOIN users u_reviewer ON rr.reviewed_by = u_reviewer.id
+       WHERE rr.event_id = ?
+       ORDER BY 
+         CASE WHEN rr.status = 'approved' THEN 0 WHEN rr.status = 'pending' THEN 1 ELSE 2 END,
+         rr.name ASC`,
+      [eventId]
+    );
+
+    return res.json({
+      success: true,
+      data: {
+        event,
+        attendees
+      }
+    });
+  } catch (error) {
+    console.error('[getEventAttendees Error]:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to retrieve event registered students.'
+    });
+  }
+}
+
+/**
+ * PATCH /api/admin/requests/:id/attendance
+ * Toggle attendance status for a student request and credit/revert reward points.
+ */
+async function toggleAttendance(req, res) {
+  const requestId = parseInt(req.params.id, 10);
+  const connection = await pool.getConnection();
+
+  try {
+    await connection.beginTransaction();
+
+    const [rows] = await connection.execute(
+      `SELECT rr.id, rr.user_id, rr.event_id, rr.attended, rr.status,
+              e.title AS event_title, e.reward_points
+       FROM registration_requests rr
+       JOIN events e ON rr.event_id = e.id
+       WHERE rr.id = ? LIMIT 1 FOR UPDATE`,
+      [requestId]
+    );
+
+    if (rows.length === 0) {
+      await connection.rollback();
+      return res.status(404).json({
+        success: false,
+        message: 'Registration request not found.'
+      });
+    }
+
+    const request = rows[0];
+    const newAttended = request.attended ? 0 : 1;
+    const rewardPoints = parseInt(request.reward_points || 0, 10);
+
+    // Update attendance status on the registration request
+    await connection.execute(
+      'UPDATE registration_requests SET attended = ? WHERE id = ?',
+      [newAttended, requestId]
+    );
+
+    if (rewardPoints > 0 && request.user_id) {
+      if (newAttended === 1) {
+        // Credit points to student user account
+        await connection.execute(
+          'UPDATE users SET total_points = total_points + ? WHERE id = ?',
+          [rewardPoints, request.user_id]
+        );
+
+        // Record in points_log
+        await connection.execute(
+          `INSERT INTO points_log (user_id, event_id, points, reason)
+           VALUES (?, ?, ?, ?)`,
+          [request.user_id, request.event_id, rewardPoints, `Attended Event: ${request.event_title}`]
+        );
+      } else {
+        // Revert points if attendance is marked Absent
+        await connection.execute(
+          'UPDATE users SET total_points = GREATEST(0, total_points - ?) WHERE id = ?',
+          [rewardPoints, request.user_id]
+        );
+
+        // Clean up points log entry
+        await connection.execute(
+          'DELETE FROM points_log WHERE user_id = ? AND event_id = ? LIMIT 1',
+          [request.user_id, request.event_id]
+        );
+      }
+    }
+
+    await connection.commit();
+
+    return res.json({
+      success: true,
+      message: newAttended
+        ? `Student marked as Present. Credited +${rewardPoints} reward points!`
+        : `Student marked as Absent. Reverted ${rewardPoints} reward points.`,
+      data: {
+        requestId,
+        attended: Boolean(newAttended),
+        rewardPoints: newAttended ? rewardPoints : 0
+      }
+    });
+  } catch (error) {
+    await connection.rollback();
+    console.error('[toggleAttendance Error]:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to update attendance status.'
+    });
+  } finally {
+    connection.release();
+  }
+}
+
+/**
+ * GET /api/admin/departments
+ * List all college academic departments
+ */
+async function getDepartments(req, res) {
+  try {
+    const [rows] = await pool.execute('SELECT code, name FROM departments ORDER BY name ASC');
+    return res.json({
+      success: true,
+      data: rows
+    });
+  } catch (error) {
+    console.error('[getDepartments Error]:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to retrieve departments list.'
+    });
+  }
+}
+
 module.exports = {
   submitRegistrationRequest,
   getMyRequests,
   getAdminRequests,
   approveRequest,
   rejectRequest,
-  getAdminStats
+  getAdminStats,
+  bulkApproveRequests,
+  bulkRejectRequests,
+  getEventAttendees,
+  toggleAttendance,
+  getDepartments
 };

@@ -1,16 +1,22 @@
 @echo off
+set "PATH=C:\Program Files\nodejs;C:\Program Files\MySQL\MySQL Server 8.4\bin;%PATH%"
 echo ========================================================
 echo   Launching FXEC Campus Event Management System
 echo ========================================================
 
-:: Check if MySQL is already running on port 3307
-netstat -ano | findstr :3307 | findstr LISTENING >nul
-if %errorlevel% neq 0 (
-    echo [1/3] Starting MySQL Server (Port 3307)...
-    start /b "" "C:\Program Files\MySQL\MySQL Server 8.4\bin\mysqld.exe" --datadir="%~dp0mysql-data" --port=3307
-    timeout /t 3 /nobreak >nul
+:: Check if MySQL is running on port 3306 or 3307
+netstat -ano | findstr :3306 | findstr LISTENING >nul
+if %errorlevel% equ 0 (
+    echo [1/3] MySQL Server is running on port 3306 (MySQL80 service).
 ) else (
-    echo [1/3] MySQL Server is already running on port 3307.
+    netstat -ano | findstr :3307 | findstr LISTENING >nul
+    if %errorlevel% neq 0 (
+        echo [1/3] Starting MySQL Server (Port 3307)...
+        start /b "" "C:\Program Files\MySQL\MySQL Server 8.4\bin\mysqld.exe" --datadir="%~dp0mysql-data" --port=3307
+        timeout /t 3 /nobreak >nul
+    ) else (
+        echo [1/3] MySQL Server is already running on port 3307.
+    )
 )
 
 :: Start Backend API

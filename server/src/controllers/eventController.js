@@ -129,8 +129,10 @@ async function getAllEvents(req, res) {
       params.push(searchParam, searchParam, searchParam, searchParam);
     }
 
-    if (upcoming === 'true' || upcoming === true) {
+    if (upcoming === 'true' || upcoming === true || req.query.timeline === 'upcoming') {
       query += ' AND e.event_date >= NOW()';
+    } else if (req.query.timeline === 'past') {
+      query += ' AND e.event_date < NOW()';
     }
 
     query += ` GROUP BY e.id ORDER BY 
@@ -146,6 +148,7 @@ async function getAllEvents(req, res) {
       const approvedCount = Number(ev.approved_count || 0);
       const seatsLeft = maxSeats !== null ? Math.max(0, maxSeats - approvedCount) : null;
       const isPastDeadline = new Date(ev.registration_deadline) < now;
+      const isPastEvent = new Date(ev.event_date) < now;
       const isSeatsFull = maxSeats !== null && seatsLeft <= 0;
 
       return {
@@ -154,6 +157,7 @@ async function getAllEvents(req, res) {
         pending_count: Number(ev.pending_count || 0),
         seats_left: seatsLeft,
         is_past_deadline: isPastDeadline,
+        is_past_event: isPastEvent,
         is_seats_full: isSeatsFull,
         user_request_status: ev.user_request_status || null,
         user_request_id: ev.user_request_id || null

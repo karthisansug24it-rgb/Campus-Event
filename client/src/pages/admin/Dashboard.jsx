@@ -140,7 +140,7 @@ const Dashboard = () => {
 
         <StatCard
           title="CONFIRMED SEATS"
-          value={stats?.approvedRequests ?? 0}
+          value={stats?.approvedRegistrations ?? stats?.approvedRequests ?? 0}
           subtitle="Allotted registrations"
           icon={CheckCircle2}
           colorScheme="emerald"
