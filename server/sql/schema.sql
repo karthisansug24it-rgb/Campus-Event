@@ -58,6 +58,7 @@ CREATE TABLE `events` (
   `organizer` VARCHAR(150) NOT NULL,
   `event_date` DATETIME NOT NULL,
   `registration_deadline` DATETIME NOT NULL,
+  `certificate_deadline` DATETIME NULL,
   `max_seats` INT NULL,
   `reward_points` INT NOT NULL DEFAULT 0,
   `external_link` VARCHAR(255) NULL,
@@ -83,10 +84,18 @@ CREATE TABLE `registration_requests` (
   `email` VARCHAR(150) NOT NULL,
   `admission_year` INT NOT NULL,
   `year_of_study` INT NOT NULL COMMENT 'Calculated snapshot at the time of request',
-  `status` ENUM('pending', 'approved', 'rejected') NOT NULL DEFAULT 'pending',
+  `status` ENUM('registered', 'registration_approved', 'participated', 'ranked', 'rejected', 'pending', 'approved') NOT NULL DEFAULT 'registered',
+  `registration_screenshot` VARCHAR(255) NULL COMMENT 'Uploaded screenshot proof of registration',
+  `screenshot_uploaded_at` DATETIME NULL,
+  `certificate_url` VARCHAR(255) NULL COMMENT 'Uploaded participation or achievement certificate',
+  `certificate_uploaded_at` DATETIME NULL,
+  `rank_position` ENUM('1', '2', '3', 'participated', 'none') NOT NULL DEFAULT 'none',
+  `rank_points_awarded` INT NOT NULL DEFAULT 0,
   `admin_note` TEXT NULL,
   `reviewed_by` INT NULL,
   `reviewed_at` DATETIME NULL,
+  `ranked_by` INT NULL,
+  `ranked_at` DATETIME NULL,
   `attended` BOOLEAN NOT NULL DEFAULT FALSE,
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   UNIQUE KEY `unique_event_user` (`event_id`, `user_id`),
@@ -100,6 +109,8 @@ CREATE TABLE `registration_requests` (
   CONSTRAINT `fk_requests_department` FOREIGN KEY (`department_code`) 
     REFERENCES `departments` (`code`) ON UPDATE CASCADE,
   CONSTRAINT `fk_requests_reviewer` FOREIGN KEY (`reviewed_by`) 
+    REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_requests_ranked_by` FOREIGN KEY (`ranked_by`) 
     REFERENCES `users` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 

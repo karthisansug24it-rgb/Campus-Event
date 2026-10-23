@@ -105,4 +105,47 @@ test('E2E API Test Suite', async (t) => {
     assert.strictEqual(data.success, true);
     assert.ok(Array.isArray(data.data));
   });
+
+  await t.test('7. Student Deadline & Action Alerts (GET /api/my/alerts)', async () => {
+    const res = await fetch(`${BASE_URL}/my/alerts`, {
+      headers: {
+        'Authorization': `Bearer ${studentToken}`
+      }
+    });
+
+    const data = await res.json();
+    assert.strictEqual(res.status, 200);
+    assert.strictEqual(data.success, true);
+    assert.ok(data.data.missingScreenshots !== undefined);
+    assert.ok(data.data.pendingCertificates !== undefined);
+    assert.ok(data.data.recentAwards !== undefined);
+  });
+
+  await t.test('8. Admin Alerts & Deadlines (GET /api/admin/alerts)', async () => {
+    const res = await fetch(`${BASE_URL}/admin/alerts`, {
+      headers: {
+        'Authorization': `Bearer ${adminToken}`
+      }
+    });
+
+    const data = await res.json();
+    assert.strictEqual(res.status, 200);
+    assert.strictEqual(data.success, true);
+    assert.strictEqual(typeof data.data.pendingScreenshots, 'number');
+    assert.strictEqual(typeof data.data.pendingCertificates, 'number');
+    assert.ok(Array.isArray(data.data.closingSoon));
+  });
+
+  await t.test('9. Admin Requests Stage Filtering (GET /api/admin/requests?status=registered)', async () => {
+    const res = await fetch(`${BASE_URL}/admin/requests?status=registered`, {
+      headers: {
+        'Authorization': `Bearer ${adminToken}`
+      }
+    });
+
+    const data = await res.json();
+    assert.strictEqual(res.status, 200);
+    assert.strictEqual(data.success, true);
+    assert.ok(Array.isArray(data.data));
+  });
 });

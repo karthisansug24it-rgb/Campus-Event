@@ -87,12 +87,13 @@ async function getAllEvents(req, res) {
         e.organizer, 
         e.event_date, 
         e.registration_deadline, 
+        e.certificate_deadline,
         e.max_seats, 
         e.reward_points, 
         e.external_link,
         e.created_at,
-        COUNT(CASE WHEN rr.status = 'approved' THEN 1 END) AS approved_count,
-        COUNT(CASE WHEN rr.status = 'pending' THEN 1 END) AS pending_count
+        COUNT(CASE WHEN rr.status IN ('registration_approved', 'approved', 'participated', 'ranked') THEN 1 END) AS approved_count,
+        COUNT(CASE WHEN rr.status IN ('registered', 'pending') THEN 1 END) AS pending_count
     `;
 
     if (currentUserId) {
@@ -190,13 +191,17 @@ async function getEventById(req, res) {
       SELECT 
         e.*,
         u.name AS creator_name,
-        COUNT(CASE WHEN rr.status = 'approved' THEN 1 END) AS approved_count,
-        COUNT(CASE WHEN rr.status = 'pending' THEN 1 END) AS pending_count
+        COUNT(CASE WHEN rr.status IN ('registration_approved', 'approved', 'participated', 'ranked') THEN 1 END) AS approved_count,
+        COUNT(CASE WHEN rr.status IN ('registered', 'pending') THEN 1 END) AS pending_count
     `;
 
     if (currentUserId) {
       query += `,
         MAX(CASE WHEN rr.user_id = ? THEN rr.status ELSE NULL END) AS user_request_status,
+        MAX(CASE WHEN rr.user_id = ? THEN rr.registration_screenshot ELSE NULL END) AS user_registration_screenshot,
+        MAX(CASE WHEN rr.user_id = ? THEN rr.certificate_url ELSE NULL END) AS user_certificate_url,
+        MAX(CASE WHEN rr.user_id = ? THEN rr.rank_position ELSE NULL END) AS user_rank_position,
+        MAX(CASE WHEN rr.user_id = ? THEN rr.rank_points_awarded ELSE 0 END) AS user_rank_points_awarded,
         MAX(CASE WHEN rr.user_id = ? THEN rr.admin_note ELSE NULL END) AS user_admin_note,
         MAX(CASE WHEN rr.user_id = ? THEN rr.created_at ELSE NULL END) AS user_requested_at,
         MAX(CASE WHEN rr.user_id = ? THEN rr.id ELSE NULL END) AS user_request_id
@@ -214,7 +219,7 @@ async function getEventById(req, res) {
 
     const params = [];
     if (currentUserId) {
-      params.push(currentUserId, currentUserId, currentUserId, currentUserId);
+      params.push(currentUserId, currentUserId, currentUserId, currentUserId, currentUserId, currentUserId, currentUserId, currentUserId);
     }
     params.push(eventId);
 
@@ -245,6 +250,10 @@ async function getEventById(req, res) {
         is_past_deadline: isPastDeadline,
         is_seats_full: isSeatsFull,
         user_request_status: ev.user_request_status || null,
+        user_registration_screenshot: ev.user_registration_screenshot || null,
+        user_certificate_url: ev.user_certificate_url || null,
+        user_rank_position: ev.user_rank_position || null,
+        user_rank_points_awarded: Number(ev.user_rank_points_awarded || 0),
         user_admin_note: ev.user_admin_note || null,
         user_requested_at: ev.user_requested_at || null,
         user_request_id: ev.user_request_id || null
@@ -284,6 +293,7 @@ async function createEvent(req, res) {
       organizer,
       event_date,
       registration_deadline,
+      certificate_deadline,
       max_seats,
       reward_points,
       external_link
@@ -305,14 +315,14 @@ async function createEvent(req, res) {
     const formattedEventDate = toMySQLDateTime(event_date);
     const deadlineValue = registration_deadline || event_date;
     const formattedDeadline = toMySQLDateTime(deadlineValue);
-
+    const formattedCertDeadline = certificate_deadline ? toMySQLDateTime(certificate_deadline) : null;
 
     const [result] = await pool.execute(
       `INSERT INTO events (
         title, description, poster_url, event_type, category, 
-        venue, organizer, event_date, registration_deadline, 
+        venue, organizer, event_date, registration_deadline, certificate_deadline,
         max_seats, reward_points, external_link, created_by
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         title.trim(),
         description.trim(),
@@ -323,6 +333,7 @@ async function createEvent(req, res) {
         organizer.trim(),
         formattedEventDate,
         formattedDeadline,
+        formattedCertDeadline,
         max_seats ? parseInt(max_seats, 10) : null,
         reward_points ? parseInt(reward_points, 10) : 0,
         external_link ? external_link.trim() : null,
@@ -378,6 +389,7 @@ async function updateEvent(req, res) {
       organizer,
       event_date,
       registration_deadline,
+      certificate_deadline,
       max_seats,
       reward_points,
       external_link
@@ -401,6 +413,9 @@ async function updateEvent(req, res) {
 
     const formattedEventDate = event_date ? toMySQLDateTime(event_date) : existing[0].event_date;
     const formattedDeadline = registration_deadline ? toMySQLDateTime(registration_deadline) : existing[0].registration_deadline;
+    const formattedCertDeadline = certificate_deadline !== undefined 
+      ? (certificate_deadline ? toMySQLDateTime(certificate_deadline) : null)
+      : existing[0].certificate_deadline;
 
     await pool.execute(
       `UPDATE events SET 
@@ -413,6 +428,7 @@ async function updateEvent(req, res) {
         organizer = ?, 
         event_date = ?, 
         registration_deadline = ?, 
+        certificate_deadline = ?,
         max_seats = ?, 
         reward_points = ?, 
         external_link = ?
@@ -427,7 +443,7 @@ async function updateEvent(req, res) {
         organizer ? organizer.trim() : existing[0].organizer,
         formattedEventDate,
         formattedDeadline,
-
+        formattedCertDeadline,
         max_seats !== undefined ? (max_seats ? parseInt(max_seats, 10) : null) : existing[0].max_seats,
         reward_points !== undefined ? parseInt(reward_points, 10) : existing[0].reward_points,
         external_link !== undefined ? (external_link ? external_link.trim() : null) : existing[0].external_link,

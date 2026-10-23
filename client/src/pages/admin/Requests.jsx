@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useLocation } from 'react-router-dom';
 import api from '../../api/axios';
 import { useToast } from '../../components/Toast';
 import { 
@@ -26,7 +27,16 @@ import {
   RotateCcw,
   GraduationCap,
   History,
-  Layers
+  Layers,
+  Trophy,
+  Medal,
+  Award,
+  Eye,
+  ExternalLink,
+  Upload,
+  Check,
+  ShieldCheck,
+  ChevronRight
 } from 'lucide-react';
 import { 
   PageHeader, 
@@ -51,8 +61,19 @@ const DEFAULT_DEPARTMENTS = [
 
 const Requests = () => {
   const { showToast } = useToast();
-  const [activeTab, setActiveTab] = useState('pending'); // 'pending', 'approved', 'rejected', 'all'
+  const location = useLocation();
+  const searchTab = new URLSearchParams(location.search).get('tab');
+  // Stages: 'registered', 'registration_approved', 'participated', 'ranked', 'rejected', 'all'
+  const [activeTab, setActiveTab] = useState(searchTab || 'registered'); 
+
+  useEffect(() => {
+    const tabParam = new URLSearchParams(location.search).get('tab');
+    if (tabParam && ['registered', 'registration_approved', 'participated', 'ranked', 'rejected', 'all'].includes(tabParam)) {
+      setActiveTab(tabParam);
+    }
+  }, [location.search]);
   const [requests, setRequests] = useState([]);
+  const [alerts, setAlerts] = useState({ pendingScreenshots: 0, pendingCertificates: 0, closingSoon: [], certClosingSoon: [] });
   const [eventsList, setEventsList] = useState([]);
   const [departments, setDepartments] = useState(DEFAULT_DEPARTMENTS);
   
@@ -73,6 +94,16 @@ const Requests = () => {
   const [rejectingRequest, setRejectingRequest] = useState(null);
   const [rejectNote, setRejectNote] = useState('');
 
+  // Proof Lightbox Modal
+  const [inspectingProof, setInspectingProof] = useState(null); // request object
+
+  // Certificate Verification & Ranking Modal
+  const [rankingRequest, setRankingRequest] = useState(null); // request object
+  const [selectedRank, setSelectedRank] = useState('1'); // '1', '2', '3', 'participated'
+  const [customPoints, setCustomPoints] = useState('');
+  const [rankNote, setRankNote] = useState('');
+  const [isSubmittingRank, setIsSubmittingRank] = useState(false);
+
   // Bulk Action Confirmation Modals
   const [isBulkApproveModalOpen, setIsBulkApproveModalOpen] = useState(false);
   const [isBulkRejectModalOpen, setIsBulkRejectModalOpen] = useState(false);
@@ -86,15 +117,19 @@ const Requests = () => {
   useEffect(() => {
     const fetchMetadata = async () => {
       try {
-        const [eventsRes, deptsRes] = await Promise.all([
+        const [eventsRes, deptsRes, alertsRes] = await Promise.all([
           api.get('/events'),
-          api.get('/admin/departments').catch(() => ({ data: { success: false } }))
+          api.get('/admin/departments').catch(() => ({ data: { success: false } })),
+          api.get('/admin/alerts').catch(() => ({ data: { success: false } }))
         ]);
         if (eventsRes.data.success) {
           setEventsList(eventsRes.data.data);
         }
         if (deptsRes.data.success && deptsRes.data.data?.length > 0) {
           setDepartments(deptsRes.data.data);
+        }
+        if (alertsRes.data.success && alertsRes.data.data) {
+          setAlerts(alertsRes.data.data);
         }
       } catch (err) {
         console.error('Failed to load filter metadata:', err);
@@ -125,11 +160,17 @@ const Requests = () => {
         params.timeline = selectedTimelineFilter;
       }
 
-      const res = await api.get('/admin/requests', { params });
+      const [res, alertsRes] = await Promise.all([
+        api.get('/admin/requests', { params }),
+        api.get('/admin/alerts').catch(() => ({ data: { success: false } }))
+      ]);
+
       if (res.data.success) {
         setRequests(res.data.data);
-        // Clean up selections that might not be in the newly fetched requests
         setSelectedIds(new Set());
+      }
+      if (alertsRes.data.success && alertsRes.data.data) {
+        setAlerts(alertsRes.data.data);
       }
     } catch (err) {
       console.error('Failed to load requests:', err);
@@ -159,10 +200,6 @@ const Requests = () => {
   }, [requests, searchQuery]);
 
   // Selection helpers
-  const pendingFilteredRequests = useMemo(() => {
-    return filteredRequests.filter(r => r.status === 'pending');
-  }, [filteredRequests]);
-
   const areAllSelected = useMemo(() => {
     if (filteredRequests.length === 0) return false;
     return filteredRequests.every(r => selectedIds.has(r.id));
@@ -182,24 +219,13 @@ const Requests = () => {
   };
 
   const toggleSelectRow = (id) => {
-    setSelectedIds(prev => {
-      const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
-      return next;
-    });
-  };
-
-  // Reset all filters helper
-  const handleResetFilters = () => {
-    setSelectedEventFilter('');
-    setSelectedDeptFilter('');
-    setSelectedYearFilter('');
-    setSelectedTimelineFilter('all');
-    setSearchQuery('');
+    const newSet = new Set(selectedIds);
+    if (newSet.has(id)) {
+      newSet.delete(id);
+    } else {
+      newSet.add(id);
+    }
+    setSelectedIds(newSet);
   };
 
   const hasActiveFilters = Boolean(
@@ -210,24 +236,33 @@ const Requests = () => {
     searchQuery.trim()
   );
 
-  // Single Request Actions
+  const handleResetFilters = () => {
+    setSelectedEventFilter('');
+    setSelectedDeptFilter('');
+    setSelectedYearFilter('');
+    setSelectedTimelineFilter('all');
+    setSearchQuery('');
+  };
+
+  // Single Approve Registration & Screenshot
   const handleApprove = async (request) => {
     setProcessingId(request.id);
     try {
       const res = await api.patch(`/admin/requests/${request.id}/approve`);
       if (res.data.success) {
-        showToast(`Approved registration for ${request.student_name}. Seat allotted!`, 'success');
+        showToast(res.data.message || 'Registration screenshot verified & approved!', 'success');
+        if (inspectingProof?.id === request.id) setInspectingProof(null);
         fetchRequests();
       }
     } catch (err) {
-      console.error('Approval failed:', err);
-      const msg = err.response?.data?.message || 'Failed to approve request.';
-      showToast(msg, 'error');
+      console.error('Approve error:', err);
+      showToast(err.response?.data?.message || 'Failed to approve request.', 'error');
     } finally {
       setProcessingId(null);
     }
   };
 
+  // Single Reject Handler
   const handleOpenReject = (request) => {
     setRejectingRequest(request);
     setRejectNote('');
@@ -241,15 +276,63 @@ const Requests = () => {
         admin_note: rejectNote.trim()
       });
       if (res.data.success) {
-        showToast(`Registration request for ${rejectingRequest.student_name} rejected.`, 'info');
+        showToast('Registration request rejected.', 'info');
         setRejectingRequest(null);
+        if (inspectingProof?.id === rejectingRequest.id) setInspectingProof(null);
         fetchRequests();
       }
     } catch (err) {
-      console.error('Rejection failed:', err);
+      console.error('Reject error:', err);
       showToast(err.response?.data?.message || 'Failed to reject request.', 'error');
     } finally {
       setProcessingId(null);
+    }
+  };
+
+  // Open Ranking Modal for a request
+  const handleOpenRankModal = (request) => {
+    setRankingRequest(request);
+    const existingRank = request.rank_position && request.rank_position !== 'none' ? request.rank_position : '1';
+    setSelectedRank(existingRank);
+    const base = Number(request.reward_points || 0);
+    const bonus = existingRank === '1' ? 50 : existingRank === '2' ? 30 : existingRank === '3' ? 20 : 0;
+    setCustomPoints(request.rank_points_awarded || (base + bonus));
+    setRankNote(request.admin_note || '');
+  };
+
+  // Calculate default points when selectedRank changes
+  const handleRankSelect = (rank) => {
+    setSelectedRank(rank);
+    if (rankingRequest) {
+      const base = Number(rankingRequest.reward_points || 0);
+      const bonus = rank === '1' ? 50 : rank === '2' ? 30 : rank === '3' ? 20 : 0;
+      setCustomPoints(base + bonus);
+    }
+  };
+
+  // Submit Rank & Verify Certificate
+  const handleConfirmRank = async (e) => {
+    e.preventDefault();
+    if (!rankingRequest) return;
+
+    setIsSubmittingRank(true);
+    try {
+      const res = await api.patch(`/admin/requests/${rankingRequest.id}/rank`, {
+        rank_position: selectedRank,
+        custom_points: parseInt(customPoints, 10),
+        note: rankNote.trim()
+      });
+
+      if (res.data.success) {
+        showToast(res.data.message || `Rank ${selectedRank.toUpperCase()} awarded successfully!`, 'success');
+        setRankingRequest(null);
+        fetchRequests();
+      }
+    } catch (err) {
+      console.error('Rank submission error:', err);
+      showToast(err.response?.data?.message || 'Failed to verify and rank certificate.', 'error');
+    } finally {
+      setIsSubmittingRank(false);
     }
   };
 
@@ -258,14 +341,13 @@ const Requests = () => {
     if (selectedIds.size > 0) {
       return Array.from(selectedIds);
     }
-    // If none selected individually, target all currently filtered pending requests
-    return pendingFilteredRequests.map(r => r.id);
+    return filteredRequests.map(r => r.id);
   };
 
   const handleOpenBulkApprove = () => {
     const ids = getTargetBulkIds();
     if (ids.length === 0) {
-      showToast('No pending requests available to approve.', 'info');
+      showToast('No requests available to approve.', 'info');
       return;
     }
     setIsBulkApproveModalOpen(true);
@@ -279,7 +361,7 @@ const Requests = () => {
     try {
       const res = await api.patch('/admin/requests/bulk-approve', { requestIds: ids });
       if (res.data.success) {
-        showToast(res.data.message || `Successfully approved ${res.data.data.approvedCount} students!`, 'success');
+        showToast(res.data.message || `Successfully approved ${res.data.data.approvedCount} registrations!`, 'success');
         setIsBulkApproveModalOpen(false);
         setSelectedIds(new Set());
         fetchRequests();
@@ -295,7 +377,7 @@ const Requests = () => {
   const handleOpenBulkReject = () => {
     const ids = getTargetBulkIds();
     if (ids.length === 0) {
-      showToast('No pending requests available to reject.', 'info');
+      showToast('No requests available to reject.', 'info');
       return;
     }
     setBulkRejectNote('');
@@ -359,9 +441,9 @@ const Requests = () => {
       {/* Page Header */}
       <AnimatedSection delay={0.05}>
         <PageHeader
-          badge="ADMISSIONS & VERIFICATION CONSOLE"
-          title="Registration Requests & Quota Manager"
-          subtitle="Audit student registration submissions, filter by Year & Department, and perform one-click batch approvals or rejections."
+          badge="ADMISSIONS & RANKING CONSOLE"
+          title="Registration Approvals & Certificate Ranking"
+          subtitle="Verify student registration screenshots, approve seats, inspect uploaded participation certificates, and award official Ranks 1, 2, 3 with reward points."
           actions={
             <Button
               variant="outline"
@@ -375,6 +457,64 @@ const Requests = () => {
           }
         />
       </AnimatedSection>
+
+      {/* Admin Action Alerts & Deadlines Notification Bar */}
+      {(alerts.pendingScreenshots > 0 || alerts.pendingCertificates > 0 || alerts.closingSoon?.length > 0) && (
+        <AnimatedSection delay={0.08} className="space-y-2.5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {/* Screenshot Verification Alert Card */}
+            {alerts.pendingScreenshots > 0 && (
+              <div 
+                onClick={() => setActiveTab('registered')}
+                className="p-3.5 rounded-2xl bg-blue-50 border border-blue-200 text-blue-900 cursor-pointer hover:bg-blue-100/80 transition-all flex items-center justify-between shadow-2xs"
+              >
+                <div className="flex items-center gap-3 truncate">
+                  <div className="p-2 rounded-xl bg-blue-600 text-white shrink-0">
+                    <ShieldCheck className="w-4 h-4" />
+                  </div>
+                  <div className="truncate">
+                    <p className="text-[11px] font-mono font-bold uppercase tracking-wider text-blue-700">Proof Approvals Pending</p>
+                    <p className="text-xs font-bold truncate"><strong>{alerts.pendingScreenshots}</strong> registration screenshot(s) awaiting approval</p>
+                  </div>
+                </div>
+                <ChevronRight className="w-4 h-4 text-blue-600 shrink-0 ml-2" />
+              </div>
+            )}
+
+            {/* Certificate Verification Alert Card */}
+            {alerts.pendingCertificates > 0 && (
+              <div 
+                onClick={() => setActiveTab('participated')}
+                className="p-3.5 rounded-2xl bg-purple-50 border border-purple-200 text-purple-900 cursor-pointer hover:bg-purple-100/80 transition-all flex items-center justify-between shadow-2xs"
+              >
+                <div className="flex items-center gap-3 truncate">
+                  <div className="p-2 rounded-xl bg-purple-600 text-white shrink-0">
+                    <Trophy className="w-4 h-4" />
+                  </div>
+                  <div className="truncate">
+                    <p className="text-[11px] font-mono font-bold uppercase tracking-wider text-purple-700">Certificates Awaiting Ranking</p>
+                    <p className="text-xs font-bold truncate"><strong>{alerts.pendingCertificates}</strong> certificate(s) ready to verify & rank</p>
+                  </div>
+                </div>
+                <ChevronRight className="w-4 h-4 text-purple-600 shrink-0 ml-2" />
+              </div>
+            )}
+
+            {/* Closing Soon Alert Card */}
+            {alerts.closingSoon?.length > 0 && (
+              <div className="p-3.5 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 flex items-center gap-3 shadow-2xs">
+                <div className="p-2 rounded-xl bg-amber-600 text-white shrink-0">
+                  <Clock className="w-4 h-4" />
+                </div>
+                <div className="truncate">
+                  <p className="text-[11px] font-mono font-bold uppercase tracking-wider text-amber-700">Registration Deadlines Approaching</p>
+                  <p className="text-xs font-bold truncate">{alerts.closingSoon.length} event(s) closing within 48 hours</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </AnimatedSection>
+      )}
 
       {/* Advanced Filter Section */}
       <AnimatedSection className="bg-white rounded-3xl border border-slate-200/90 p-5 shadow-xs space-y-4" delay={0.1}>
@@ -398,7 +538,6 @@ const Requests = () => {
 
         {/* Filter Controls Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
-          
           {/* 1. Department Filter */}
           <div className="space-y-1">
             <label className="text-[11px] font-mono font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
@@ -449,12 +588,12 @@ const Requests = () => {
               onChange={(e) => setSelectedEventFilter(e.target.value)}
               className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-800 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 shadow-2xs truncate"
             >
-              <option value="">All Events ({eventsList.length})</option>
+              <option value="">All Events (All)</option>
               {groupedEvents.upcoming.length > 0 && (
                 <optgroup label="Upcoming Events">
                   {groupedEvents.upcoming.map((e) => (
                     <option key={e.id} value={e.id}>
-                      {e.title}
+                      {e.title} ({new Date(e.event_date).toLocaleDateString()})
                     </option>
                   ))}
                 </optgroup>
@@ -463,7 +602,7 @@ const Requests = () => {
                 <optgroup label="Past Events">
                   {groupedEvents.past.map((e) => (
                     <option key={e.id} value={e.id}>
-                      [Past] {e.title}
+                      {e.title} ({new Date(e.event_date).toLocaleDateString()})
                     </option>
                   ))}
                 </optgroup>
@@ -487,7 +626,6 @@ const Requests = () => {
               <option value="past">Past Events Only</option>
             </select>
           </div>
-
         </div>
 
         {/* Live Search Bar */}
@@ -500,85 +638,84 @@ const Requests = () => {
             className="w-full"
           />
         </div>
-
-        {/* Active Filter Indicators */}
-        {hasActiveFilters && (
-          <div className="flex flex-wrap items-center gap-2 pt-1 text-xs">
-            <span className="text-slate-400 font-mono text-[11px] uppercase">Active Filters:</span>
-            {selectedDeptFilter && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-50 border border-blue-200 text-blue-700 font-bold font-mono text-[11px]">
-                Dept: {selectedDeptFilter.toUpperCase()}
-                <X className="w-3 h-3 cursor-pointer hover:text-blue-900" onClick={() => setSelectedDeptFilter('')} />
-              </span>
-            )}
-            {selectedYearFilter && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-50 border border-blue-200 text-blue-700 font-bold font-mono text-[11px]">
-                Year {selectedYearFilter}
-                <X className="w-3 h-3 cursor-pointer hover:text-blue-900" onClick={() => setSelectedYearFilter('')} />
-              </span>
-            )}
-            {selectedEventFilter && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-50 border border-blue-200 text-blue-700 font-bold font-mono text-[11px] max-w-xs truncate">
-                Event ID: {selectedEventFilter}
-                <X className="w-3 h-3 cursor-pointer hover:text-blue-900" onClick={() => setSelectedEventFilter('')} />
-              </span>
-            )}
-            {selectedTimelineFilter !== 'all' && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-50 border border-blue-200 text-blue-700 font-bold font-mono text-[11px]">
-                Timeline: {selectedTimelineFilter}
-                <X className="w-3 h-3 cursor-pointer hover:text-blue-900" onClick={() => setSelectedTimelineFilter('all')} />
-              </span>
-            )}
-            {searchQuery && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 border border-slate-200 text-slate-700 font-mono text-[11px]">
-                "{searchQuery}"
-                <X className="w-3 h-3 cursor-pointer hover:text-slate-900" onClick={() => setSearchQuery('')} />
-              </span>
-            )}
-          </div>
-        )}
       </AnimatedSection>
 
       {/* Tabs & Bulk Action Toolbar */}
       <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
         
-        {/* Status Tabs */}
+        {/* Status Stages Tabs */}
         <div className="flex bg-slate-100/90 p-1.5 rounded-2xl w-full md:w-fit border border-slate-200/90 gap-1 overflow-x-auto">
+          {/* 1. Screenshot Verification */}
           <button
             type="button"
-            onClick={() => setActiveTab('pending')}
-            className={`px-4 py-2 rounded-xl text-xs font-mono font-bold flex items-center justify-center gap-2 transition-all whitespace-nowrap ${
-              activeTab === 'pending'
+            onClick={() => setActiveTab('registered')}
+            className={`px-3.5 py-2 rounded-xl text-xs font-mono font-bold flex items-center justify-center gap-1.5 transition-all whitespace-nowrap ${
+              activeTab === 'registered'
                 ? 'bg-blue-600 text-white shadow-xs font-black'
                 : 'text-slate-600 hover:text-blue-700 hover:bg-white/60'
             }`}
           >
-            <Clock className="w-3.5 h-3.5" />
-            <span>Pending Queue</span>
-            {requests.filter(r => r.status === 'pending').length > 0 && (
-              <span className="px-1.5 py-0.2 rounded-md bg-white/25 text-white text-[10px]">
-                {requests.filter(r => r.status === 'pending').length}
+            <ShieldCheck className="w-3.5 h-3.5" />
+            <span>1. Screenshot Verification</span>
+            {alerts.pendingScreenshots > 0 && (
+              <span className="px-1.5 py-0.2 rounded-md bg-white/30 text-white text-[10px]">
+                {alerts.pendingScreenshots}
               </span>
             )}
           </button>
 
+          {/* 2. Approved Attendees */}
           <button
             type="button"
-            onClick={() => setActiveTab('approved')}
-            className={`px-4 py-2 rounded-xl text-xs font-mono font-bold flex items-center justify-center gap-2 transition-all whitespace-nowrap ${
-              activeTab === 'approved'
-                ? 'bg-blue-600 text-white shadow-xs font-black'
-                : 'text-slate-600 hover:text-blue-700 hover:bg-white/60'
+            onClick={() => setActiveTab('registration_approved')}
+            className={`px-3.5 py-2 rounded-xl text-xs font-mono font-bold flex items-center justify-center gap-1.5 transition-all whitespace-nowrap ${
+              activeTab === 'registration_approved'
+                ? 'bg-emerald-600 text-white shadow-xs font-black'
+                : 'text-slate-600 hover:text-emerald-700 hover:bg-white/60'
             }`}
           >
             <CheckCircle2 className="w-3.5 h-3.5" />
-            <span>Approved</span>
+            <span>2. Approved Attendees</span>
           </button>
 
+          {/* 3. Certificate Verification & Ranking */}
+          <button
+            type="button"
+            onClick={() => setActiveTab('participated')}
+            className={`px-3.5 py-2 rounded-xl text-xs font-mono font-bold flex items-center justify-center gap-1.5 transition-all whitespace-nowrap ${
+              activeTab === 'participated'
+                ? 'bg-purple-600 text-white shadow-xs font-black'
+                : 'text-slate-600 hover:text-purple-700 hover:bg-white/60'
+            }`}
+          >
+            <Award className="w-3.5 h-3.5" />
+            <span>3. Certificate Ranking</span>
+            {alerts.pendingCertificates > 0 && (
+              <span className="px-1.5 py-0.2 rounded-md bg-white/30 text-white text-[10px]">
+                {alerts.pendingCertificates}
+              </span>
+            )}
+          </button>
+
+          {/* 4. Ranked */}
+          <button
+            type="button"
+            onClick={() => setActiveTab('ranked')}
+            className={`px-3.5 py-2 rounded-xl text-xs font-mono font-bold flex items-center justify-center gap-1.5 transition-all whitespace-nowrap ${
+              activeTab === 'ranked'
+                ? 'bg-amber-600 text-white shadow-xs font-black'
+                : 'text-slate-600 hover:text-amber-700 hover:bg-white/60'
+            }`}
+          >
+            <Trophy className="w-3.5 h-3.5" />
+            <span>4. Ranked & Completed</span>
+          </button>
+
+          {/* Rejected */}
           <button
             type="button"
             onClick={() => setActiveTab('rejected')}
-            className={`px-4 py-2 rounded-xl text-xs font-mono font-bold flex items-center justify-center gap-2 transition-all whitespace-nowrap ${
+            className={`px-3.5 py-2 rounded-xl text-xs font-mono font-bold flex items-center justify-center gap-1.5 transition-all whitespace-nowrap ${
               activeTab === 'rejected'
                 ? 'bg-slate-900 text-white shadow-xs font-black'
                 : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
@@ -588,65 +725,59 @@ const Requests = () => {
             <span>Rejected</span>
           </button>
 
+          {/* All */}
           <button
             type="button"
             onClick={() => setActiveTab('all')}
-            className={`px-4 py-2 rounded-xl text-xs font-mono font-bold flex items-center justify-center gap-2 transition-all whitespace-nowrap ${
+            className={`px-3.5 py-2 rounded-xl text-xs font-mono font-bold flex items-center justify-center gap-1.5 transition-all whitespace-nowrap ${
               activeTab === 'all'
                 ? 'bg-blue-600 text-white shadow-xs font-black'
                 : 'text-slate-600 hover:text-blue-700 hover:bg-white/60'
             }`}
           >
             <Layers className="w-3.5 h-3.5" />
-            <span>All Records</span>
+            <span>All</span>
           </button>
         </div>
 
-        {/* BULK ACTION BUTTONS: Accept All & Reject All */}
-        {activeTab === 'pending' && pendingFilteredRequests.length > 0 && (
-          <div className="flex items-center gap-2 bg-white p-1.5 rounded-2xl border border-slate-200/90 shadow-xs">
-            <span className="text-[11px] font-mono font-bold text-slate-500 px-2 hidden sm:inline">
-              {selectedIds.size > 0 ? `${selectedIds.size} Selected` : `All ${pendingFilteredRequests.length} Filtered`}:
-            </span>
-
-            {/* Accept All */}
+        {/* Bulk Action Buttons */}
+        {(activeTab === 'registered' || activeTab === 'all') && (
+          <div className="flex items-center gap-2">
             <Button
-              variant="primary"
+              variant="outline"
               size="sm"
               onClick={handleOpenBulkApprove}
-              loading={bulkProcessing}
+              disabled={filteredRequests.length === 0}
               icon={CheckCircle2}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white"
+              className="border-emerald-300 text-emerald-700 hover:bg-emerald-50 font-bold"
             >
-              <span>Accept All ({selectedIds.size > 0 ? selectedIds.size : pendingFilteredRequests.length})</span>
+              Accept All Visible ({selectedIds.size > 0 ? selectedIds.size : filteredRequests.length})
             </Button>
-
-            {/* Reject All */}
             <Button
               variant="outline"
               size="sm"
               onClick={handleOpenBulkReject}
-              disabled={bulkProcessing}
+              disabled={filteredRequests.length === 0}
               icon={XCircle}
-              className="border-rose-200 text-rose-700 hover:bg-rose-50"
+              className="border-rose-300 text-rose-700 hover:bg-rose-50 font-bold"
             >
-              <span>Reject All ({selectedIds.size > 0 ? selectedIds.size : pendingFilteredRequests.length})</span>
+              Reject All Visible
             </Button>
           </div>
         )}
       </div>
 
-      {/* Floating Bulk Selection Action Bar when items are selected */}
+      {/* Floating Selection Action Bar */}
       {selectedIds.size > 0 && (
-        <div className="sticky top-20 z-40 bg-slate-950 text-white px-5 py-3 rounded-2xl shadow-xl flex items-center justify-between gap-4 animate-modal-pop border border-slate-800">
-          <div className="flex items-center gap-3">
-            <span className="w-2.5 h-2.5 rounded-full bg-blue-500 animate-pulse" />
-            <span className="font-mono text-xs font-bold tracking-wide">
-              <strong>{selectedIds.size}</strong> student request{selectedIds.size > 1 ? 's' : ''} selected
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-slate-900 text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-4 animate-modal-pop border border-slate-700">
+          <div className="flex items-center gap-2 text-xs font-mono">
+            <span className="w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold">
+              {selectedIds.size}
             </span>
+            <span>Student(s) Selected</span>
           </div>
-
-          <div className="flex items-center gap-2.5">
+          <div className="h-4 w-px bg-slate-700" />
+          <div className="flex items-center gap-2">
             <button
               onClick={() => setSelectedIds(new Set())}
               className="text-xs font-mono text-slate-400 hover:text-white px-2 py-1 transition-colors"
@@ -694,8 +825,8 @@ const Requests = () => {
         ) : filteredRequests.length === 0 ? (
           <EmptyState
             icon={FileText}
-            title={`No ${activeTab} requests found`}
-            description="There are currently no records matching the selected department, year, event, or status filters."
+            title={`No ${activeTab} records found`}
+            description="There are currently no records matching the selected department, year, event, or stage filters."
           />
         ) : (
           <div className="overflow-x-auto">
@@ -721,17 +852,20 @@ const Requests = () => {
                   </th>
                   <th className="py-4 px-4">Target Event</th>
                   <th className="py-4 px-4">Student Profile</th>
-                  <th className="py-4 px-4">College Verification</th>
+                  <th className="py-4 px-4">Stage & Proof</th>
                   <th className="py-4 px-4">Submitted At</th>
+                  {activeTab === 'ranked' && <th className="py-4 px-4">Award & Rank</th>}
                   {activeTab === 'rejected' && <th className="py-4 px-4">Admin Note</th>}
-                  {activeTab === 'approved' && <th className="py-4 px-4">Verified By</th>}
-                  {activeTab === 'all' && <th className="py-4 px-4">Status</th>}
                   <th className="py-4 px-5 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {filteredRequests.map((r) => {
                   const isSelected = selectedIds.has(r.id);
+                  const isPendingReview = r.status === 'registered' || r.status === 'pending';
+                  const isParticipated = r.status === 'participated';
+                  const isRanked = r.status === 'ranked';
+
                   return (
                     <tr 
                       key={r.id} 
@@ -755,7 +889,7 @@ const Requests = () => {
                       </td>
 
                       {/* Event Details with Poster */}
-                      <td className="py-4 px-4 max-w-[260px]">
+                      <td className="py-4 px-4 max-w-[240px]">
                         <div className="flex items-start gap-3">
                           <div className="w-12 h-10 rounded-xl bg-slate-100 overflow-hidden shrink-0 shadow-2xs border border-slate-200 mt-0.5">
                             {r.poster_url ? (
@@ -801,34 +935,83 @@ const Requests = () => {
                             <span className="px-2 py-0.5 rounded-md bg-blue-50 border border-blue-200 font-mono font-bold text-blue-700 text-[10px]">
                               {r.register_number}
                             </span>
+                            <span className="px-2 py-0.5 rounded-md bg-slate-50 border border-slate-200 font-mono text-[10px] text-slate-600">
+                              Yr {r.year_of_study} ({r.department_code?.toUpperCase()})
+                            </span>
                           </div>
                         </div>
                       </td>
 
-                      {/* College Verification & Department / Year */}
-                      <td className="py-4 px-4 space-y-1 font-mono">
-                        <div className="flex items-center gap-1.5">
-                          <span className="px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 font-bold text-[10px]">
-                            Year {r.year_of_study} (Adm: {r.admission_year})
+                      {/* Stage & Proofs (Screenshot / Certificate) */}
+                      <td className="py-4 px-4 space-y-1.5 font-mono">
+                        {/* Status Stage Pill */}
+                        <div>
+                          <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                            r.status === 'ranked' ? 'bg-amber-100 text-amber-800 border border-amber-300' :
+                            r.status === 'participated' ? 'bg-purple-100 text-purple-800 border border-purple-300' :
+                            r.status === 'registration_approved' || r.status === 'approved' ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' :
+                            r.status === 'rejected' ? 'bg-rose-100 text-rose-800 border border-rose-300' :
+                            'bg-blue-100 text-blue-800 border border-blue-300'
+                          }`}>
+                            <span className="w-1.5 h-1.5 rounded-full bg-current" />
+                            <span>
+                              {r.status === 'ranked' ? `Rank ${r.rank_position.toUpperCase()}` :
+                               r.status === 'participated' ? 'Cert Submitted' :
+                               r.status === 'registration_approved' || r.status === 'approved' ? 'Seat Approved' :
+                               r.status === 'rejected' ? 'Rejected' : 'Proof In Review'}
+                            </span>
                           </span>
                         </div>
-                        <p className="font-semibold text-slate-800 text-xs">
-                          {r.department_name} ({r.department_code?.toUpperCase()})
-                        </p>
 
-                        {/* Warning Badge if discrepancy detected */}
-                        {r.has_mismatch === 1 && (
-                          <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-50 border border-amber-300 text-amber-900 text-[10px] font-bold">
-                            <AlertTriangle className="w-3 h-3 text-amber-600 shrink-0" />
-                            <span>Dept Mismatch with Email</span>
+                        {/* Registration Screenshot Proof Button */}
+                        {r.registration_screenshot ? (
+                          <div>
+                            <button
+                              type="button"
+                              onClick={() => setInspectingProof(r)}
+                              className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 text-[11px] font-bold transition-colors"
+                            >
+                              <Eye className="w-3 h-3" />
+                              <span>Inspect Screenshot Proof</span>
+                            </button>
+                          </div>
+                        ) : (
+                          <p className="text-[10px] text-amber-600 font-medium">No screenshot uploaded</p>
+                        )}
+
+                        {/* Participation Certificate Proof Button */}
+                        {r.certificate_url && (
+                          <div>
+                            <button
+                              type="button"
+                              onClick={() => handleOpenRankModal(r)}
+                              className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 text-[11px] font-bold transition-colors"
+                            >
+                              <Award className="w-3 h-3" />
+                              <span>Inspect Certificate</span>
+                            </button>
                           </div>
                         )}
                       </td>
 
-                      {/* Requested Time */}
+                      {/* Submitted Time */}
                       <td className="py-4 px-4 text-slate-500 font-mono text-xs">
                         {formatDate(r.requested_at)}
                       </td>
+
+                      {/* Ranked info column */}
+                      {activeTab === 'ranked' && (
+                        <td className="py-4 px-4 font-mono">
+                          <div className="space-y-1">
+                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-amber-50 border border-amber-300 text-amber-900 font-black text-xs">
+                              <Trophy className="w-3.5 h-3.5 text-amber-600" />
+                              <span>Rank {r.rank_position.toUpperCase()}</span>
+                            </span>
+                            <p className="text-[11px] text-amber-700 font-bold">+{r.rank_points_awarded} PTS CREDITED</p>
+                            <p className="text-[10px] text-slate-400">By {r.ranked_by_name || 'Admin'} on {formatDate(r.ranked_at)}</p>
+                          </div>
+                        </td>
+                      )}
 
                       {/* Admin Note if Rejected */}
                       {activeTab === 'rejected' && (
@@ -839,32 +1022,9 @@ const Requests = () => {
                         </td>
                       )}
 
-                      {/* Reviewer if Approved */}
-                      {activeTab === 'approved' && (
-                        <td className="py-4 px-4 text-slate-500 font-mono">
-                          <p className="font-semibold text-slate-800">{r.reviewer_name || 'Admin'}</p>
-                          <p className="text-[10px] text-slate-400">{formatDate(r.reviewed_at)}</p>
-                        </td>
-                      )}
-
-                      {/* Status Column in 'all' view */}
-                      {activeTab === 'all' && (
-                        <td className="py-4 px-4">
-                          <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase ${
-                            r.status === 'approved'
-                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                              : r.status === 'pending'
-                              ? 'bg-amber-50 text-amber-700 border border-amber-200'
-                              : 'bg-rose-50 text-rose-700 border border-rose-200'
-                          }`}>
-                            {r.status}
-                          </span>
-                        </td>
-                      )}
-
-                      {/* Actions */}
+                      {/* Actions Column */}
                       <td className="py-4 px-5 text-right">
-                        {r.status === 'pending' ? (
+                        {isPendingReview ? (
                           <div className="flex items-center justify-end gap-2">
                             <Button
                               variant="primary"
@@ -872,9 +1032,9 @@ const Requests = () => {
                               onClick={() => handleApprove(r)}
                               loading={processingId === r.id}
                               icon={CheckCircle2}
-                              className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                              className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold"
                             >
-                              Accept
+                              Approve Proof
                             </Button>
 
                             <Button
@@ -883,9 +1043,33 @@ const Requests = () => {
                               onClick={() => handleOpenReject(r)}
                               disabled={processingId === r.id}
                               icon={XCircle}
-                              className="text-rose-600 hover:bg-rose-50 border-rose-200"
+                              className="text-rose-600 hover:bg-rose-50 border-rose-200 font-bold"
                             >
                               Reject
+                            </Button>
+                          </div>
+                        ) : isParticipated ? (
+                          <div className="flex items-center justify-end gap-2">
+                            <Button
+                              variant="primary"
+                              size="xs"
+                              onClick={() => handleOpenRankModal(r)}
+                              icon={Trophy}
+                              className="bg-purple-600 hover:bg-purple-700 text-white font-bold"
+                            >
+                              Verify & Rank
+                            </Button>
+                          </div>
+                        ) : isRanked ? (
+                          <div className="flex items-center justify-end gap-2">
+                            <Button
+                              variant="outline"
+                              size="xs"
+                              onClick={() => handleOpenRankModal(r)}
+                              icon={Trophy}
+                              className="border-amber-300 text-amber-900 hover:bg-amber-50 font-bold"
+                            >
+                              Edit Rank
                             </Button>
                           </div>
                         ) : r.status === 'rejected' ? (
@@ -899,13 +1083,9 @@ const Requests = () => {
                             Re-approve
                           </Button>
                         ) : (
-                          <span className="text-emerald-700 font-mono font-bold flex items-center justify-end gap-1">
-                            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                            <span>Approved ✓</span>
-                          </span>
+                          <span className="text-slate-400 font-mono text-xs">Seat Confirmed ✓</span>
                         )}
                       </td>
-
                     </tr>
                   );
                 })}
@@ -913,67 +1093,300 @@ const Requests = () => {
             </table>
           </div>
         )}
-
-        {/* Footer info strip */}
-        <div className="p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between text-xs font-mono text-slate-500">
-          <span>
-            Showing <strong className="text-slate-800">{filteredRequests.length}</strong> of {requests.length} requests
-          </span>
-          {activeTab === 'pending' && pendingFilteredRequests.length > 0 && (
-            <span className="text-slate-600">
-              💡 Tip: Use <strong>Accept All</strong> or <strong>Reject All</strong> above to process matching cohorts.
-            </span>
-          )}
-        </div>
       </div>
 
-      {/* SINGLE REJECT DIALOG MODAL */}
-      {rejectingRequest && (
-        <div 
-          className="fixed inset-0 z-[80] bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4"
-          onClick={() => setRejectingRequest(null)}
-          role="dialog"
-          aria-modal="true"
-        >
-          <div 
-            className="bg-white text-slate-800 rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 animate-modal-pop space-y-4"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-              <h3 className="text-base font-extrabold font-display text-slate-900">
-                Reject Registration Request
-              </h3>
-              <button
-                onClick={() => setRejectingRequest(null)}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-600"
+      {/* Proof Lightbox Inspector Modal */}
+      {inspectingProof && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+          <div className="bg-white rounded-3xl max-w-3xl w-full p-6 shadow-2xl border border-slate-200 space-y-4 max-h-[92vh] flex flex-col animate-modal-pop">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 shrink-0">
+              <div>
+                <span className="text-[10px] font-mono font-bold text-blue-600 uppercase tracking-wider">REGISTRATION PROOF VERIFICATION</span>
+                <h3 className="text-lg font-bold text-slate-900">{inspectingProof.student_name} ({inspectingProof.register_number})</h3>
+                <p className="text-xs text-slate-500 font-mono">{inspectingProof.event_title}</p>
+              </div>
+              <button 
+                onClick={() => setInspectingProof(null)}
+                className="p-1 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100"
               >
-                <X className="w-4 h-4" />
+                <X className="w-5 h-5" />
               </button>
             </div>
 
-            <p className="text-xs text-slate-500 leading-relaxed">
-              Rejecting application for <strong className="text-slate-900">{rejectingRequest.student_name}</strong> for event <strong className="text-blue-700">{rejectingRequest.event_title}</strong>.
+            {/* Proof Image Box */}
+            <div className="flex-1 overflow-auto bg-slate-900 rounded-2xl p-3 flex items-center justify-center min-h-[300px]">
+              <img 
+                src={inspectingProof.registration_screenshot} 
+                alt="Registration proof screenshot" 
+                className="max-h-[50vh] max-w-full object-contain rounded-xl shadow-lg"
+              />
+            </div>
+
+            {/* Student & Event Summary */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs font-mono p-3 rounded-2xl bg-slate-50 border border-slate-200 shrink-0">
+              <div>
+                <span className="text-slate-400 text-[10px]">DEPARTMENT:</span>
+                <p className="font-bold text-slate-800">{inspectingProof.department_name}</p>
+              </div>
+              <div>
+                <span className="text-slate-400 text-[10px]">SECTION:</span>
+                <p className="font-bold text-slate-800">Section {inspectingProof.section}</p>
+              </div>
+              <div>
+                <span className="text-slate-400 text-[10px]">YEAR:</span>
+                <p className="font-bold text-slate-800">Year {inspectingProof.year_of_study}</p>
+              </div>
+              <div>
+                <span className="text-slate-400 text-[10px]">EMAIL:</span>
+                <p className="font-bold text-slate-800 truncate">{inspectingProof.student_email}</p>
+              </div>
+            </div>
+
+            {/* Actions Bar */}
+            <div className="flex items-center justify-between pt-2 border-t border-slate-100 shrink-0">
+              <a 
+                href={inspectingProof.registration_screenshot} 
+                target="_blank" 
+                rel="noreferrer"
+                className="text-xs font-mono text-blue-600 hover:underline flex items-center gap-1"
+              >
+                <ExternalLink className="w-3.5 h-3.5" />
+                <span>Open Original Image</span>
+              </a>
+
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleOpenReject(inspectingProof)}
+                  className="text-rose-600 border-rose-200 hover:bg-rose-50"
+                  icon={XCircle}
+                >
+                  Reject Proof
+                </Button>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={() => handleApprove(inspectingProof)}
+                  loading={processingId === inspectingProof.id}
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold"
+                  icon={CheckCircle2}
+                >
+                  Approve Proof & Confirm Seat
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Certificate Verification & Ranking Modal */}
+      {rankingRequest && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+          <div className="bg-white rounded-3xl max-w-3xl w-full p-6 shadow-2xl border border-slate-200 space-y-4 max-h-[94vh] flex flex-col animate-modal-pop">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 shrink-0">
+              <div>
+                <span className="text-[10px] font-mono font-bold text-purple-600 uppercase tracking-wider">STAGE 4: VERIFY & AWARD RANK</span>
+                <h3 className="text-lg font-bold text-slate-900">{rankingRequest.student_name} · {rankingRequest.event_title}</h3>
+                <p className="text-xs text-slate-500 font-mono">Roll: {rankingRequest.register_number} · Dept: {rankingRequest.department_name}</p>
+              </div>
+              <button 
+                onClick={() => setRankingRequest(null)}
+                className="p-1 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Certificate Preview */}
+            <div className="flex-1 overflow-auto bg-slate-900 rounded-2xl p-3 flex items-center justify-center min-h-[220px]">
+              {rankingRequest.certificate_url?.toLowerCase().endsWith('.pdf') ? (
+                <div className="text-center text-white space-y-2 p-6">
+                  <FileText className="w-16 h-16 mx-auto text-purple-400" />
+                  <p className="font-bold text-sm">PDF Participation Certificate Uploaded</p>
+                  <a 
+                    href={rankingRequest.certificate_url} 
+                    target="_blank" 
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-purple-600 text-white font-bold text-xs hover:bg-purple-700 transition-colors"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                    <span>Open Certificate PDF in New Window</span>
+                  </a>
+                </div>
+              ) : (
+                <img 
+                  src={rankingRequest.certificate_url} 
+                  alt="Student Certificate" 
+                  className="max-h-[38vh] max-w-full object-contain rounded-xl shadow-lg"
+                />
+              )}
+            </div>
+
+            {/* Ranking Position Cards Selector */}
+            <form onSubmit={handleConfirmRank} className="space-y-4 shrink-0">
+              <div className="space-y-2">
+                <label className="block text-xs font-mono font-bold text-slate-600 uppercase tracking-wider">
+                  Select Award Rank & Certificate Level:
+                </label>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                  {/* Rank 1 */}
+                  <div
+                    onClick={() => handleRankSelect('1')}
+                    className={`p-3 rounded-2xl border-2 cursor-pointer transition-all flex flex-col items-center justify-center text-center gap-1 ${
+                      selectedRank === '1'
+                        ? 'border-amber-500 bg-amber-50/80 text-amber-900 shadow-xs'
+                        : 'border-slate-200 hover:border-amber-300 bg-white text-slate-700'
+                    }`}
+                  >
+                    <Trophy className="w-6 h-6 text-amber-600 fill-amber-500" />
+                    <span className="text-xs font-black font-mono">Rank 1</span>
+                    <span className="text-[10px] text-amber-700 font-bold uppercase">1st Prize / Winner</span>
+                    <span className="text-[10px] text-slate-500 font-mono">+50 Bonus PTS</span>
+                  </div>
+
+                  {/* Rank 2 */}
+                  <div
+                    onClick={() => handleRankSelect('2')}
+                    className={`p-3 rounded-2xl border-2 cursor-pointer transition-all flex flex-col items-center justify-center text-center gap-1 ${
+                      selectedRank === '2'
+                        ? 'border-slate-500 bg-slate-100 text-slate-900 shadow-xs'
+                        : 'border-slate-200 hover:border-slate-400 bg-white text-slate-700'
+                    }`}
+                  >
+                    <Medal className="w-6 h-6 text-slate-600 fill-slate-400" />
+                    <span className="text-xs font-black font-mono">Rank 2</span>
+                    <span className="text-[10px] text-slate-700 font-bold uppercase">2nd Runner Up</span>
+                    <span className="text-[10px] text-slate-500 font-mono">+30 Bonus PTS</span>
+                  </div>
+
+                  {/* Rank 3 */}
+                  <div
+                    onClick={() => handleRankSelect('3')}
+                    className={`p-3 rounded-2xl border-2 cursor-pointer transition-all flex flex-col items-center justify-center text-center gap-1 ${
+                      selectedRank === '3'
+                        ? 'border-amber-600 bg-amber-50 text-amber-950 shadow-xs'
+                        : 'border-slate-200 hover:border-amber-400 bg-white text-slate-700'
+                    }`}
+                  >
+                    <Medal className="w-6 h-6 text-amber-700 fill-amber-600" />
+                    <span className="text-xs font-black font-mono">Rank 3</span>
+                    <span className="text-[10px] text-amber-800 font-bold uppercase">3rd Place</span>
+                    <span className="text-[10px] text-slate-500 font-mono">+20 Bonus PTS</span>
+                  </div>
+
+                  {/* Participated */}
+                  <div
+                    onClick={() => handleRankSelect('participated')}
+                    className={`p-3 rounded-2xl border-2 cursor-pointer transition-all flex flex-col items-center justify-center text-center gap-1 ${
+                      selectedRank === 'participated'
+                        ? 'border-emerald-500 bg-emerald-50/80 text-emerald-900 shadow-xs'
+                        : 'border-slate-200 hover:border-emerald-300 bg-white text-slate-700'
+                    }`}
+                  >
+                    <Award className="w-6 h-6 text-emerald-600" />
+                    <span className="text-xs font-black font-mono">Participated</span>
+                    <span className="text-[10px] text-emerald-700 font-bold uppercase">Participant</span>
+                    <span className="text-[10px] text-slate-500 font-mono">Base Event PTS</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Points Adjustment & Feedback Note */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-mono font-bold text-slate-600 mb-1 uppercase tracking-wider">
+                    Total Reward Points Credited:
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={customPoints}
+                    onChange={(e) => setCustomPoints(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm font-mono font-bold text-slate-900 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-100"
+                    required
+                  />
+                  <p className="text-[10px] text-slate-400 font-mono mt-1">
+                    Event Base: {rankingRequest.reward_points} PTS. Points will be automatically credited to student wallet.
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-mono font-bold text-slate-600 mb-1 uppercase tracking-wider">
+                    Admin Note / Congratulatory Remark:
+                  </label>
+                  <input
+                    type="text"
+                    value={rankNote}
+                    onChange={(e) => setRankNote(e.target.value)}
+                    placeholder="e.g. Excellent project pitch and prototype!"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-medium text-slate-800 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-100"
+                  />
+                </div>
+              </div>
+
+              {/* Submit Buttons */}
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setRankingRequest(null)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  variant="primary"
+                  size="sm"
+                  loading={isSubmittingRank}
+                  className="bg-purple-600 hover:bg-purple-700 text-white font-bold"
+                  icon={Trophy}
+                >
+                  Confirm Verification & Award Rank
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Single Reject Modal */}
+      {rejectingRequest && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-4 animate-modal-pop">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <h3 className="text-base font-bold text-slate-900">Reject Registration Request</h3>
+              <button 
+                onClick={() => setRejectingRequest(null)}
+                className="p-1 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <p className="text-xs text-slate-600">
+              Are you sure you want to reject <strong>{rejectingRequest.student_name}</strong> for event <strong>{rejectingRequest.event_title}</strong>?
             </p>
 
-            <div className="space-y-1.5">
-              <label className="block text-xs font-mono font-bold text-slate-600 uppercase tracking-wide">
-                Reason / Feedback for Student
+            <div>
+              <label className="block text-xs font-mono font-bold text-slate-600 mb-1 uppercase tracking-wide">
+                Rejection Reason (Visible to Student):
               </label>
               <textarea
                 value={rejectNote}
                 onChange={(e) => setRejectNote(e.target.value)}
-                placeholder="e.g. Prerequisites not verified, or section quota full for this department..."
-                rows={3}
-                className="w-full p-3.5 rounded-xl border border-slate-200 bg-white text-slate-800 text-xs focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 leading-relaxed"
+                placeholder="e.g. Invalid registration screenshot proof or eligibility criteria not met."
+                rows="3"
+                className="w-full p-3 rounded-xl border border-slate-200 text-xs font-sans text-slate-800 focus:outline-none focus:border-rose-500 focus:ring-2 focus:ring-rose-100"
               />
             </div>
 
-            <div className="pt-3 flex items-center justify-end gap-2.5 border-t border-slate-100">
+            <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setRejectingRequest(null)}
-                disabled={processingId === rejectingRequest.id}
               >
                 Cancel
               </Button>
@@ -982,6 +1395,7 @@ const Requests = () => {
                 size="sm"
                 onClick={handleConfirmReject}
                 loading={processingId === rejectingRequest.id}
+                icon={XCircle}
               >
                 Confirm Rejection
               </Button>
@@ -990,52 +1404,15 @@ const Requests = () => {
         </div>
       )}
 
-      {/* BULK ACCEPT ALL CONFIRMATION MODAL */}
+      {/* Bulk Approve Confirmation Modal */}
       {isBulkApproveModalOpen && (
-        <div 
-          className="fixed inset-0 z-[80] bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4"
-          onClick={() => setIsBulkApproveModalOpen(false)}
-          role="dialog"
-          aria-modal="true"
-        >
-          <div 
-            className="bg-white text-slate-800 rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 animate-modal-pop space-y-4"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-              <div className="flex items-center gap-2 text-emerald-700">
-                <CheckCircle2 className="w-5 h-5 text-emerald-600" />
-                <h3 className="text-base font-extrabold font-display text-slate-900">
-                  Bulk Approve Registration Requests
-                </h3>
-              </div>
-              <button
-                onClick={() => setIsBulkApproveModalOpen(false)}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-600"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            <div className="p-4 rounded-2xl bg-emerald-50/60 border border-emerald-200 text-xs space-y-2">
-              <p className="font-bold text-emerald-900 text-sm">
-                You are about to approve {getTargetBulkIds().length} student registration(s).
-              </p>
-              <p className="text-emerald-800 leading-relaxed">
-                Approved students will receive confirmed seat allocations in their designated events. The system verifies maximum seat capacities safely using database transaction locks.
-              </p>
-            </div>
-
-            {hasActiveFilters && (
-              <div className="text-xs text-slate-600 space-y-1 bg-slate-50 p-3 rounded-xl border border-slate-200 font-mono">
-                <p className="font-bold text-slate-700 uppercase text-[10px]">Filtered Cohort Criteria:</p>
-                <p>• Department: {selectedDeptFilter ? selectedDeptFilter.toUpperCase() : 'All'}</p>
-                <p>• Year: {selectedYearFilter ? `Year ${selectedYearFilter}` : 'All'}</p>
-                <p>• Event: {selectedEventFilter ? `Event ID ${selectedEventFilter}` : 'All Events'}</p>
-              </div>
-            )}
-
-            <div className="pt-3 flex items-center justify-end gap-2.5 border-t border-slate-100">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-4 animate-modal-pop">
+            <h3 className="text-base font-bold text-slate-900">Confirm Bulk Approval</h3>
+            <p className="text-xs text-slate-600">
+              You are about to approve <strong>{getTargetBulkIds().length}</strong> student registration(s). Each student will receive a confirmed seat status.
+            </p>
+            <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
               <Button
                 variant="outline"
                 size="sm"
@@ -1049,65 +1426,37 @@ const Requests = () => {
                 size="sm"
                 onClick={handleConfirmBulkApprove}
                 loading={bulkProcessing}
+                icon={CheckCircle2}
                 className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold"
               >
-                Confirm Accept All ({getTargetBulkIds().length})
+                Confirm Batch Approval
               </Button>
             </div>
           </div>
         </div>
       )}
 
-      {/* BULK REJECT ALL MODAL */}
+      {/* Bulk Reject Confirmation Modal */}
       {isBulkRejectModalOpen && (
-        <div 
-          className="fixed inset-0 z-[80] bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4"
-          onClick={() => setIsBulkRejectModalOpen(false)}
-          role="dialog"
-          aria-modal="true"
-        >
-          <div 
-            className="bg-white text-slate-800 rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 animate-modal-pop space-y-4"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-              <div className="flex items-center gap-2 text-rose-700">
-                <XCircle className="w-5 h-5 text-rose-600" />
-                <h3 className="text-base font-extrabold font-display text-slate-900">
-                  Bulk Reject Registration Requests
-                </h3>
-              </div>
-              <button
-                onClick={() => setIsBulkRejectModalOpen(false)}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-600"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            <div className="p-4 rounded-2xl bg-rose-50/60 border border-rose-200 text-xs space-y-2">
-              <p className="font-bold text-rose-900 text-sm">
-                You are about to reject {getTargetBulkIds().length} student registration(s).
-              </p>
-              <p className="text-rose-800 leading-relaxed">
-                This will update their application status to rejected and allow them to view your administrative note.
-              </p>
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="block text-xs font-mono font-bold text-slate-600 uppercase tracking-wide">
-                Common Rejection Note / Reason for All Students
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-4 animate-modal-pop">
+            <h3 className="text-base font-bold text-slate-900">Confirm Bulk Rejection</h3>
+            <p className="text-xs text-slate-600">
+              You are about to reject <strong>{getTargetBulkIds().length}</strong> registration request(s).
+            </p>
+            <div>
+              <label className="block text-xs font-mono font-bold text-slate-600 mb-1 uppercase tracking-wide">
+                Rejection Reason (Applied to all):
               </label>
               <textarea
                 value={bulkRejectNote}
                 onChange={(e) => setBulkRejectNote(e.target.value)}
-                placeholder="e.g. Quota full for this department/year, prerequisites incomplete, or event cancelled..."
-                rows={3}
-                className="w-full p-3.5 rounded-xl border border-slate-200 bg-white text-slate-800 text-xs focus:outline-none focus:border-rose-500 focus:ring-2 focus:ring-rose-100 leading-relaxed"
+                placeholder="e.g. Quota full or eligibility requirements not met."
+                rows="3"
+                className="w-full p-3 rounded-xl border border-slate-200 text-xs font-sans text-slate-800 focus:outline-none focus:border-rose-500 focus:ring-2 focus:ring-rose-100"
               />
             </div>
-
-            <div className="pt-3 flex items-center justify-end gap-2.5 border-t border-slate-100">
+            <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
               <Button
                 variant="outline"
                 size="sm"
@@ -1121,9 +1470,9 @@ const Requests = () => {
                 size="sm"
                 onClick={handleConfirmBulkReject}
                 loading={bulkProcessing}
-                className="bg-rose-600 hover:bg-rose-700 text-white font-bold"
+                icon={XCircle}
               >
-                Confirm Reject All ({getTargetBulkIds().length})
+                Confirm Batch Rejection
               </Button>
             </div>
           </div>

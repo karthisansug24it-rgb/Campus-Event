@@ -14,7 +14,8 @@ import {
   CheckCircle2,
   Building,
   Sparkles,
-  ArrowRight
+  ArrowRight,
+  Trophy
 } from 'lucide-react';
 import { Button } from './ui/Button';
 import { Badge } from './ui/Badge';
@@ -122,30 +123,63 @@ const EventModal = ({ eventId, onClose, onOpenRegister }) => {
       );
     }
 
-    if (userStatus === 'approved') {
+    if (userStatus === 'ranked') {
       return (
-        <div className="w-full py-3.5 px-4 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-center gap-2.5 text-emerald-900 text-sm font-bold shadow-xs">
-          <CheckCircle2 className="w-5 h-5 text-emerald-600" />
-          <span>Registered ✓ (Confirmed Attendance - Registration Finalized)</span>
+        <div className="w-full py-3.5 px-4 rounded-2xl bg-amber-50 border border-amber-300 flex items-center justify-between text-amber-900 text-sm font-bold shadow-xs">
+          <div className="flex items-center gap-2.5">
+            <Trophy className="w-5 h-5 text-amber-600 fill-amber-500" />
+            <span>Rank {event.user_rank_position?.toUpperCase()} Awarded!</span>
+          </div>
+          <span className="font-mono text-xs px-2.5 py-1 bg-amber-200/80 rounded-xl text-amber-900">
+            +{event.user_rank_points_awarded || event.reward_points} PTS Credited
+          </span>
         </div>
       );
     }
 
-    if (userStatus === 'pending') {
+    if (userStatus === 'participated') {
+      return (
+        <div className="w-full py-3.5 px-4 rounded-2xl bg-purple-50 border border-purple-200 flex items-center justify-center gap-2.5 text-purple-900 text-sm font-bold shadow-xs">
+          <Clock className="w-5 h-5 text-purple-600 animate-pulse" />
+          <span>Certificate Submitted ✓ (Awaiting Admin Verification & Ranking)</span>
+        </div>
+      );
+    }
+
+    if (userStatus === 'registration_approved' || userStatus === 'approved') {
+      return (
+        <div className="w-full py-3.5 px-4 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-center gap-2.5 text-emerald-900 text-sm font-bold shadow-xs">
+          <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+          <span>Registration Approved ✓ (Seat Confirmed - Official Participant)</span>
+        </div>
+      );
+    }
+
+    if (userStatus === 'registered' || userStatus === 'pending') {
       return (
         <div className="space-y-3 w-full">
-          <div className="w-full py-3 px-4 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-center gap-2.5 text-amber-900 text-xs font-bold shadow-xs">
-            <Clock className="w-4 h-4 text-amber-600 animate-pulse" />
-            <span>Registration Pending (Under Admin Review)</span>
+          <div className="w-full py-3 px-4 rounded-2xl bg-blue-50 border border-blue-200 flex items-center justify-center gap-2.5 text-blue-900 text-xs font-bold shadow-xs">
+            <Clock className="w-4 h-4 text-blue-600 animate-pulse" />
+            <span>Registration Submitted (Proof Under Admin Review)</span>
           </div>
-          <Button
-            variant="outline"
-            size="lg"
-            className="w-full border-blue-400 text-blue-700 hover:bg-blue-50 font-bold"
-            onClick={() => onOpenRegister(event)}
-          >
-            Update Registration Details
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="md"
+              className="flex-1 border-blue-400 text-blue-700 hover:bg-blue-50 font-bold"
+              onClick={() => onOpenRegister(event)}
+            >
+              Update Registration Details
+            </Button>
+            <Button
+              variant="primary"
+              size="md"
+              className="flex-1 bg-blue-600 hover:bg-blue-700 font-bold"
+              onClick={() => window.location.href = '/my/requests'}
+            >
+              Track in Applied Events
+            </Button>
+          </div>
         </div>
       );
     }

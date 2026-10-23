@@ -60,6 +60,7 @@ const initialForm = {
   organizer: '',
   event_date: '',
   registration_deadline: '',
+  certificate_deadline: '',
   max_seats: '',
   reward_points: '' // Strictly provided by Admin only
 };
@@ -211,6 +212,7 @@ const Events = () => {
       organizer: event.organizer || '',
       event_date: toDateTimeLocal(event.event_date),
       registration_deadline: toDateTimeLocal(event.registration_deadline || event.event_date),
+      certificate_deadline: toDateTimeLocal(event.certificate_deadline || ''),
       max_seats: event.max_seats !== undefined && event.max_seats !== null ? String(event.max_seats) : '',
       reward_points: event.reward_points !== undefined && event.reward_points !== null ? String(event.reward_points) : ''
     });
@@ -362,6 +364,7 @@ const Events = () => {
 
       data.append('event_date', formatLocalToMySQL(formData.event_date));
       data.append('registration_deadline', formatLocalToMySQL(formData.registration_deadline || formData.event_date));
+      data.append('certificate_deadline', formData.certificate_deadline ? formatLocalToMySQL(formData.certificate_deadline) : '');
       
       data.append('max_seats', formData.max_seats ? formData.max_seats : '');
 
@@ -1034,36 +1037,53 @@ const Events = () => {
                 </div>
               </div>
 
-              {/* Event Date & Registration Deadline */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Event Date, Registration Deadline & Certificate Deadline */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
                 <div>
                   <label className="block text-xs font-mono font-bold text-slate-600 mb-1.5 uppercase tracking-wide flex items-center gap-1.5">
                     <Calendar className="w-3.5 h-3.5 text-blue-600" />
-                    <span>Event Date & Time <span className="text-rose-500">*</span></span>
+                    <span>Event Date <span className="text-rose-500">*</span></span>
                   </label>
                   <input
                     type="datetime-local"
                     name="event_date"
                     value={formData.event_date}
                     onChange={handleInputChange}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm font-mono font-medium focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-mono font-medium focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                   />
                 </div>
 
                 <div>
                   <label className="block text-xs font-mono font-bold text-slate-600 mb-1.5 uppercase tracking-wide flex items-center gap-1.5">
                     <Clock className="w-3.5 h-3.5 text-amber-600" />
-                    <span>Registration Deadline</span>
+                    <span>Reg Deadline</span>
                   </label>
                   <input
                     type="datetime-local"
                     name="registration_deadline"
                     value={formData.registration_deadline}
                     onChange={handleInputChange}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm font-mono font-medium focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-mono font-medium focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                   />
-                  <p className="text-[11px] text-slate-400 mt-1 font-sans">
-                    Defaults to event date if left blank.
+                  <p className="text-[10px] text-slate-400 mt-1 font-sans">
+                    Defaults to event date.
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-mono font-bold text-slate-600 mb-1.5 uppercase tracking-wide flex items-center gap-1.5">
+                    <Award className="w-3.5 h-3.5 text-purple-600" />
+                    <span>Cert Deadline</span>
+                  </label>
+                  <input
+                    type="datetime-local"
+                    name="certificate_deadline"
+                    value={formData.certificate_deadline}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-mono font-medium focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-100"
+                  />
+                  <p className="text-[10px] text-slate-400 mt-1 font-sans">
+                    Optional certificate upload cut-off.
                   </p>
                 </div>
               </div>

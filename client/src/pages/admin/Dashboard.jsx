@@ -17,7 +17,8 @@ import {
   Sparkles,
   ExternalLink,
   ShieldCheck,
-  ChevronRight
+  ChevronRight,
+  Trophy
 } from 'lucide-react';
 import { 
   PageHeader, 
@@ -120,39 +121,47 @@ const Dashboard = () => {
         </div>
       )}
 
-      {/* Real KPI Stat Cards */}
+      {/* Real KPI 4-Stage Stat Cards */}
       <AnimatedSection className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6" delay={0.15}>
-        <StatCard
-          title="TOTAL PUBLISHED"
-          value={stats?.totalEvents ?? 0}
-          subtitle={`${stats?.internalEvents ?? 0} Inside · ${stats?.externalEvents ?? 0} Outside`}
-          icon={Calendar}
-          colorScheme="blue"
-        />
+        <Link to="/admin/requests?tab=registered" className="block group">
+          <StatCard
+            title="1. PROOFS IN REVIEW"
+            value={stats?.registeredRequests ?? stats?.pendingRequests ?? 0}
+            subtitle="Screenshots awaiting review"
+            icon={ShieldCheck}
+            colorScheme={stats?.registeredRequests > 0 ? "blue" : "blue"}
+          />
+        </Link>
 
-        <StatCard
-          title="PENDING APPROVALS"
-          value={stats?.pendingRequests ?? 0}
-          subtitle="Awaiting admin action"
-          icon={Clock}
-          colorScheme={stats?.pendingRequests > 0 ? "blue" : "blue"}
-        />
+        <Link to="/admin/requests?tab=registration_approved" className="block group">
+          <StatCard
+            title="2. CONFIRMED SEATS"
+            value={stats?.approvedRegistrations ?? 0}
+            subtitle="Approved registrations"
+            icon={CheckCircle2}
+            colorScheme="emerald"
+          />
+        </Link>
 
-        <StatCard
-          title="CONFIRMED SEATS"
-          value={stats?.approvedRegistrations ?? stats?.approvedRequests ?? 0}
-          subtitle="Allotted registrations"
-          icon={CheckCircle2}
-          colorScheme="emerald"
-        />
+        <Link to="/admin/requests?tab=participated" className="block group">
+          <StatCard
+            title="3. CERTS IN REVIEW"
+            value={stats?.participatedRequests ?? 0}
+            subtitle="Awaiting admin ranking"
+            icon={Award}
+            colorScheme={stats?.participatedRequests > 0 ? "purple" : "purple"}
+          />
+        </Link>
 
-        <StatCard
-          title="REJECTED REQUESTS"
-          value={stats?.rejectedRequests ?? 0}
-          subtitle="Reviewed applications"
-          icon={Users}
-          colorScheme="amber"
-        />
+        <Link to="/admin/requests?tab=ranked" className="block group">
+          <StatCard
+            title="4. RANKED WINNERS"
+            value={stats?.rankedRequests ?? 0}
+            subtitle="Rank 1, 2, 3 & participant awards"
+            icon={Trophy}
+            colorScheme="amber"
+          />
+        </Link>
       </AnimatedSection>
 
       {/* Two Column Layout: Pending Queue & Recently Created Events */}

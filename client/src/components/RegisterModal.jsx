@@ -13,7 +13,8 @@ import {
   AlertCircle, 
   Loader2,
   Sparkles,
-  ShieldCheck
+  ShieldCheck,
+  Upload
 } from 'lucide-react';
 import { Button } from './ui/Button';
 
@@ -34,6 +35,8 @@ const RegisterModal = ({ event, onClose, onSuccess }) => {
   const [fieldErrors, setFieldErrors] = useState({});
   const [generalError, setGeneralError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [screenshotFile, setScreenshotFile] = useState(null);
+  const [screenshotPreview, setScreenshotPreview] = useState(null);
 
   // Sync state with auth user profile
   useEffect(() => {
@@ -112,18 +115,24 @@ const RegisterModal = ({ event, onClose, onSuccess }) => {
 
     setSubmitting(true);
     try {
-      const res = await api.post(`/events/${event.id}/requests`, {
-        name: formData.name.trim(),
-        email: formData.email.trim(),
-        section: formData.section,
-        register_number: formData.registerNumber.trim().toUpperCase()
+      const payload = new FormData();
+      payload.append('name', formData.name.trim());
+      payload.append('email', formData.email.trim());
+      payload.append('section', formData.section);
+      payload.append('register_number', formData.registerNumber.trim().toUpperCase());
+      if (screenshotFile) {
+        payload.append('screenshot', screenshotFile);
+      }
+
+      const res = await api.post(`/events/${event.id}/requests`, payload, {
+        headers: { 'Content-Type': 'multipart/form-data' }
       });
 
       if (res.data.success) {
         showToast(
-          isUpdate ? 'Registration details updated successfully!' : 'Request sent to admin', 
+          isUpdate ? 'Registration details updated successfully!' : 'Registration submitted! Screenshot proof sent for admin approval.', 
           'success', 
-          3000
+          3500
         );
         onSuccess();
       }
@@ -331,6 +340,53 @@ const RegisterModal = ({ event, onClose, onSuccess }) => {
                   <AlertCircle className="w-3.5 h-3.5" />
                   {fieldErrors.registerNumber}
                 </p>
+              )}
+            </div>
+          </div>
+
+          {/* Optional Registration Screenshot Upload */}
+          <div className="pt-1">
+            <label className="block text-xs font-mono font-bold text-slate-600 mb-1.5 uppercase tracking-wide flex items-center justify-between">
+              <span>Registration Screenshot Proof</span>
+              <span className="text-[10px] text-slate-400 font-normal font-sans">(Optional: upload now or later)</span>
+            </label>
+            <div className="border border-dashed border-slate-300 hover:border-blue-400 rounded-2xl p-3.5 bg-slate-50/60 relative cursor-pointer text-center transition-colors">
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    setScreenshotFile(file);
+                    setScreenshotPreview(URL.createObjectURL(file));
+                  }
+                }}
+                className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+              />
+              {screenshotPreview ? (
+                <div className="flex items-center gap-3 text-left">
+                  <img src={screenshotPreview} alt="Preview" className="w-12 h-12 object-cover rounded-xl border border-slate-200" />
+                  <div className="flex-1 truncate">
+                    <p className="text-xs font-bold font-mono text-blue-700 truncate">{screenshotFile?.name}</p>
+                    <p className="text-[10px] text-slate-400 font-mono">Proof ready to submit with application</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setScreenshotFile(null);
+                      setScreenshotPreview(null);
+                    }}
+                    className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center justify-center gap-2 py-1 text-slate-500">
+                  <Upload className="w-4 h-4 text-blue-600" />
+                  <span className="text-xs font-medium">Attach screenshot proof of event registration (optional)</span>
+                </div>
               )}
             </div>
           </div>
