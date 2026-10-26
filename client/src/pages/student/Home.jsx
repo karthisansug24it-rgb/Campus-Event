@@ -22,7 +22,8 @@ import {
   ChevronRight,
   Trophy,
   XCircle,
-  Users
+  Users,
+  MousePointer
 } from 'lucide-react';
 import { 
   Button, 
@@ -145,29 +146,128 @@ const Home = () => {
 
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
+  const sliderContainerRef = useRef(null);
 
-  // Auto slide timer with pause on hover
-  useEffect(() => {
-    if (upcomingEvents.length <= 1 || isPaused) return;
-    const interval = setInterval(() => {
-      setCurrentSlideIndex(prev => (prev + 1) % upcomingEvents.length);
-    }, 6000);
-    return () => clearInterval(interval);
-  }, [upcomingEvents.length, isPaused]);
+  // Drag / Swipe State
+  const [dragStartX, setDragStartX] = useState(null);
+  const [dragDeltaX, setDragDeltaX] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
 
   const activeSlideIndex = upcomingEvents.length > 0
     ? (currentSlideIndex % upcomingEvents.length + upcomingEvents.length) % upcomingEvents.length
     : 0;
   const currentUpcomingEvent = upcomingEvents[activeSlideIndex] || null;
 
-  const handlePrevSlide = (e) => {
+  const handlePrevSlide = useCallback((e) => {
     e?.stopPropagation();
     setCurrentSlideIndex(prev => (prev - 1 + upcomingEvents.length) % upcomingEvents.length);
-  };
+  }, [upcomingEvents.length]);
 
-  const handleNextSlide = (e) => {
+  const handleNextSlide = useCallback((e) => {
     e?.stopPropagation();
     setCurrentSlideIndex(prev => (prev + 1) % upcomingEvents.length);
+  }, [upcomingEvents.length]);
+
+  // Auto slide timer with pause on hover
+  useEffect(() => {
+    if (upcomingEvents.length <= 1 || isPaused || isDragging) return;
+    const interval = setInterval(() => {
+      handleNextSlide();
+    }, 6000);
+    return () => clearInterval(interval);
+  }, [upcomingEvents.length, isPaused, isDragging, handleNextSlide]);
+
+  // Touchpad horizontal scroll listener ("if i scroll from touchpad from left to right the next events should be displayed")
+  useEffect(() => {
+    const el = sliderContainerRef.current;
+    if (!el || upcomingEvents.length <= 1) return;
+
+    let isCooldown = false;
+    let accumulatedDeltaX = 0;
+    let resetTimer = null;
+
+    const handleWheel = (e) => {
+      const absX = Math.abs(e.deltaX);
+      const absY = Math.abs(e.deltaY);
+
+      // Only handle if horizontal scroll gesture on touchpad is dominant
+      if (absX > absY && absX > 6) {
+        // Prevent default browser horizontal page bounce/history navigation
+        e.preventDefault();
+        setIsPaused(true);
+
+        if (isCooldown) return;
+
+        accumulatedDeltaX += e.deltaX;
+
+        // When threshold reached: scroll from left to right (deltaX > 0) displays next events!
+        if (Math.abs(accumulatedDeltaX) >= 25) {
+          isCooldown = true;
+          if (accumulatedDeltaX > 0) {
+            handleNextSlide();
+          } else {
+            handlePrevSlide();
+          }
+          accumulatedDeltaX = 0;
+
+          // Cooldown to prevent multi-slide skipping from trackpad momentum
+          setTimeout(() => {
+            isCooldown = false;
+          }, 450);
+        }
+
+        clearTimeout(resetTimer);
+        resetTimer = setTimeout(() => {
+          accumulatedDeltaX = 0;
+        }, 200);
+      }
+    };
+
+    // Attach non-passive wheel listener so e.preventDefault() works cleanly
+    el.addEventListener('wheel', handleWheel, { passive: false });
+    return () => {
+      el.removeEventListener('wheel', handleWheel);
+      clearTimeout(resetTimer);
+    };
+  }, [upcomingEvents.length, handleNextSlide, handlePrevSlide]);
+
+  // Pointer drag handlers for mouse / touchpad drag & touch swipe
+  const handlePointerDown = (e) => {
+    if (e.target.closest('button') || e.target.closest('a') || e.target.closest('input')) return;
+    setDragStartX(e.clientX);
+    setDragDeltaX(0);
+    setIsDragging(true);
+    setIsPaused(true);
+  };
+
+  const handlePointerMove = (e) => {
+    if (!isDragging || dragStartX === null) return;
+    const delta = e.clientX - dragStartX;
+    setDragDeltaX(delta);
+  };
+
+  const handlePointerUp = () => {
+    if (!isDragging) return;
+    if (Math.abs(dragDeltaX) > 40) {
+      if (dragDeltaX < 0) {
+        // Dragged leftward -> reveal next slide
+        handleNextSlide();
+      } else {
+        // Dragged rightward -> reveal previous slide
+        handlePrevSlide();
+      }
+    }
+    setIsDragging(false);
+    setDragStartX(null);
+    setDragDeltaX(0);
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'ArrowRight') {
+      handleNextSlide();
+    } else if (e.key === 'ArrowLeft') {
+      handlePrevSlide();
+    }
   };
 
   const getDaysRemainingText = (eventDateStr) => {
@@ -190,9 +290,14 @@ const Home = () => {
         {currentUpcomingEvent && (
           <AnimatedSection className="relative" delay={0.1}>
             <div 
+              ref={sliderContainerRef}
+              tabIndex={0}
+              onKeyDown={handleKeyDown}
               onMouseEnter={() => setIsPaused(true)}
-              onMouseLeave={() => setIsPaused(false)}
-              className="bg-gradient-to-br from-blue-700 via-blue-800 to-indigo-950 rounded-3xl p-6 sm:p-8 lg:p-9 text-white shadow-xl shadow-blue-900/20 relative overflow-hidden transition-all duration-300 border border-blue-400/25"
+              onMouseLeave={() => {
+                if (!isDragging) setIsPaused(false);
+              }}
+              className="bg-gradient-to-br from-blue-700 via-blue-800 to-indigo-950 rounded-3xl p-6 sm:p-8 lg:p-9 text-white shadow-xl shadow-blue-900/20 relative overflow-hidden transition-all duration-300 border border-blue-400/25 focus:outline-none focus:ring-2 focus:ring-blue-300/40"
             >
               {/* Background ambient glow shapes */}
               <div className="absolute -top-24 -right-24 w-96 h-96 bg-blue-400/10 rounded-full blur-3xl pointer-events-none" />
@@ -214,6 +319,10 @@ const Home = () => {
                 {/* Slider Controls (if multiple upcoming events) */}
                 {upcomingEvents.length > 1 && (
                   <div className="flex items-center gap-2">
+                    <span className="hidden md:inline-flex items-center gap-1 text-[11px] font-mono text-blue-200/80 bg-white/10 px-2.5 py-1 rounded-xl backdrop-blur-sm border border-white/15">
+                      <MousePointer className="w-3 h-3 text-amber-300" />
+                      <span>Scroll touchpad / swipe</span>
+                    </span>
                     <span className="text-xs font-mono font-bold text-blue-200/90 bg-white/10 px-2.5 py-1 rounded-xl backdrop-blur-sm border border-white/15">
                       {activeSlideIndex + 1} / {upcomingEvents.length}
                     </span>
@@ -237,177 +346,195 @@ const Home = () => {
                 )}
               </div>
 
-              {/* Active Slide Body with smooth transition key */}
+              {/* Viewport with overflow-hidden for genuine horizontal slide animation */}
               <div 
-                key={currentUpcomingEvent.id} 
-                className="relative z-10 flex flex-col lg:flex-row items-stretch lg:items-center gap-6 sm:gap-8 transition-opacity duration-500 ease-out animate-fadeIn"
+                className={`relative z-10 overflow-hidden w-full select-none ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+                onPointerDown={handlePointerDown}
+                onPointerMove={handlePointerMove}
+                onPointerUp={handlePointerUp}
+                onPointerCancel={handlePointerUp}
               >
-                {/* Event Poster / Visual Preview */}
                 <div 
-                  onClick={() => handleSelectEvent(currentUpcomingEvent)}
-                  className="w-full lg:w-auto flex items-center justify-center shrink-0 self-center"
+                  className="flex items-start"
+                  style={{
+                    transform: `translateX(calc(-${activeSlideIndex * 100}% + ${dragDeltaX}px))`,
+                    transition: isDragging ? 'none' : 'transform 500ms cubic-bezier(0.25, 1, 0.5, 1)'
+                  }}
                 >
-                  <div className="relative group cursor-pointer rounded-2xl overflow-hidden bg-white/10 backdrop-blur-md border border-white/20 shadow-2xl p-1.5 flex items-center justify-center transition-all duration-300 hover:border-white/40 hover:shadow-blue-950/40 max-w-full">
-                    {currentUpcomingEvent.poster_url ? (
-                      <>
-                        <img
-                          src={getPosterUrl(currentUpcomingEvent.poster_url)}
-                          alt={currentUpcomingEvent.title}
-                          className="w-auto h-auto max-h-[280px] sm:max-h-[330px] max-w-full sm:max-w-xs md:max-w-sm object-contain rounded-xl shadow-md transition-transform duration-500 group-hover:scale-[1.02] block"
-                          onError={(e) => handleImageError(e, currentUpcomingEvent.poster_url)}
-                        />
-                        <div className="absolute inset-0 bg-slate-950/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center rounded-xl pointer-events-none">
-                          <span className="px-3 py-1.5 rounded-full bg-white/95 text-slate-900 text-xs font-mono font-bold shadow-lg flex items-center gap-1.5 backdrop-blur-sm">
-                            <ExternalLink className="w-3.5 h-3.5 text-blue-600" />
-                            <span>View Full Poster</span>
-                          </span>
-                        </div>
-                      </>
-                    ) : (
-                      <div className="w-56 h-56 flex flex-col items-center justify-center bg-blue-900/60 rounded-xl text-blue-200">
-                        <Calendar className="w-12 h-12 mb-2" />
-                        <span className="text-xs font-mono font-medium">No Poster Available</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Event Details Narrative */}
-                <div className="flex-1 space-y-3.5">
-                  <div className="flex flex-wrap items-center gap-2">
-                    {currentUpcomingEvent.category && (
-                      <span className="inline-flex items-center px-3 py-1 rounded-full bg-blue-500/80 text-white text-xs font-mono font-bold backdrop-blur-md border border-blue-400/40">
-                        {currentUpcomingEvent.category}
-                      </span>
-                    )}
-                    <span className="inline-flex items-center px-3 py-1 rounded-full bg-black/30 text-white text-xs font-mono font-semibold backdrop-blur-md border border-white/15">
-                      {currentUpcomingEvent.event_type === 'internal' ? 'Inside College' : 'Outside College'}
-                    </span>
-                    {currentUpcomingEvent.reward_points > 0 && (
-                      <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/30 text-xs font-mono font-bold">
-                        <Award className="w-3.5 h-3.5 text-amber-300" />
-                        <span>+{currentUpcomingEvent.reward_points} PTS</span>
-                      </span>
-                    )}
-                  </div>
-
-                  <h2 
-                    onClick={() => handleSelectEvent(currentUpcomingEvent)}
-                    className="text-2xl sm:text-3xl font-black font-display text-white tracking-tight leading-snug cursor-pointer hover:text-blue-200 transition-colors"
-                  >
-                    {currentUpcomingEvent.title}
-                  </h2>
-
-                  <p className="text-sm text-blue-100/90 leading-relaxed line-clamp-2">
-                    {currentUpcomingEvent.description
-                      ? currentUpcomingEvent.description.replace(/^#{2,4}\s*[^\n]+\n*/gm, '').replace(/[-*•]\s*/g, '').replace(/\s+/g, ' ').trim()
-                      : ''}
-                  </p>
-
-                  <div className="flex flex-wrap items-center gap-4 text-xs text-blue-200 pt-1 font-sans">
-                    <span className="flex items-center gap-1.5 bg-white/10 px-3 py-1.5 rounded-xl backdrop-blur-sm">
-                      <Calendar className="w-4 h-4 text-blue-300" />
-                      <strong className="text-white">
-                        {new Date(currentUpcomingEvent.event_date).toLocaleDateString('en-IN', {
-                          day: 'numeric',
-                          month: 'short',
-                          year: 'numeric'
-                        })}
-                      </strong>
-                    </span>
-                    <span className="flex items-center gap-1.5 bg-white/10 px-3 py-1.5 rounded-xl backdrop-blur-sm">
-                      <MapPin className="w-4 h-4 text-blue-300" />
-                      <span className="text-white truncate max-w-[200px]">{currentUpcomingEvent.venue}</span>
-                    </span>
-                    {currentUpcomingEvent.max_seats ? (
-                      <span className="flex items-center gap-1.5 bg-white/10 px-3 py-1.5 rounded-xl backdrop-blur-sm">
-                        <Users className="w-4 h-4 text-blue-300" />
-                        <span className="text-white">
-                          {currentUpcomingEvent.is_seats_full ? 'Seats Full' : `${currentUpcomingEvent.seats_left} seats left`}
-                        </span>
-                      </span>
-                    ) : null}
-                  </div>
-
-                  {/* Action Buttons: strictly prevent registering again if already registered */}
-                  <div className="pt-2 flex flex-wrap items-center gap-3">
-                    <button
-                      type="button"
-                      onClick={() => handleSelectEvent(currentUpcomingEvent)}
-                      className="px-5 py-2.5 rounded-xl bg-white text-blue-900 font-bold text-xs hover:bg-blue-50 transition-all flex items-center gap-2 shadow-md shadow-black/10 active:scale-95 cursor-pointer"
+                  {upcomingEvents.map((event) => (
+                    <div 
+                      key={event.id}
+                      className="w-full shrink-0 flex flex-col lg:flex-row items-stretch lg:items-center gap-6 sm:gap-8 px-0.5"
                     >
-                      <span>View Specifications</span>
-                      <ArrowRight className="w-4 h-4" />
-                    </button>
+                      {/* Event Poster / Visual Preview */}
+                      <div 
+                        onClick={() => handleSelectEvent(event)}
+                        className="w-full lg:w-auto flex items-center justify-center shrink-0 self-center"
+                      >
+                        <div className="relative group cursor-pointer rounded-2xl overflow-hidden bg-white/10 backdrop-blur-md border border-white/20 shadow-2xl p-1.5 flex items-center justify-center transition-all duration-300 hover:border-white/40 hover:shadow-blue-950/40 max-w-full">
+                          {event.poster_url ? (
+                            <>
+                              <img
+                                src={getPosterUrl(event.poster_url)}
+                                alt={event.title}
+                                className="w-auto h-auto max-h-[280px] sm:max-h-[330px] max-w-full sm:max-w-xs md:max-w-sm object-contain rounded-xl shadow-md transition-transform duration-500 group-hover:scale-[1.02] block"
+                                onError={(e) => handleImageError(e, event.poster_url)}
+                              />
+                              <div className="absolute inset-0 bg-slate-950/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center rounded-xl pointer-events-none">
+                                <span className="px-3 py-1.5 rounded-full bg-white/95 text-slate-900 text-xs font-mono font-bold shadow-lg flex items-center gap-1.5 backdrop-blur-sm">
+                                  <ExternalLink className="w-3.5 h-3.5 text-blue-600" />
+                                  <span>View Full Poster</span>
+                                </span>
+                              </div>
+                            </>
+                          ) : (
+                            <div className="w-56 h-56 flex flex-col items-center justify-center bg-blue-900/60 rounded-xl text-blue-200">
+                              <Calendar className="w-12 h-12 mb-2" />
+                              <span className="text-xs font-mono font-medium">No Poster Available</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
 
-                    {/* Registration Status Check */}
-                    {currentUpcomingEvent.user_request_status === 'ranked' ? (
-                      <span className="px-5 py-2.5 rounded-xl bg-amber-400 text-slate-950 font-black text-xs flex items-center gap-2 shadow-sm">
-                        <Trophy className="w-4 h-4 text-amber-900 fill-amber-800" />
-                        <span>Rank {currentUpcomingEvent.user_rank_position?.toUpperCase()} Awarded (+{currentUpcomingEvent.user_rank_points_awarded || currentUpcomingEvent.reward_points} PTS)</span>
-                      </span>
-                    ) : currentUpcomingEvent.user_request_status === 'participated' ? (
-                      <span className="px-5 py-2.5 rounded-xl bg-purple-500/90 text-white font-bold text-xs flex items-center gap-2 border border-purple-300 shadow-md backdrop-blur-md">
-                        <Clock className="w-4 h-4 animate-pulse" />
-                        <span>Participated (Cert Uploaded)</span>
-                      </span>
-                    ) : (currentUpcomingEvent.user_request_status === 'registration_approved' || currentUpcomingEvent.user_request_status === 'approved') ? (
-                      <div className="flex items-center gap-2">
-                        <span className="px-5 py-2.5 rounded-xl bg-emerald-500/95 text-white font-bold text-xs flex items-center gap-2 border border-emerald-300 shadow-md backdrop-blur-md">
-                          <CheckCircle2 className="w-4 h-4 text-white" />
-                          <span>Registered ✓ (Seat Confirmed)</span>
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => window.location.href = '/my/requests'}
-                          className="px-3.5 py-2.5 rounded-xl bg-white/15 hover:bg-white/25 text-white font-bold text-xs transition-all flex items-center gap-1 border border-white/20 backdrop-blur-sm cursor-pointer"
+                      {/* Event Details Narrative */}
+                      <div className="flex-1 space-y-3.5">
+                        <div className="flex flex-wrap items-center gap-2">
+                          {event.category && (
+                            <span className="inline-flex items-center px-3 py-1 rounded-full bg-blue-500/80 text-white text-xs font-mono font-bold backdrop-blur-md border border-blue-400/40">
+                              {event.category}
+                            </span>
+                          )}
+                          <span className="inline-flex items-center px-3 py-1 rounded-full bg-black/30 text-white text-xs font-mono font-semibold backdrop-blur-md border border-white/15">
+                            {event.event_type === 'internal' ? 'Inside College' : 'Outside College'}
+                          </span>
+                          {event.reward_points > 0 && (
+                            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/30 text-xs font-mono font-bold">
+                              <Award className="w-3.5 h-3.5 text-amber-300" />
+                              <span>+{event.reward_points} PTS</span>
+                            </span>
+                          )}
+                        </div>
+
+                        <h2 
+                          onClick={() => handleSelectEvent(event)}
+                          className="text-2xl sm:text-3xl font-black font-display text-white tracking-tight leading-snug cursor-pointer hover:text-blue-200 transition-colors"
                         >
-                          <span>Track Status</span>
-                          <ArrowRight className="w-3.5 h-3.5" />
-                        </button>
+                          {event.title}
+                        </h2>
+
+                        <p className="text-sm text-blue-100/90 leading-relaxed line-clamp-2">
+                          {event.description
+                            ? event.description.replace(/^#{2,4}\s*[^\n]+\n*/gm, '').replace(/[-*•]\s*/g, '').replace(/\s+/g, ' ').trim()
+                            : ''}
+                        </p>
+
+                        <div className="flex flex-wrap items-center gap-4 text-xs text-blue-200 pt-1 font-sans">
+                          <span className="flex items-center gap-1.5 bg-white/10 px-3 py-1.5 rounded-xl backdrop-blur-sm">
+                            <Calendar className="w-4 h-4 text-blue-300" />
+                            <strong className="text-white">
+                              {new Date(event.event_date).toLocaleDateString('en-IN', {
+                                day: 'numeric',
+                                month: 'short',
+                                year: 'numeric'
+                              })}
+                            </strong>
+                          </span>
+                          <span className="flex items-center gap-1.5 bg-white/10 px-3 py-1.5 rounded-xl backdrop-blur-sm">
+                            <MapPin className="w-4 h-4 text-blue-300" />
+                            <span className="text-white truncate max-w-[200px]">{event.venue}</span>
+                          </span>
+                          {event.max_seats ? (
+                            <span className="flex items-center gap-1.5 bg-white/10 px-3 py-1.5 rounded-xl backdrop-blur-sm">
+                              <Users className="w-4 h-4 text-blue-300" />
+                              <span className="text-white">
+                                {event.is_seats_full ? 'Seats Full' : `${event.seats_left} seats left`}
+                              </span>
+                            </span>
+                          ) : null}
+                        </div>
+
+                        {/* Action Buttons: strictly prevent registering again if already registered */}
+                        <div className="pt-2 flex flex-wrap items-center gap-3">
+                          <button
+                            type="button"
+                            onClick={() => handleSelectEvent(event)}
+                            className="px-5 py-2.5 rounded-xl bg-white text-blue-900 font-bold text-xs hover:bg-blue-50 transition-all flex items-center gap-2 shadow-md shadow-black/10 active:scale-95 cursor-pointer"
+                          >
+                            <span>View Specifications</span>
+                            <ArrowRight className="w-4 h-4" />
+                          </button>
+
+                          {/* Registration Status Check */}
+                          {event.user_request_status === 'ranked' ? (
+                            <span className="px-5 py-2.5 rounded-xl bg-amber-400 text-slate-950 font-black text-xs flex items-center gap-2 shadow-sm">
+                              <Trophy className="w-4 h-4 text-amber-900 fill-amber-800" />
+                              <span>Rank {event.user_rank_position?.toUpperCase()} Awarded (+{event.user_rank_points_awarded || event.reward_points} PTS)</span>
+                            </span>
+                          ) : event.user_request_status === 'participated' ? (
+                            <span className="px-5 py-2.5 rounded-xl bg-purple-500/90 text-white font-bold text-xs flex items-center gap-2 border border-purple-300 shadow-md backdrop-blur-md">
+                              <Clock className="w-4 h-4 animate-pulse" />
+                              <span>Participated (Cert Uploaded)</span>
+                            </span>
+                          ) : (event.user_request_status === 'registration_approved' || event.user_request_status === 'approved') ? (
+                            <div className="flex items-center gap-2">
+                              <span className="px-5 py-2.5 rounded-xl bg-emerald-500/95 text-white font-bold text-xs flex items-center gap-2 border border-emerald-300 shadow-md backdrop-blur-md">
+                                <CheckCircle2 className="w-4 h-4 text-white" />
+                                <span>Registered ✓ (Seat Confirmed)</span>
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => window.location.href = '/my/requests'}
+                                className="px-3.5 py-2.5 rounded-xl bg-white/15 hover:bg-white/25 text-white font-bold text-xs transition-all flex items-center gap-1 border border-white/20 backdrop-blur-sm cursor-pointer"
+                              >
+                                <span>Track Status</span>
+                                <ArrowRight className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          ) : (event.user_request_status === 'registered' || event.user_request_status === 'pending') ? (
+                            <div className="flex items-center gap-2">
+                              <span className="px-5 py-2.5 rounded-xl bg-blue-500/95 text-white font-bold text-xs flex items-center gap-2 border border-blue-300 shadow-md backdrop-blur-md">
+                                <CheckCircle2 className="w-4 h-4 text-emerald-300" />
+                                <span>Registered ✓ (Under Review)</span>
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => window.location.href = '/my/requests'}
+                                className="px-3.5 py-2.5 rounded-xl bg-white/15 hover:bg-white/25 text-white font-bold text-xs transition-all flex items-center gap-1 border border-white/20 backdrop-blur-sm cursor-pointer"
+                              >
+                                <span>Track Status</span>
+                                <ArrowRight className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          ) : event.user_request_status === 'rejected' ? (
+                            <span className="px-5 py-2.5 rounded-xl bg-rose-500/90 text-white font-bold text-xs flex items-center gap-2 border border-rose-300 shadow-md">
+                              <XCircle className="w-4 h-4" />
+                              <span>Registration Rejected</span>
+                            </span>
+                          ) : (
+                            /* Not registered yet */
+                            event.is_past_deadline ? (
+                              <span className="px-5 py-2.5 rounded-xl bg-slate-800/80 text-slate-300 font-bold text-xs border border-white/10">
+                                Registration Closed
+                              </span>
+                            ) : event.is_seats_full ? (
+                              <span className="px-5 py-2.5 rounded-xl bg-slate-800/80 text-slate-300 font-bold text-xs border border-white/10">
+                                Seats Full
+                              </span>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => handleOpenRegister(event)}
+                                className="px-6 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs transition-all flex items-center gap-2 shadow-lg shadow-amber-950/20 active:scale-95 cursor-pointer"
+                              >
+                                <span>Register Now</span>
+                                <ArrowRight className="w-4 h-4" />
+                              </button>
+                            )
+                          )}
+                        </div>
                       </div>
-                    ) : (currentUpcomingEvent.user_request_status === 'registered' || currentUpcomingEvent.user_request_status === 'pending') ? (
-                      <div className="flex items-center gap-2">
-                        <span className="px-5 py-2.5 rounded-xl bg-blue-500/95 text-white font-bold text-xs flex items-center gap-2 border border-blue-300 shadow-md backdrop-blur-md">
-                          <CheckCircle2 className="w-4 h-4 text-emerald-300" />
-                          <span>Registered ✓ (Under Review)</span>
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => window.location.href = '/my/requests'}
-                          className="px-3.5 py-2.5 rounded-xl bg-white/15 hover:bg-white/25 text-white font-bold text-xs transition-all flex items-center gap-1 border border-white/20 backdrop-blur-sm cursor-pointer"
-                        >
-                          <span>Track Status</span>
-                          <ArrowRight className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    ) : currentUpcomingEvent.user_request_status === 'rejected' ? (
-                      <span className="px-5 py-2.5 rounded-xl bg-rose-500/90 text-white font-bold text-xs flex items-center gap-2 border border-rose-300 shadow-md">
-                        <XCircle className="w-4 h-4" />
-                        <span>Registration Rejected</span>
-                      </span>
-                    ) : (
-                      /* Not registered yet */
-                      currentUpcomingEvent.is_past_deadline ? (
-                        <span className="px-5 py-2.5 rounded-xl bg-slate-800/80 text-slate-300 font-bold text-xs border border-white/10">
-                          Registration Closed
-                        </span>
-                      ) : currentUpcomingEvent.is_seats_full ? (
-                        <span className="px-5 py-2.5 rounded-xl bg-slate-800/80 text-slate-300 font-bold text-xs border border-white/10">
-                          Seats Full
-                        </span>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={() => handleOpenRegister(currentUpcomingEvent)}
-                          className="px-6 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs transition-all flex items-center gap-2 shadow-lg shadow-amber-950/20 active:scale-95 cursor-pointer"
-                        >
-                          <span>Register Now</span>
-                          <ArrowRight className="w-4 h-4" />
-                        </button>
-                      )
-                    )}
-                  </div>
+                    </div>
+                  ))}
                 </div>
               </div>
 
