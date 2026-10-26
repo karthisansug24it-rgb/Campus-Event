@@ -22,7 +22,7 @@ function App() {
     <BrowserRouter>
       <AuthProvider>
         <ToastProvider>
-          <div className="min-h-screen bg-white text-slate-800 antialiased selection:bg-blue-600 selection:text-white">
+          <div className="min-h-screen bg-[#FAFBFC] text-slate-800 antialiased font-serif selection:bg-blue-700 selection:text-white">
             <MobileAppBanner />
             <Routes>
                 {/* Student Portal Routes with Dedicated StudentLayout */}

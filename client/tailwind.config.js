@@ -43,8 +43,10 @@ export default {
         }
       },
       fontFamily: {
-        sans: ['"Plus Jakarta Sans"', 'Inter', 'system-ui', '-apple-system', 'sans-serif'],
-        display: ['"Space Grotesk"', '"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
+        serif: ['"Merriweather"', 'Georgia', 'Cambria', '"Times New Roman"', 'serif'],
+        display: ['"Merriweather"', 'Georgia', 'serif'],
+        sans: ['"Merriweather"', '"Source Sans 3"', '"Lato"', 'Georgia', 'serif'],
+        ui: ['"Source Sans 3"', '"Lato"', 'system-ui', '-apple-system', 'sans-serif'],
         mono: ['"JetBrains Mono"', 'Fira Code', 'monospace'],
       },
       boxShadow: {
