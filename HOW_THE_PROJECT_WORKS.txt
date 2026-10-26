@@ -1,0 +1,392 @@
+================================================================================
+                    CAMPUS EVENT MANAGEMENT SYSTEM (EMS)
+           FRANCIS XAVIER ENGINEERING COLLEGE (AUTONOMOUS), TIRUNELVELI
+                      COMPREHENSIVE TECHNICAL & WORKFLOW GUIDE
+================================================================================
+
+1. PROJECT OVERVIEW & OBJECTIVE
+--------------------------------------------------------------------------------
+The Campus Event Management System (EMS) is a full-stack web application designed 
+specifically for Francis Xavier Engineering College (Autonomous), Tirunelveli. 
+It automates the end-to-end lifecycle of college events (including hackathons, 
+workshops, technical symposiums, cultural fests, and sports meets) held inside 
+and outside the campus.
+
+Key Goals:
+  - Provide a single, centralized discovery hub for campus events.
+  - Automate student verification via strict institutional email rules.
+  - Prevent duplicate event registrations (strictly 1 registration per event per student).
+  - Provide a modern Upcoming Events Blue Card Carousel with touchpad horizontal 
+    scrolling (left-to-right gesture to reveal next events), touch swipe, and 
+    smooth physical transitions.
+  - Support a 4-Stage Verification & Recognition Lifecycle:
+      Stage 1: Registered (Screenshot proof uploaded, pending admin review)
+      Stage 2: Registration Approved (Seat confirmed, official participant)
+      Stage 3: Participated (Student uploads certificate of participation/win)
+      Stage 4: Ranked & Awarded (Admin verifies certificate, awards Rank 1/2/3 
+               or Participated, and credits Reward Points to student profile)
+  - Remove legacy binary attendance blocks in favor of genuine certificate 
+    verification and ranking.
+  - Empower Administrators with event publication (including external Google Forms 
+    hackathon links), proof inspection, ranking, and CSV exports.
+
+
+2. ARCHITECTURE & TECHNOLOGY STACK
+--------------------------------------------------------------------------------
+The project follows a decoupled client-server architecture with relational storage:
+
+FRONTEND (client/):
+  - Framework: React 18 with Vite build tooling (ESModules)
+  - Routing: React Router DOM v6 with protected routes and role guards
+  - Styling: Vanilla CSS & Tailwind CSS v3 (modern glassmorphism, responsive grid)
+  - Icons: Lucide React
+  - HTTP Client: Axios with automatic JWT Bearer token interceptor
+  - Real-time Notifications: Custom lightweight Toast notification provider
+
+BACKEND (server/):
+  - Runtime: Node.js (v18+)
+  - Web Framework: Express.js REST API
+  - Authentication: JSON Web Tokens (JWT) signed with HMAC-SHA256
+  - Password Security: bcryptjs with 10 salt rounds
+  - File Storage: Multer multipart parser (posters, proofs, certificates stored 
+    in server/uploads and synchronized to client/public/uploads for direct asset access)
+  - Security Middlewares: Helmet (HTTP headers), CORS, express-rate-limit
+
+DATABASE (server/sql/):
+  - Database Engine: MySQL 8.0 (InnoDB engine, utf8mb4 charset)
+  - Connectivity: mysql2 with connection pooling (max 10 connections) & prepared statements
+  - Concurrency Safety: MySQL transactions (BEGIN, SELECT ... FOR UPDATE, COMMIT/ROLLBACK) 
+    preventing race conditions during seat allotment.
+
+
+3. DATABASE SCHEMA & DATA MODEL
+--------------------------------------------------------------------------------
+The database name is `campus_events` and comprises the following core tables:
+
+1. `departments`
+   - `code` (VARCHAR(10), PRIMARY KEY): e.g. 'it', 'cse', 'ece', 'eee', 'mech', 'civil', 'aids', 'bme'
+   - `name` (VARCHAR(100)): Full department name (e.g. 'Information Technology')
+
+2. `users`
+   - `id` (INT AUTO_INCREMENT, PRIMARY KEY)
+   - `name` (VARCHAR(100)): Student or Admin display name
+   - `email` (VARCHAR(150) UNIQUE): Institutional email (@francisxavier.ac.in)
+   - `password_hash` (VARCHAR(255)): Bcrypt hashed password
+   - `role` (ENUM('admin', 'student')): System access role
+   - `department_code` (VARCHAR(10), FK -> departments.code)
+   - `admission_year` (INT): Year student joined (e.g. 2024)
+   - `study_level` (ENUM('UG', 'PG')): Undergraduate or Postgraduate
+   - `section` (VARCHAR(5)): Section 'A', 'B', 'C', or 'D'
+   - `register_number` (VARCHAR(20)): 12-digit university roll number
+   - `total_points` (INT DEFAULT 0): Accumulated reward points
+   - `created_at` (TIMESTAMP)
+
+3. `events`
+   - `id` (INT AUTO_INCREMENT, PRIMARY KEY)
+   - `title` (VARCHAR(200)): Event name
+   - `description` (TEXT): Full description, schedule, and guidelines
+   - `poster_url` (VARCHAR(255)): Stored image path (/uploads/...)
+   - `event_type` (ENUM('internal', 'external')): Inside College vs Outside College
+   - `category` (VARCHAR(50)): Technical, Non-Technical, Workshop, Hackathon, Cultural, Sports
+   - `venue` (VARCHAR(150)): Hall or lab location
+   - `organizer` (VARCHAR(150)): Club, Department, or Host
+   - `event_date` (DATETIME): Date and time of the event
+   - `start_time` (VARCHAR(20)): Optional display time (e.g. 09:30 AM)
+   - `end_time` (VARCHAR(20)): Optional display time (e.g. 04:30 PM)
+   - `registration_deadline` (DATETIME): Cutoff for registration submissions
+   - `registration_open_date` (DATETIME): Date when registration opens
+   - `certificate_deadline` (DATETIME): Cutoff for certificate uploads
+   - `max_seats` (INT NULL): Seat quota (NULL means unlimited seats)
+   - `reward_points` (INT DEFAULT 0): Base reward points offered
+   - `external_link` (VARCHAR(255)): External website/portal link
+   - `registration_url` (TEXT): Google Forms or Hackathon registration link
+   - `status` (ENUM('draft', 'published', 'registration_closed') DEFAULT 'published')
+   - `is_visible_on_dashboard` (TINYINT(1) DEFAULT 1): Student dashboard visibility
+   - `created_by` (INT, FK -> users.id)
+   - `created_at`, `updated_at` (TIMESTAMP)
+
+4. `registration_requests`
+   - `id` (INT AUTO_INCREMENT, PRIMARY KEY)
+   - `event_id` (INT, FK -> events.id ON DELETE CASCADE)
+   - `user_id` (INT, FK -> users.id ON DELETE CASCADE)
+   - `name` (VARCHAR(100)): Student name at submission
+   - `department_code` (VARCHAR(10), FK -> departments.code)
+   - `section` (VARCHAR(5)): Section at submission
+   - `register_number` (VARCHAR(20)): Student register number
+   - `email` (VARCHAR(150)): Student college email
+   - `admission_year` (INT): Year of admission
+   - `year_of_study` (INT): 1, 2, 3, or 4
+   - `status` (ENUM('registered', 'pending', 'registration_approved', 'approved', 'participated', 'ranked', 'rejected'))
+   - `registration_screenshot` (VARCHAR(255)): Stored path to proof image
+   - `screenshot_uploaded_at` (DATETIME): Timestamp when proof was uploaded
+   - `certificate_url` (VARCHAR(255)): Stored path to certificate PDF or image
+   - `certificate_uploaded_at` (DATETIME): Timestamp when certificate was uploaded
+   - `rank_position` (ENUM('none', '1', '2', '3', 'participated') DEFAULT 'none')
+   - `rank_points_awarded` (INT DEFAULT 0): Points credited for this event
+   - `ranked_by` (INT, FK -> users.id): Admin who verified & ranked
+   - `ranked_at` (DATETIME): Timestamp when ranked
+   - `admin_note` (TEXT): Reason if rejected or remarks on ranking
+   - `reviewed_by` (INT, FK -> users.id): Admin who reviewed proof
+   - `reviewed_at` (DATETIME)
+   - `created_at` (TIMESTAMP)
+   - UNIQUE KEY `uq_event_user` (`event_id`, `user_id`): Guarantees strictly 1 registration per event.
+
+5. `external_registrations`
+   - `id` (INT AUTO_INCREMENT, PRIMARY KEY)
+   - `event_id` (INT, FK -> events.id ON DELETE CASCADE)
+   - `user_id` (INT, FK -> users.id ON DELETE CASCADE)
+   - `registration_url` (TEXT): The external URL opened
+   - `registered_at` (TIMESTAMP)
+
+6. `points_log`
+   - `id` (INT AUTO_INCREMENT, PRIMARY KEY)
+   - `user_id` (INT, FK -> users.id ON DELETE CASCADE)
+   - `event_id` (INT, FK -> events.id ON DELETE SET NULL)
+   - `points` (INT): Point delta credited
+   - `reason` (VARCHAR(255)): Audit description (e.g. "Rank 1 Winner - Hackathon 2026")
+   - `created_at` (TIMESTAMP)
+
+
+4. INSTITUTIONAL EMAIL PARSER & ACADEMIC RULES
+--------------------------------------------------------------------------------
+To prevent unauthorized signups and identity spoofing, the system uses a strict 
+institutional email parser engine (server/src/utils/emailParser.js):
+
+- Email Pattern:
+    ^([a-z][a-z0-9]*)\.(ug|pg)\.(\d{2})\.([a-z]+)@francisxavier\.ac\.in$
+
+  Example: karthisans.ug.24.it@francisxavier.ac.in
+    - Display Name: Karthisans
+    - Degree Level: UG (Undergraduate)
+    - Admission Year: 2024 (from '24')
+    - Department: IT (Information Technology)
+
+- Academic Year of Study Calculation:
+    Computed dynamically based on the June academic calendar boundary:
+    If current month is June or later (month >= 5):
+      academicYear = currentYear - admissionYear + 1
+    Else (before June):
+      academicYear = currentYear - admissionYear
+
+- Alumni Registration Protection:
+    - UG students enrolled > 4 years are flagged as Alumni and blocked.
+    - PG students enrolled > 2 years are flagged as Alumni and blocked.
+    - Non-Francis Xavier domains (@gmail.com, @yahoo.com) are rejected immediately.
+    - Server re-derives all fields independently upon every request and never trusts 
+      client-supplied year or department.
+
+
+5. THE 4-STAGE EVENT PARTICIPATION LIFECYCLE
+--------------------------------------------------------------------------------
+Legacy binary attendance checking has been completely removed. The application 
+now functions around 4 explicit, verifiable stages:
+
+STAGE 1: REGISTERED (Pending Review)
+  - Student opens event specifications and clicks "Register Now".
+  - If event has an external Google Form, student opens the link to submit, then 
+    uploads their registration screenshot proof in the popup.
+  - Status is set to 'registered'.
+  - Seat count reflects pending review quota.
+  - Student card switches to "Registered ✓ (Under Review)" with a "Track Status" button.
+  - Re-registration is strictly blocked (duplicate submissions receive HTTP 409).
+
+STAGE 2: REGISTRATION APPROVED (Seat Confirmed)
+  - Admin navigates to Admin Requests (`/admin/requests`) under the "Registered" tab 
+    or opens Registered Students modal in Admin Events (`/admin/events`).
+  - Admin views student's uploaded registration screenshot in the lightbox preview.
+  - Upon clicking "Approve Registration", status transitions to 'registration_approved'.
+  - A seat is atomically confirmed in the database using SELECT ... FOR UPDATE.
+  - Student account card switches to green badge: "Registered ✓ (Seat Confirmed)".
+
+STAGE 3: PARTICIPATED (Certificate Uploaded)
+  - After attending the event, student goes to My Requests (`/my/requests`).
+  - Student uploads their official participation or winner certificate (PDF/JPG/PNG).
+  - Status automatically transitions to 'participated'.
+  - Student card shows purple badge: "Participated (Cert Uploaded)".
+  - Built-in deadline alerts alert the student before certificate submission closes.
+
+STAGE 4: RANKED & AWARDED (Points Credited)
+  - Admin navigates to the "Participated" tab in Admin Requests.
+  - Admin inspects the student's certificate.
+  - Admin clicks "Verify & Rank" and selects:
+      * Rank 1 (Gold Trophy + Bonus Points)
+      * Rank 2 (Silver Trophy + Bonus Points)
+      * Rank 3 (Bronze Trophy + Bonus Points)
+      * Participated (Base Reward Points)
+  - Admin can override or approve points and add congratulatory notes.
+  - Status becomes 'ranked'.
+  - Reward points are automatically credited to student's user account and recorded 
+    in `points_log`.
+  - Student card in Home & My Requests displays gold badge: "Rank 1 Awarded (+50 PTS)".
+
+
+6. STUDENT PORTAL FEATURES & UI WORKFLOW
+--------------------------------------------------------------------------------
+
+A. UPCOMING EVENTS BLUE CARD SLIDER (Home.jsx)
+  - Chronological Filtering: Strictly displays events where event_date >= startOfToday, 
+    sorted soonest first.
+  - Touchpad Horizontal Scroll:
+      * Using two fingers on touchpad to scroll left-to-right (deltaX > 0) immediately 
+        slides to the NEXT upcoming event.
+      * Scrolling right-to-left (deltaX < 0) returns to the PREVIOUS event.
+      * Vertical page scrolling is preserved (absX > absY check prevents hijacking).
+      * Inertial accumulator and 450ms cooldown prevent runaway slide skipping.
+  - Drag / Swipe Gestures:
+      * Touchpad click-and-drag, mouse drag, and mobile touch swipes smoothly move 
+        the card track in real time.
+  - Keyboard Controls: Left and Right arrow keys navigate between upcoming events.
+  - Real-time Slide Track: Uses physical CSS transform:
+      transform: translateX(calc(-${activeSlideIndex * 100}% + ${dragDeltaX}px))
+      transition: transform 500ms cubic-bezier(0.25, 1, 0.5, 1)
+  - Dynamic Countdown: Displays "Happening in X days", "Happening Tomorrow!", or 
+    "Happening Today!".
+  - Registration Guard in Blue Card: If student is already registered, "Register Now" 
+    is replaced with their live stage badge and a "Track Status" button.
+
+B. EVENT SPECIFICATIONS MODAL (EventModal.jsx)
+  - Full uncropped event poster preview with high-res zoom link.
+  - Structured student guide breakdown (Objectives, Schedule, Requirements, Contacts).
+  - Live seat calculation: Remaining seats = max_seats - approved_count.
+  - Registration status check:
+      * If registered, shows stage status and "Track Status in Applied Events".
+      * If seats full or deadline passed, shows disabled status indicator.
+
+C. EVENT REGISTRATION POPUP (RegisterModal.jsx)
+  - Pre-filled verified college credentials (read-only email, student name, verified department).
+  - Mandatory registration screenshot upload for admin validation.
+  - Duplicate registration protection: Displays "You Are Already Registered!" confirmation 
+    screen if attempted again.
+
+D. MY REQUESTS & CERTIFICATE PORTAL (MyRequests.jsx)
+  - Progress tracker showing the student's real-time position across the 4 stages.
+  - Stage tabs: All, Under Review, Seat Confirmed, Participated, Ranked, Rejected.
+  - Certificate uploader with file type/size validation.
+  - Rejection note banner with explanation if admin declines submission.
+
+
+7. ADMIN PORTAL FEATURES & UI WORKFLOW
+--------------------------------------------------------------------------------
+
+A. ADMIN DASHBOARD (Dashboard.jsx)
+  - Real-time KPI statistics: Total Events, Confirmed Participants, Pending Reviews, 
+    Total Student Accounts, Points Credited.
+  - Department participation breakdown chart.
+  - Quick action links to publish events and review queues.
+
+B. EVENT MANAGER (admin/Events.jsx)
+  - Add / Edit / Delete campus events.
+  - Multi-part poster image uploader (JPG, PNG, WebP with server synchronization).
+  - External registration link field (for Google Forms hackathons).
+  - Date and time selectors, registration cutoff date, certificate cutoff date.
+  - Seat quotas and reward points allotment.
+
+C. REGISTERED STUDENTS VIEWER MODAL (EventAttendeesModal.jsx)
+  - Accessible via "Students (N)" button on any event card in Admin Events.
+  - Stage filters: All Stages, Registered (Pending), Approved Seats, Participated, Ranked, Rejected.
+  - Department and Year of study dropdown filters.
+  - Direct preview links for uploaded screenshot proofs and completion certificates.
+  - Export CSV: Generates clean attendee spreadsheets with student name, email, register 
+    number, department, year, section, stage, rank, and submission timestamp (no attendance column).
+  - Print sheet formatting.
+
+D. REQUESTS REVIEW CONSOLE (admin/Requests.jsx)
+  - Dedicated tabs for each stage:
+      1. Registered (Review pending screenshot proofs)
+      2. Registration Approved (Confirmed attendees)
+      3. Participated (Pending certificate verification)
+      4. Ranked (Awarded students with points credited)
+      5. Rejected (Declined registrations)
+  - Lightbox proof viewer for rapid inspection.
+  - Bulk approval / bulk rejection with custom admin notes.
+  - Certificate verification and ranking modal:
+      * Select Rank 1, Rank 2, Rank 3, or Participated.
+      * Auto-calculates or customizes reward points.
+      * Instantly credits student account and updates ledger.
+
+
+8. DEFAULT CREDENTIALS & SAMPLE DATA
+--------------------------------------------------------------------------------
+1. Administrator Account:
+   - Email:    admin@francisxavier.ac.in
+   - Password: Admin@123
+   - Role:     admin
+   - Portal:   http://localhost:5173/admin
+
+2. Sample Student Account:
+   - Email:    karthisans.ug.24.it@francisxavier.ac.in
+   - Password: Student@123
+   - Role:     student
+   - Portal:   http://localhost:5173/events
+   - Profile:  Karthisans, UG, Year 2024, III Year, Information Technology, Sec A
+
+
+9. ENVIRONMENT VARIABLES & CONFIGURATION
+--------------------------------------------------------------------------------
+Backend configuration file (server/.env):
+  PORT=5000
+  NODE_ENV=development
+  CLIENT_URL=http://localhost:5173
+
+  DB_HOST=localhost
+  DB_PORT=3306
+  DB_USER=root
+  DB_PASSWORD=admin123
+  DB_NAME=campus_events
+
+  JWT_SECRET=fxec_campus_event_jwt_super_secret_key_2026_x89!secure
+  JWT_EXPIRES_IN=1d
+
+  ADMIN_NAME=FXEC Event Admin
+  ADMIN_EMAIL=admin@francisxavier.ac.in
+  ADMIN_PASSWORD=Admin@123
+  ADMIN_DEPT=it
+
+
+10. COMMANDS TO RUN & OPERATE THE PROJECT
+--------------------------------------------------------------------------------
+
+A. PREREQUISITES
+  - Ensure Node.js (v18+) is installed.
+  - Ensure MySQL Server (v8.0+) is running locally on port 3306.
+
+B. DATABASE INITIALIZATION (First Time Setup)
+  - Open MySQL command line or MySQL Workbench:
+      mysql -u root -p
+  - Execute database creation:
+      CREATE DATABASE IF NOT EXISTS campus_events;
+  - Import schema:
+      mysql -u root -p campus_events < server/sql/schema.sql
+  - Run database migration script:
+      node server/src/scripts/migrateHackathonRegistration.js
+
+C. STARTING THE APPLICATION
+  Option 1: Using the root start script
+    Double-click `start.bat` in the root folder, OR run:
+    ./start.bat
+
+  Option 2: Running via separate terminals
+    Terminal 1 (Backend Server):
+      cd "c:\New folder (2)\Campus-Event\server"
+      npm install
+      npm start
+      (Runs on http://localhost:5000)
+
+    Terminal 2 (Frontend Client):
+      cd "c:\New folder (2)\Campus-Event\client"
+      npm install
+      npm run dev
+      (Runs on http://localhost:5173)
+
+D. RUNNING TESTS & BUILD VERIFICATION
+    Server Unit Tests (Email Parser & Rules):
+      cd "c:\New folder (2)\Campus-Event\server"
+      npm test
+
+    Client Production Build:
+      cd "c:\New folder (2)\Campus-Event\client"
+      npm run build
+
+================================================================================
+                                END OF GUIDE
+================================================================================
