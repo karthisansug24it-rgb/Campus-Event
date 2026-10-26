@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import api from '../../api/axios';
 import EventCard from '../../components/EventCard';
 import EventModal from '../../components/EventModal';
@@ -8,16 +8,21 @@ import {
   Calendar, 
   Sparkles, 
   ArrowDown, 
-  ArrowRight,
+  ArrowRight, 
   MapPin, 
   Clock, 
   Layers, 
-  AlertCircle,
-  Award,
-  Compass,
-  Filter,
-  CheckCircle2,
-  ExternalLink
+  AlertCircle, 
+  Award, 
+  Compass, 
+  Filter, 
+  CheckCircle2, 
+  ExternalLink,
+  ChevronLeft,
+  ChevronRight,
+  Trophy,
+  XCircle,
+  Users
 } from 'lucide-react';
 import { 
   Button, 
@@ -126,8 +131,44 @@ const Home = () => {
     setUpcomingOnly(false);
   };
 
-  // Soonest upcoming event (first in sorted events)
-  const soonestEvent = events.length > 0 ? events[0] : null;
+  // Strictly only upcoming events by date, sorted chronologically (soonest first)
+  const upcomingEvents = useMemo(() => {
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+    return events
+      .filter(ev => {
+        const evDate = new Date(ev.event_date);
+        return !isNaN(evDate.getTime()) && evDate >= now;
+      })
+      .sort((a, b) => new Date(a.event_date) - new Date(b.event_date));
+  }, [events]);
+
+  const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
+
+  // Auto slide timer with pause on hover
+  useEffect(() => {
+    if (upcomingEvents.length <= 1 || isPaused) return;
+    const interval = setInterval(() => {
+      setCurrentSlideIndex(prev => (prev + 1) % upcomingEvents.length);
+    }, 6000);
+    return () => clearInterval(interval);
+  }, [upcomingEvents.length, isPaused]);
+
+  const activeSlideIndex = upcomingEvents.length > 0
+    ? (currentSlideIndex % upcomingEvents.length + upcomingEvents.length) % upcomingEvents.length
+    : 0;
+  const currentUpcomingEvent = upcomingEvents[activeSlideIndex] || null;
+
+  const handlePrevSlide = (e) => {
+    e?.stopPropagation();
+    setCurrentSlideIndex(prev => (prev - 1 + upcomingEvents.length) % upcomingEvents.length);
+  };
+
+  const handleNextSlide = (e) => {
+    e?.stopPropagation();
+    setCurrentSlideIndex(prev => (prev + 1) % upcomingEvents.length);
+  };
 
   const getDaysRemainingText = (eventDateStr) => {
     if (!eventDateStr) return '';
@@ -145,138 +186,252 @@ const Home = () => {
       {/* Container */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-8">
 
-        {/* 1. Highlight: Soonest Upcoming Event ("Recent ah nadakapora event") */}
-        {soonestEvent && (
-          <AnimatedSection className="bg-gradient-to-br from-blue-700 via-blue-800 to-indigo-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl shadow-blue-900/15 relative overflow-hidden" delay={0.1}>
-            <div className="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full blur-3xl pointer-events-none" />
-            
-            <div className="relative z-10 flex flex-col lg:flex-row items-stretch lg:items-center gap-6 sm:gap-8">
-              {/* Event Poster / Visual Preview */}
-              <div 
-                onClick={() => handleSelectEvent(soonestEvent)}
-                className="w-full lg:w-auto flex items-center justify-center shrink-0 self-center"
-              >
-                <div className="relative group cursor-pointer rounded-2xl overflow-hidden bg-white/10 backdrop-blur-md border border-white/20 shadow-2xl p-1.5 flex items-center justify-center transition-all duration-300 hover:border-white/40 hover:shadow-blue-950/40 max-w-full">
-                  {soonestEvent.poster_url ? (
-                    <>
-                      <img
-                        src={getPosterUrl(soonestEvent.poster_url)}
-                        alt={soonestEvent.title}
-                        className="w-auto h-auto max-h-[280px] sm:max-h-[340px] max-w-full sm:max-w-xs md:max-w-sm object-contain rounded-xl shadow-md transition-transform duration-300 group-hover:scale-[1.02] block"
-                        onError={(e) => handleImageError(e, soonestEvent.poster_url)}
-                      />
-                      <div className="absolute inset-0 bg-slate-950/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center rounded-xl pointer-events-none">
-                        <span className="px-3 py-1.5 rounded-full bg-white/95 text-slate-900 text-xs font-mono font-bold shadow-lg flex items-center gap-1.5 backdrop-blur-sm">
-                          <ExternalLink className="w-3.5 h-3.5 text-blue-600" />
-                          <span>View Full Poster</span>
-                        </span>
-                      </div>
-                    </>
-                  ) : (
-                    <div className="w-56 h-56 flex flex-col items-center justify-center bg-blue-900/60 rounded-xl text-blue-200">
-                      <Calendar className="w-12 h-12 mb-2" />
-                      <span className="text-xs font-mono font-medium">No Poster Available</span>
-                    </div>
-                  )}
+        {/* 1. Highlight: Upcoming Events Slider ("view it as a slide with smooth animation only upcoming by date") */}
+        {currentUpcomingEvent && (
+          <AnimatedSection className="relative" delay={0.1}>
+            <div 
+              onMouseEnter={() => setIsPaused(true)}
+              onMouseLeave={() => setIsPaused(false)}
+              className="bg-gradient-to-br from-blue-700 via-blue-800 to-indigo-950 rounded-3xl p-6 sm:p-8 lg:p-9 text-white shadow-xl shadow-blue-900/20 relative overflow-hidden transition-all duration-300 border border-blue-400/25"
+            >
+              {/* Background ambient glow shapes */}
+              <div className="absolute -top-24 -right-24 w-96 h-96 bg-blue-400/10 rounded-full blur-3xl pointer-events-none" />
+              <div className="absolute -bottom-24 -left-24 w-80 h-80 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
 
-                </div>
-              </div>
-
-              {/* Event Details Narrative */}
-              <div className="flex-1 space-y-3.5">
-                <div className="flex flex-wrap items-center gap-2">
-                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-400 text-slate-950 text-xs font-mono font-black tracking-wider uppercase shadow-xs">
+              {/* Slider Header Control Bar */}
+              <div className="relative z-20 flex flex-wrap items-center justify-between gap-3 pb-5 border-b border-white/10 mb-6">
+                <div className="flex flex-wrap items-center gap-2.5">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-400 text-slate-950 text-xs font-mono font-black tracking-wider uppercase shadow-xs">
                     <Sparkles className="w-3.5 h-3.5" />
-                    <span>NEXT UPCOMING EVENT · HAPPENING SOONEST</span>
-                  </div>
+                    <span>UPCOMING EVENTS · HAPPENING SOONEST</span>
+                  </span>
                   <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-white/15 text-blue-100 text-xs font-mono font-semibold backdrop-blur-md">
                     <Clock className="w-3.5 h-3.5 text-amber-300" />
-                    {getDaysRemainingText(soonestEvent.event_date)}
-                  </span>
-                  {soonestEvent.category && (
-                    <span className="inline-flex items-center px-3 py-1 rounded-full bg-blue-500/80 text-white text-xs font-mono font-bold backdrop-blur-md border border-blue-400/40">
-                      {soonestEvent.category}
-                    </span>
-                  )}
-                  <span className="inline-flex items-center px-3 py-1 rounded-full bg-black/30 text-white text-xs font-mono font-semibold backdrop-blur-md border border-white/15">
-                    {soonestEvent.event_type === 'internal' ? 'Inside College' : 'Outside College'}
+                    {getDaysRemainingText(currentUpcomingEvent.event_date)}
                   </span>
                 </div>
 
-                <h2 
-                  onClick={() => handleSelectEvent(soonestEvent)}
-                  className="text-2xl sm:text-3xl font-black font-display text-white tracking-tight leading-snug cursor-pointer hover:text-blue-200 transition-colors"
+                {/* Slider Controls (if multiple upcoming events) */}
+                {upcomingEvents.length > 1 && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-mono font-bold text-blue-200/90 bg-white/10 px-2.5 py-1 rounded-xl backdrop-blur-sm border border-white/15">
+                      {activeSlideIndex + 1} / {upcomingEvents.length}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={handlePrevSlide}
+                      className="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 text-white flex items-center justify-center transition-all border border-white/15 backdrop-blur-sm cursor-pointer"
+                      aria-label="Previous upcoming event"
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleNextSlide}
+                      className="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 text-white flex items-center justify-center transition-all border border-white/15 backdrop-blur-sm cursor-pointer"
+                      aria-label="Next upcoming event"
+                    >
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Active Slide Body with smooth transition key */}
+              <div 
+                key={currentUpcomingEvent.id} 
+                className="relative z-10 flex flex-col lg:flex-row items-stretch lg:items-center gap-6 sm:gap-8 transition-opacity duration-500 ease-out animate-fadeIn"
+              >
+                {/* Event Poster / Visual Preview */}
+                <div 
+                  onClick={() => handleSelectEvent(currentUpcomingEvent)}
+                  className="w-full lg:w-auto flex items-center justify-center shrink-0 self-center"
                 >
-                  {soonestEvent.title}
-                </h2>
-
-                <p className="text-sm text-blue-100/90 leading-relaxed line-clamp-2">
-                  {soonestEvent.description
-                    ? soonestEvent.description.replace(/^#{2,4}\s*[^\n]+\n*/gm, '').replace(/[-*•]\s*/g, '').replace(/\s+/g, ' ').trim()
-                    : ''}
-                </p>
-
-                <div className="flex flex-wrap items-center gap-4 text-xs text-blue-200 pt-1 font-sans">
-                  <span className="flex items-center gap-1.5 bg-white/10 px-3 py-1.5 rounded-xl backdrop-blur-sm">
-                    <Calendar className="w-4 h-4 text-blue-300" />
-                    <strong className="text-white">
-                      {new Date(soonestEvent.event_date).toLocaleDateString('en-IN', {
-                        day: 'numeric',
-                        month: 'short',
-                        year: 'numeric'
-                      })}
-                    </strong>
-                  </span>
-                  <span className="flex items-center gap-1.5 bg-white/10 px-3 py-1.5 rounded-xl backdrop-blur-sm">
-                    <MapPin className="w-4 h-4 text-blue-300" />
-                    <span className="text-white truncate max-w-[200px]">{soonestEvent.venue}</span>
-                  </span>
-                  <span className="flex items-center gap-1.5 bg-white/10 px-3 py-1.5 rounded-xl backdrop-blur-sm">
-                    <Award className="w-4 h-4 text-amber-300" />
-                    <span className="text-amber-300 font-bold">+{soonestEvent.reward_points} Points</span>
-                  </span>
+                  <div className="relative group cursor-pointer rounded-2xl overflow-hidden bg-white/10 backdrop-blur-md border border-white/20 shadow-2xl p-1.5 flex items-center justify-center transition-all duration-300 hover:border-white/40 hover:shadow-blue-950/40 max-w-full">
+                    {currentUpcomingEvent.poster_url ? (
+                      <>
+                        <img
+                          src={getPosterUrl(currentUpcomingEvent.poster_url)}
+                          alt={currentUpcomingEvent.title}
+                          className="w-auto h-auto max-h-[280px] sm:max-h-[330px] max-w-full sm:max-w-xs md:max-w-sm object-contain rounded-xl shadow-md transition-transform duration-500 group-hover:scale-[1.02] block"
+                          onError={(e) => handleImageError(e, currentUpcomingEvent.poster_url)}
+                        />
+                        <div className="absolute inset-0 bg-slate-950/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center rounded-xl pointer-events-none">
+                          <span className="px-3 py-1.5 rounded-full bg-white/95 text-slate-900 text-xs font-mono font-bold shadow-lg flex items-center gap-1.5 backdrop-blur-sm">
+                            <ExternalLink className="w-3.5 h-3.5 text-blue-600" />
+                            <span>View Full Poster</span>
+                          </span>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="w-56 h-56 flex flex-col items-center justify-center bg-blue-900/60 rounded-xl text-blue-200">
+                        <Calendar className="w-12 h-12 mb-2" />
+                        <span className="text-xs font-mono font-medium">No Poster Available</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
-                {/* Action Buttons */}
-                <div className="pt-2 flex flex-wrap items-center gap-3">
-                  <button
-                    type="button"
-                    onClick={() => handleSelectEvent(soonestEvent)}
-                    className="px-5 py-2.5 rounded-xl bg-white text-blue-900 font-bold text-xs hover:bg-blue-50 transition-all flex items-center gap-2 shadow-md shadow-black/10"
-                  >
-                    <span>View Specifications</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </button>
+                {/* Event Details Narrative */}
+                <div className="flex-1 space-y-3.5">
+                  <div className="flex flex-wrap items-center gap-2">
+                    {currentUpcomingEvent.category && (
+                      <span className="inline-flex items-center px-3 py-1 rounded-full bg-blue-500/80 text-white text-xs font-mono font-bold backdrop-blur-md border border-blue-400/40">
+                        {currentUpcomingEvent.category}
+                      </span>
+                    )}
+                    <span className="inline-flex items-center px-3 py-1 rounded-full bg-black/30 text-white text-xs font-mono font-semibold backdrop-blur-md border border-white/15">
+                      {currentUpcomingEvent.event_type === 'internal' ? 'Inside College' : 'Outside College'}
+                    </span>
+                    {currentUpcomingEvent.reward_points > 0 && (
+                      <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/30 text-xs font-mono font-bold">
+                        <Award className="w-3.5 h-3.5 text-amber-300" />
+                        <span>+{currentUpcomingEvent.reward_points} PTS</span>
+                      </span>
+                    )}
+                  </div>
 
-                  {soonestEvent.user_request_status === 'approved' ? (
-                    <span className="px-5 py-2.5 rounded-xl bg-emerald-500/90 text-white font-bold text-xs flex items-center gap-2 border border-emerald-400 backdrop-blur-md">
-                      <CheckCircle2 className="w-4 h-4" />
-                      <span>Registered ✓</span>
+                  <h2 
+                    onClick={() => handleSelectEvent(currentUpcomingEvent)}
+                    className="text-2xl sm:text-3xl font-black font-display text-white tracking-tight leading-snug cursor-pointer hover:text-blue-200 transition-colors"
+                  >
+                    {currentUpcomingEvent.title}
+                  </h2>
+
+                  <p className="text-sm text-blue-100/90 leading-relaxed line-clamp-2">
+                    {currentUpcomingEvent.description
+                      ? currentUpcomingEvent.description.replace(/^#{2,4}\s*[^\n]+\n*/gm, '').replace(/[-*•]\s*/g, '').replace(/\s+/g, ' ').trim()
+                      : ''}
+                  </p>
+
+                  <div className="flex flex-wrap items-center gap-4 text-xs text-blue-200 pt-1 font-sans">
+                    <span className="flex items-center gap-1.5 bg-white/10 px-3 py-1.5 rounded-xl backdrop-blur-sm">
+                      <Calendar className="w-4 h-4 text-blue-300" />
+                      <strong className="text-white">
+                        {new Date(currentUpcomingEvent.event_date).toLocaleDateString('en-IN', {
+                          day: 'numeric',
+                          month: 'short',
+                          year: 'numeric'
+                        })}
+                      </strong>
                     </span>
-                  ) : soonestEvent.user_request_status === 'pending' ? (
+                    <span className="flex items-center gap-1.5 bg-white/10 px-3 py-1.5 rounded-xl backdrop-blur-sm">
+                      <MapPin className="w-4 h-4 text-blue-300" />
+                      <span className="text-white truncate max-w-[200px]">{currentUpcomingEvent.venue}</span>
+                    </span>
+                    {currentUpcomingEvent.max_seats ? (
+                      <span className="flex items-center gap-1.5 bg-white/10 px-3 py-1.5 rounded-xl backdrop-blur-sm">
+                        <Users className="w-4 h-4 text-blue-300" />
+                        <span className="text-white">
+                          {currentUpcomingEvent.is_seats_full ? 'Seats Full' : `${currentUpcomingEvent.seats_left} seats left`}
+                        </span>
+                      </span>
+                    ) : null}
+                  </div>
+
+                  {/* Action Buttons: strictly prevent registering again if already registered */}
+                  <div className="pt-2 flex flex-wrap items-center gap-3">
                     <button
                       type="button"
-                      onClick={() => handleOpenRegister(soonestEvent)}
-                      className="px-5 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs transition-all flex items-center gap-2 shadow-sm"
+                      onClick={() => handleSelectEvent(currentUpcomingEvent)}
+                      className="px-5 py-2.5 rounded-xl bg-white text-blue-900 font-bold text-xs hover:bg-blue-50 transition-all flex items-center gap-2 shadow-md shadow-black/10 active:scale-95 cursor-pointer"
                     >
-                      <Clock className="w-4 h-4" />
-                      <span>Pending (Update Details)</span>
+                      <span>View Specifications</span>
+                      <ArrowRight className="w-4 h-4" />
                     </button>
-                  ) : soonestEvent.user_request_status === 'rejected' ? (
-                    <span className="px-5 py-2.5 rounded-xl bg-rose-500/80 text-white font-mono font-bold text-xs flex items-center gap-2 border border-rose-400">
-                      <span>Registration Rejected</span>
-                    </span>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => handleOpenRegister(soonestEvent)}
-                      className="px-5 py-2.5 rounded-xl bg-blue-500 hover:bg-blue-400 text-white font-bold text-xs transition-all flex items-center gap-2 border border-blue-400"
-                    >
-                      <span>Register Now</span>
-                    </button>
-                  )}
+
+                    {/* Registration Status Check */}
+                    {currentUpcomingEvent.user_request_status === 'ranked' ? (
+                      <span className="px-5 py-2.5 rounded-xl bg-amber-400 text-slate-950 font-black text-xs flex items-center gap-2 shadow-sm">
+                        <Trophy className="w-4 h-4 text-amber-900 fill-amber-800" />
+                        <span>Rank {currentUpcomingEvent.user_rank_position?.toUpperCase()} Awarded (+{currentUpcomingEvent.user_rank_points_awarded || currentUpcomingEvent.reward_points} PTS)</span>
+                      </span>
+                    ) : currentUpcomingEvent.user_request_status === 'participated' ? (
+                      <span className="px-5 py-2.5 rounded-xl bg-purple-500/90 text-white font-bold text-xs flex items-center gap-2 border border-purple-300 shadow-md backdrop-blur-md">
+                        <Clock className="w-4 h-4 animate-pulse" />
+                        <span>Participated (Cert Uploaded)</span>
+                      </span>
+                    ) : (currentUpcomingEvent.user_request_status === 'registration_approved' || currentUpcomingEvent.user_request_status === 'approved') ? (
+                      <div className="flex items-center gap-2">
+                        <span className="px-5 py-2.5 rounded-xl bg-emerald-500/95 text-white font-bold text-xs flex items-center gap-2 border border-emerald-300 shadow-md backdrop-blur-md">
+                          <CheckCircle2 className="w-4 h-4 text-white" />
+                          <span>Registered ✓ (Seat Confirmed)</span>
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => window.location.href = '/my/requests'}
+                          className="px-3.5 py-2.5 rounded-xl bg-white/15 hover:bg-white/25 text-white font-bold text-xs transition-all flex items-center gap-1 border border-white/20 backdrop-blur-sm cursor-pointer"
+                        >
+                          <span>Track Status</span>
+                          <ArrowRight className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ) : (currentUpcomingEvent.user_request_status === 'registered' || currentUpcomingEvent.user_request_status === 'pending') ? (
+                      <div className="flex items-center gap-2">
+                        <span className="px-5 py-2.5 rounded-xl bg-blue-500/95 text-white font-bold text-xs flex items-center gap-2 border border-blue-300 shadow-md backdrop-blur-md">
+                          <CheckCircle2 className="w-4 h-4 text-emerald-300" />
+                          <span>Registered ✓ (Under Review)</span>
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => window.location.href = '/my/requests'}
+                          className="px-3.5 py-2.5 rounded-xl bg-white/15 hover:bg-white/25 text-white font-bold text-xs transition-all flex items-center gap-1 border border-white/20 backdrop-blur-sm cursor-pointer"
+                        >
+                          <span>Track Status</span>
+                          <ArrowRight className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ) : currentUpcomingEvent.user_request_status === 'rejected' ? (
+                      <span className="px-5 py-2.5 rounded-xl bg-rose-500/90 text-white font-bold text-xs flex items-center gap-2 border border-rose-300 shadow-md">
+                        <XCircle className="w-4 h-4" />
+                        <span>Registration Rejected</span>
+                      </span>
+                    ) : (
+                      /* Not registered yet */
+                      currentUpcomingEvent.is_past_deadline ? (
+                        <span className="px-5 py-2.5 rounded-xl bg-slate-800/80 text-slate-300 font-bold text-xs border border-white/10">
+                          Registration Closed
+                        </span>
+                      ) : currentUpcomingEvent.is_seats_full ? (
+                        <span className="px-5 py-2.5 rounded-xl bg-slate-800/80 text-slate-300 font-bold text-xs border border-white/10">
+                          Seats Full
+                        </span>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => handleOpenRegister(currentUpcomingEvent)}
+                          className="px-6 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs transition-all flex items-center gap-2 shadow-lg shadow-amber-950/20 active:scale-95 cursor-pointer"
+                        >
+                          <span>Register Now</span>
+                          <ArrowRight className="w-4 h-4" />
+                        </button>
+                      )
+                    )}
+                  </div>
                 </div>
               </div>
+
+              {/* Pagination Dots at Bottom */}
+              {upcomingEvents.length > 1 && (
+                <div className="relative z-20 flex items-center justify-center gap-2 pt-6 mt-2">
+                  {upcomingEvents.map((ev, idx) => (
+                    <button
+                      key={ev.id}
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setCurrentSlideIndex(idx);
+                      }}
+                      className={`h-2 rounded-full transition-all duration-300 cursor-pointer ${
+                        idx === activeSlideIndex 
+                          ? 'w-8 bg-amber-400 shadow-sm' 
+                          : 'w-2.5 bg-white/30 hover:bg-white/60'
+                      }`}
+                      aria-label={`Go to upcoming event slide ${idx + 1}: ${ev.title}`}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
           </AnimatedSection>
         )}

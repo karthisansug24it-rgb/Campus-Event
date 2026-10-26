@@ -103,11 +103,17 @@ const RegisterModal = ({ event, onClose, onSuccess }) => {
     return Object.keys(errors).length === 0;
   };
 
-  const isUpdate = event?.user_request_status === 'pending' || event?.isUpdate;
+  const isAlreadyRegistered = ['registered', 'pending', 'registration_approved', 'approved', 'participated', 'ranked'].includes(event?.user_request_status);
+  const isUpdate = Boolean(event?.isUpdate && !isAlreadyRegistered);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setGeneralError('');
+
+    if (isAlreadyRegistered) {
+      setGeneralError('You have already registered for this event. Duplicate registrations are not allowed.');
+      return;
+    }
 
     if (!validate()) {
       return;
@@ -182,15 +188,49 @@ const RegisterModal = ({ event, onClose, onSuccess }) => {
           </button>
         </div>
 
-        {/* Form Body */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          
-          {generalError && (
-            <div className="p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-semibold flex items-start gap-2.5">
-              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-600" />
-              <span>{generalError}</span>
+        {isAlreadyRegistered ? (
+          <div className="p-8 text-center space-y-4">
+            <div className="w-14 h-14 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto shadow-sm">
+              <CheckCircle2 className="w-8 h-8" />
             </div>
-          )}
+            <div>
+              <h4 className="font-display font-extrabold text-lg text-slate-900">
+                You Are Already Registered!
+              </h4>
+              <p className="text-xs text-slate-500 max-w-sm mx-auto mt-1 leading-relaxed">
+                Your registration request for <strong className="text-slate-800">{event?.title}</strong> is already recorded in your account. Duplicate registrations are not allowed.
+              </p>
+            </div>
+            <div className="pt-2 flex flex-col sm:flex-row gap-2.5 justify-center">
+              <Button
+                variant="primary"
+                size="md"
+                onClick={() => {
+                  onClose();
+                  window.location.href = '/my/requests';
+                }}
+              >
+                Track in Applied Events
+              </Button>
+              <Button
+                variant="outline"
+                size="md"
+                onClick={onClose}
+              >
+                Close
+              </Button>
+            </div>
+          </div>
+        ) : (
+          /* Form Body */
+          <form onSubmit={handleSubmit} className="p-6 space-y-4">
+            
+            {generalError && (
+              <div className="p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-semibold flex items-start gap-2.5">
+                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-600" />
+                <span>{generalError}</span>
+              </div>
+            )}
 
           {/* Verified Read-Only College Email */}
           <div>
@@ -413,7 +453,8 @@ const RegisterModal = ({ event, onClose, onSuccess }) => {
             </Button>
           </div>
 
-        </form>
+          </form>
+        )}
 
       </div>
     </div>

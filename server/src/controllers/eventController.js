@@ -86,11 +86,17 @@ async function getAllEvents(req, res) {
         e.venue, 
         e.organizer, 
         e.event_date, 
+        e.start_time,
+        e.end_time,
         e.registration_deadline, 
+        e.registration_open_date,
         e.certificate_deadline,
+        e.status,
+        e.is_visible_on_dashboard,
         e.max_seats, 
         e.reward_points, 
         e.external_link,
+        COALESCE(e.registration_url, e.external_link) AS registration_url,
         e.created_at,
         COUNT(CASE WHEN rr.status IN ('registration_approved', 'approved', 'participated', 'ranked') THEN 1 END) AS approved_count,
         COUNT(CASE WHEN rr.status IN ('registered', 'pending') THEN 1 END) AS pending_count
@@ -99,7 +105,9 @@ async function getAllEvents(req, res) {
     if (currentUserId) {
       query += `,
         MAX(CASE WHEN rr.user_id = ? THEN rr.status ELSE NULL END) AS user_request_status,
-        MAX(CASE WHEN rr.user_id = ? THEN rr.id ELSE NULL END) AS user_request_id
+        MAX(CASE WHEN rr.user_id = ? THEN rr.id ELSE NULL END) AS user_request_id,
+        MAX(CASE WHEN rr.user_id = ? THEN rr.rank_position ELSE NULL END) AS user_rank_position,
+        MAX(CASE WHEN rr.user_id = ? THEN rr.rank_points_awarded ELSE 0 END) AS user_rank_points_awarded
       `;
     }
 
@@ -111,7 +119,18 @@ async function getAllEvents(req, res) {
 
     const params = [];
     if (currentUserId) {
-      params.push(currentUserId, currentUserId);
+      params.push(currentUserId, currentUserId, currentUserId, currentUserId);
+    }
+
+    const isAdmin = req.user && req.user.role === 'admin';
+    const includeAll = req.query.include_all === 'true' && isAdmin;
+
+    // Student / Public visibility filter: only published and dashboard-visible events
+    if (!includeAll) {
+      query += " AND (e.status = 'published' OR e.status IS NULL) AND (e.is_visible_on_dashboard = 1 OR e.is_visible_on_dashboard IS NULL)";
+    } else if (req.query.status) {
+      query += " AND e.status = ?";
+      params.push(req.query.status);
     }
 
     if (type && ['internal', 'external'].includes(type)) {
@@ -161,7 +180,9 @@ async function getAllEvents(req, res) {
         is_past_event: isPastEvent,
         is_seats_full: isSeatsFull,
         user_request_status: ev.user_request_status || null,
-        user_request_id: ev.user_request_id || null
+        user_request_id: ev.user_request_id || null,
+        user_rank_position: ev.user_rank_position || null,
+        user_rank_points_awarded: ev.user_rank_points_awarded ? Number(ev.user_rank_points_awarded) : 0
       };
     });
 
@@ -233,6 +254,14 @@ async function getEventById(req, res) {
     }
 
     const ev = rows[0];
+    const isAdmin = req.user && req.user.role === 'admin';
+    if (!isAdmin && (ev.status === 'draft' || ev.is_visible_on_dashboard === 0)) {
+      return res.status(404).json({
+        success: false,
+        message: 'Event is currently not available or in draft mode.'
+      });
+    }
+
     const now = new Date();
     const maxSeats = ev.max_seats;
     const approvedCount = Number(ev.approved_count || 0);
@@ -244,6 +273,7 @@ async function getEventById(req, res) {
       success: true,
       data: {
         ...ev,
+        registration_url: ev.registration_url || ev.external_link || null,
         approved_count: approvedCount,
         pending_count: Number(ev.pending_count || 0),
         seats_left: seatsLeft,

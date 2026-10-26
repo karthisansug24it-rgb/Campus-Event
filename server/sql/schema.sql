@@ -57,17 +57,24 @@ CREATE TABLE `events` (
   `venue` VARCHAR(150) NOT NULL,
   `organizer` VARCHAR(150) NOT NULL,
   `event_date` DATETIME NOT NULL,
+  `start_time` VARCHAR(20) NULL,
+  `end_time` VARCHAR(20) NULL,
   `registration_deadline` DATETIME NOT NULL,
+  `registration_open_date` DATETIME NULL,
   `certificate_deadline` DATETIME NULL,
+  `status` ENUM('draft', 'published', 'registration_closed') NOT NULL DEFAULT 'published',
+  `is_visible_on_dashboard` BOOLEAN NOT NULL DEFAULT TRUE,
   `max_seats` INT NULL,
   `reward_points` INT NOT NULL DEFAULT 0,
   `external_link` VARCHAR(255) NULL,
+  `registration_url` VARCHAR(500) NULL COMMENT 'Configured external or form registration URL',
   `created_by` INT NOT NULL,
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   INDEX `idx_event_type` (`event_type`),
   INDEX `idx_event_category` (`category`),
   INDEX `idx_event_date` (`event_date`),
+  INDEX `idx_event_status` (`status`),
   CONSTRAINT `fk_events_created_by` FOREIGN KEY (`created_by`) 
     REFERENCES `users` (`id`) ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -128,3 +135,22 @@ CREATE TABLE `points_log` (
   CONSTRAINT `fk_points_event` FOREIGN KEY (`event_id`) 
     REFERENCES `events` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 6. External Registrations Table (Self-reported/unverified external submissions e.g. Google Forms)
+CREATE TABLE IF NOT EXISTS `external_registrations` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `event_id` INT NOT NULL,
+  `user_id` INT NULL,
+  `student_name` VARCHAR(100) NULL,
+  `student_email` VARCHAR(150) NULL,
+  `verification_status` ENUM('self_reported', 'unverified') NOT NULL DEFAULT 'unverified',
+  `submitted_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  `source_provider` VARCHAR(50) DEFAULT 'google_forms',
+  INDEX `idx_ext_event` (`event_id`),
+  INDEX `idx_ext_user` (`user_id`),
+  CONSTRAINT `fk_ext_event` FOREIGN KEY (`event_id`) 
+    REFERENCES `events` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_ext_user` FOREIGN KEY (`user_id`) 
+    REFERENCES `users` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+

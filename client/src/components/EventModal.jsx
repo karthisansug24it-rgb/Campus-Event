@@ -158,28 +158,18 @@ const EventModal = ({ eventId, onClose, onOpenRegister }) => {
     if (userStatus === 'registered' || userStatus === 'pending') {
       return (
         <div className="space-y-3 w-full">
-          <div className="w-full py-3 px-4 rounded-2xl bg-blue-50 border border-blue-200 flex items-center justify-center gap-2.5 text-blue-900 text-xs font-bold shadow-xs">
-            <Clock className="w-4 h-4 text-blue-600 animate-pulse" />
-            <span>Registration Submitted (Proof Under Admin Review)</span>
+          <div className="w-full py-3.5 px-4 rounded-2xl bg-blue-50 border border-blue-200 flex items-center justify-center gap-2.5 text-blue-900 text-sm font-bold shadow-xs">
+            <CheckCircle2 className="w-5 h-5 text-blue-600" />
+            <span>Registered ✓ (Proof Under Admin Review)</span>
           </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="md"
-              className="flex-1 border-blue-400 text-blue-700 hover:bg-blue-50 font-bold"
-              onClick={() => onOpenRegister(event)}
-            >
-              Update Registration Details
-            </Button>
-            <Button
-              variant="primary"
-              size="md"
-              className="flex-1 bg-blue-600 hover:bg-blue-700 font-bold"
-              onClick={() => window.location.href = '/my/requests'}
-            >
-              Track in Applied Events
-            </Button>
-          </div>
+          <Button
+            variant="primary"
+            size="lg"
+            className="w-full bg-blue-600 hover:bg-blue-700 font-bold"
+            onClick={() => window.location.href = '/my/requests'}
+          >
+            Track Status in Applied Events
+          </Button>
         </div>
       );
     }

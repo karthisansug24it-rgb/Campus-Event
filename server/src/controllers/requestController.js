@@ -103,11 +103,11 @@ async function submitRegistrationRequest(req, res) {
     if (existing.length > 0) {
       const currentStatus = existing[0].status;
 
-      // 1. Rule: After admin approval/participation/ranking, student cannot register again
-      if (['registration_approved', 'approved', 'participated', 'ranked'].includes(currentStatus)) {
+      // 1. Rule: Once registered, student cannot submit duplicate registration requests
+      if (['registered', 'pending', 'registration_approved', 'approved', 'participated', 'ranked'].includes(currentStatus)) {
         return res.status(400).json({
           success: false,
-          message: 'Your registration is already approved by the admin. You cannot register again.'
+          message: 'You have already registered for this event. You cannot register again.'
         });
       }
 
@@ -116,53 +116,6 @@ async function submitRegistrationRequest(req, res) {
         return res.status(400).json({
           success: false,
           message: 'Your registration was rejected by the admin. You cannot register again for this event.'
-        });
-      }
-
-      // 3. Rule: Student can update their details and screenshot while in registered/pending stage
-      if (['registered', 'pending'].includes(currentStatus)) {
-        const finalScreenshot = screenshotUrl || existing[0].registration_screenshot;
-        await pool.execute(
-          `UPDATE registration_requests SET
-            name = ?,
-            department_code = ?,
-            section = ?,
-            register_number = ?,
-            email = ?,
-            admission_year = ?,
-            year_of_study = ?,
-            registration_screenshot = ?,
-            screenshot_uploaded_at = CASE WHEN ? IS NOT NULL THEN NOW() ELSE screenshot_uploaded_at END
-           WHERE id = ?`,
-          [
-            studentName,
-            parsed.departmentCode,
-            normalizedSection,
-            regNumber,
-            studentEmail,
-            parsed.admissionYear,
-            parsed.yearOfStudy,
-            finalScreenshot,
-            screenshotUrl,
-            existing[0].id
-          ]
-        );
-
-        // Also update student's profile defaults
-        await pool.execute(
-          `UPDATE users SET section = COALESCE(?, section), register_number = COALESCE(?, register_number) WHERE id = ?`,
-          [normalizedSection, regNumber, req.user.id]
-        );
-
-        return res.json({
-          success: true,
-          message: 'Registration details updated successfully! Pending admin approval.',
-          data: {
-            requestId: existing[0].id,
-            status: currentStatus,
-            isUpdated: true,
-            registration_screenshot: finalScreenshot
-          }
         });
       }
     }

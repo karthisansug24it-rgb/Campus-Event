@@ -19,7 +19,11 @@ import {
   AlertCircle,
   Building,
   GraduationCap,
-  ShieldCheck
+  ShieldCheck,
+  Trophy,
+  Eye,
+  FileText,
+  ExternalLink
 } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
@@ -33,10 +37,9 @@ const EventAttendeesModal = ({ eventId, isOpen, onClose }) => {
   
   // Filters within modal
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all'); // all, approved, pending, rejected
+  const [statusFilter, setStatusFilter] = useState('all'); // all, registered, approved, participated, ranked, rejected
   const [deptFilter, setDeptFilter] = useState('all');
   const [yearFilter, setYearFilter] = useState('all');
-  const [togglingId, setTogglingId] = useState(null);
 
   const fetchAttendees = async () => {
     if (!eventId) return;
@@ -66,27 +69,6 @@ const EventAttendeesModal = ({ eventId, isOpen, onClose }) => {
     }
   }, [isOpen, eventId]);
 
-  // Attendance Toggle
-  const handleToggleAttendance = async (studentRequestId) => {
-    setTogglingId(studentRequestId);
-    try {
-      const res = await api.patch(`/admin/requests/${studentRequestId}/attendance`);
-      if (res.data.success) {
-        setAttendees(prev => prev.map(a => 
-          a.id === studentRequestId 
-            ? { ...a, attended: res.data.data.attended ? 1 : 0 }
-            : a
-        ));
-        showToast(res.data.message || 'Attendance status updated', 'success');
-      }
-    } catch (err) {
-      console.error('Attendance toggle error:', err);
-      showToast('Failed to update attendance.', 'error');
-    } finally {
-      setTogglingId(null);
-    }
-  };
-
   // Unique departments present in the attendees list
   const availableDepts = useMemo(() => {
     const map = new Map();
@@ -101,8 +83,14 @@ const EventAttendeesModal = ({ eventId, isOpen, onClose }) => {
   // Filtered attendees
   const filteredAttendees = useMemo(() => {
     return attendees.filter(a => {
-      // Status
-      if (statusFilter !== 'all' && a.status !== statusFilter) return false;
+      // Status mapping for filter
+      if (statusFilter !== 'all') {
+        if (statusFilter === 'approved' && !['registration_approved', 'approved'].includes(a.status)) return false;
+        else if (statusFilter === 'registered' && !['registered', 'pending'].includes(a.status)) return false;
+        else if (statusFilter === 'participated' && a.status !== 'participated') return false;
+        else if (statusFilter === 'ranked' && a.status !== 'ranked') return false;
+        else if (statusFilter === 'rejected' && a.status !== 'rejected') return false;
+      }
       // Department
       if (deptFilter !== 'all' && a.department_code !== deptFilter) return false;
       // Year
@@ -123,20 +111,21 @@ const EventAttendeesModal = ({ eventId, isOpen, onClose }) => {
     });
   }, [attendees, statusFilter, deptFilter, yearFilter, searchQuery]);
 
-  // Statistics
+  // Statistics across 4-stage lifecycle
   const stats = useMemo(() => {
     const total = attendees.length;
-    const approved = attendees.filter(a => a.status === 'approved').length;
-    const pending = attendees.filter(a => a.status === 'pending').length;
+    const approved = attendees.filter(a => ['registration_approved', 'approved'].includes(a.status)).length;
+    const pending = attendees.filter(a => ['registered', 'pending'].includes(a.status)).length;
+    const participated = attendees.filter(a => a.status === 'participated').length;
+    const ranked = attendees.filter(a => a.status === 'ranked').length;
     const rejected = attendees.filter(a => a.status === 'rejected').length;
-    const attended = attendees.filter(a => a.attended === 1 || a.attended === true).length;
-    return { total, approved, pending, rejected, attended };
+    return { total, approved, pending, participated, ranked, rejected, participatedOrRanked: participated + ranked };
   }, [attendees]);
 
-  // Export CSV
+  // Export CSV without attendance block
   const handleExportCSV = () => {
     if (!filteredAttendees.length) return;
-    const headers = ['S.No', 'Student Name', 'College Email', 'Register Number', 'Department', 'Year of Study', 'Section', 'Status', 'Attendance', 'Requested At'];
+    const headers = ['S.No', 'Student Name', 'College Email', 'Register Number', 'Department', 'Year of Study', 'Section', 'Registration Stage', 'Rank / Award', 'Proof / Certificate Status', 'Requested At'];
     const rows = filteredAttendees.map((a, idx) => [
       idx + 1,
       `"${a.name || ''}"`,
@@ -146,7 +135,8 @@ const EventAttendeesModal = ({ eventId, isOpen, onClose }) => {
       `Year ${a.year_of_study || ''}`,
       a.section || '',
       a.status?.toUpperCase() || '',
-      a.attended ? 'PRESENT' : 'ABSENT',
+      a.rank_position && a.rank_position !== 'none' ? `Rank ${a.rank_position} (+${a.rank_points_awarded} pts)` : 'None',
+      a.certificate_url ? 'Certificate Uploaded' : a.registration_screenshot ? 'Proof Screenshot Uploaded' : 'None',
       a.created_at ? new Date(a.created_at).toLocaleString() : ''
     ]);
 
@@ -156,7 +146,7 @@ const EventAttendeesModal = ({ eventId, isOpen, onClose }) => {
     const link = document.createElement('a');
     link.href = url;
     const eventNameSlug = (eventData?.title || 'event').replace(/[^a-z0-9]/gi, '_').toLowerCase();
-    link.download = `${eventNameSlug}_attendees_export.csv`;
+    link.download = `${eventNameSlug}_registered_students.csv`;
     link.click();
     URL.revokeObjectURL(url);
     showToast('Student attendees CSV exported successfully!', 'success');
@@ -235,13 +225,13 @@ const EventAttendeesModal = ({ eventId, isOpen, onClose }) => {
         </div>
 
         {/* Modal Stats Bar */}
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 p-4 bg-white border-b border-slate-200/80 text-xs font-mono">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 bg-white border-b border-slate-200/80 text-xs font-mono">
           <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200/90 flex flex-col">
-            <span className="text-[10px] uppercase font-bold text-slate-400">Total Requests</span>
+            <span className="text-[10px] uppercase font-bold text-slate-400">Total Registered</span>
             <span className="text-lg font-black text-slate-900 mt-0.5">{stats.total}</span>
           </div>
           <div className="p-3 rounded-2xl bg-emerald-50/70 border border-emerald-200 flex flex-col">
-            <span className="text-[10px] uppercase font-bold text-emerald-700">Approved Seats</span>
+            <span className="text-[10px] uppercase font-bold text-emerald-700">Seats Approved</span>
             <span className="text-lg font-black text-emerald-800 mt-0.5">
               {stats.approved} {eventData?.max_seats ? `/ ${eventData.max_seats}` : ''}
             </span>
@@ -250,15 +240,9 @@ const EventAttendeesModal = ({ eventId, isOpen, onClose }) => {
             <span className="text-[10px] uppercase font-bold text-amber-700">Pending Review</span>
             <span className="text-lg font-black text-amber-800 mt-0.5">{stats.pending}</span>
           </div>
-          <div className="p-3 rounded-2xl bg-rose-50/70 border border-rose-200 flex flex-col">
-            <span className="text-[10px] uppercase font-bold text-rose-700">Rejected</span>
-            <span className="text-lg font-black text-rose-800 mt-0.5">{stats.rejected}</span>
-          </div>
-          <div className="p-3 rounded-2xl bg-blue-50/70 border border-blue-200 flex flex-col col-span-2 sm:col-span-1">
-            <span className="text-[10px] uppercase font-bold text-blue-700">Marked Attended</span>
-            <span className="text-lg font-black text-blue-800 mt-0.5">
-              {stats.attended} <span className="text-xs font-bold text-blue-600">({stats.approved > 0 ? Math.round((stats.attended / stats.approved) * 100) : 0}%)</span>
-            </span>
+          <div className="p-3 rounded-2xl bg-purple-50/70 border border-purple-200 flex flex-col">
+            <span className="text-[10px] uppercase font-bold text-purple-700">Participated & Ranked</span>
+            <span className="text-lg font-black text-purple-800 mt-0.5">{stats.participatedOrRanked}</span>
           </div>
         </div>
 
@@ -283,10 +267,12 @@ const EventAttendeesModal = ({ eventId, isOpen, onClose }) => {
               onChange={(e) => setStatusFilter(e.target.value)}
               className="px-3 py-1.5 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-700 focus:outline-none focus:border-blue-500"
             >
-              <option value="all">All Statuses ({attendees.length})</option>
-              <option value="approved">Approved Only ({stats.approved})</option>
-              <option value="pending">Pending Only ({stats.pending})</option>
-              <option value="rejected">Rejected Only ({stats.rejected})</option>
+              <option value="all">All Stages ({attendees.length})</option>
+              <option value="registered">1. Registered (Pending Review) ({stats.pending})</option>
+              <option value="approved">2. Approved Seats ({stats.approved})</option>
+              <option value="participated">3. Participated ({stats.participated})</option>
+              <option value="ranked">4. Ranked & Awarded ({stats.ranked})</option>
+              <option value="rejected">Rejected ({stats.rejected})</option>
             </select>
 
             {/* Department Dropdown */}
@@ -369,7 +355,7 @@ const EventAttendeesModal = ({ eventId, isOpen, onClose }) => {
                     <th className="py-3 px-4">Student Details</th>
                     <th className="py-3 px-4">Department & Year</th>
                     <th className="py-3 px-4">Registration Status</th>
-                    <th className="py-3 px-4">Attendance</th>
+                    <th className="py-3 px-4">Proof / Certificate</th>
                     <th className="py-3 px-4">Submitted Date</th>
                   </tr>
                 </thead>
@@ -418,51 +404,81 @@ const EventAttendeesModal = ({ eventId, isOpen, onClose }) => {
 
                       {/* Registration Status */}
                       <td className="py-3 px-4">
-                        {a.status === 'approved' ? (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-mono font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                            <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-                            Approved
+                        {a.status === 'ranked' ? (
+                          <div className="space-y-1">
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-mono font-black bg-amber-50 text-amber-900 border border-amber-300 shadow-2xs">
+                              <Trophy className="w-3.5 h-3.5 text-amber-600 fill-amber-500" />
+                              <span>Rank {a.rank_position?.toUpperCase()} (+{a.rank_points_awarded} PTS)</span>
+                            </span>
+                            {a.admin_note && (
+                              <p className="text-[10px] text-slate-500 max-w-xs truncate" title={a.admin_note}>
+                                {a.admin_note}
+                              </p>
+                            )}
+                          </div>
+                        ) : a.status === 'participated' ? (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-mono font-bold bg-purple-50 text-purple-800 border border-purple-200 shadow-2xs">
+                            <Clock className="w-3 h-3 text-purple-600" />
+                            <span>Participated (Cert Uploaded)</span>
                           </span>
-                        ) : a.status === 'pending' ? (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-mono font-bold bg-amber-50 text-amber-700 border border-amber-200">
-                            <Clock className="w-3 h-3 text-amber-600" />
-                            Pending Review
+                        ) : (a.status === 'registration_approved' || a.status === 'approved') ? (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-mono font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 shadow-2xs">
+                            <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                            <span>Approved (Seat Confirmed)</span>
+                          </span>
+                        ) : (a.status === 'registered' || a.status === 'pending') ? (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-mono font-bold bg-blue-50 text-blue-800 border border-blue-200 shadow-2xs">
+                            <Clock className="w-3 h-3 text-blue-600 animate-pulse" />
+                            <span>Registered (Pending Review)</span>
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-mono font-bold bg-rose-50 text-rose-700 border border-rose-200" title={a.admin_note}>
-                            <XCircle className="w-3 h-3 text-rose-600" />
-                            Rejected
-                          </span>
-                        )}
-                        {a.admin_note && (
-                          <p className="text-[10px] text-slate-500 mt-1 max-w-xs truncate" title={a.admin_note}>
-                            Note: {a.admin_note}
-                          </p>
+                          <div>
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-mono font-bold bg-rose-50 text-rose-700 border border-rose-200 shadow-2xs" title={a.admin_note}>
+                              <XCircle className="w-3 h-3 text-rose-600" />
+                              <span>Rejected</span>
+                            </span>
+                            {a.admin_note && (
+                              <p className="text-[10px] text-slate-500 mt-1 max-w-xs truncate" title={a.admin_note}>
+                                Note: {a.admin_note}
+                              </p>
+                            )}
+                          </div>
                         )}
                       </td>
 
-                      {/* Attendance Toggle */}
-                      <td className="py-3 px-4">
-                        <button
-                          type="button"
-                          onClick={() => handleToggleAttendance(a.id)}
-                          disabled={togglingId === a.id || a.status !== 'approved'}
-                          className={`px-3 py-1 rounded-xl text-xs font-mono font-bold transition-all flex items-center gap-1.5 border shadow-2xs ${
-                            a.attended
-                              ? 'bg-emerald-600 text-white border-emerald-700 hover:bg-emerald-700'
-                              : 'bg-slate-100 text-slate-600 border-slate-300 hover:bg-slate-200'
-                          } ${a.status !== 'approved' ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-                          title={a.status !== 'approved' ? 'Only approved registrations can be marked present' : 'Click to toggle attendance'}
-                        >
-                          {togglingId === a.id ? (
-                            <Loader2 className="w-3 h-3 animate-spin" />
-                          ) : a.attended ? (
-                            <Check className="w-3 h-3 text-white" />
-                          ) : (
-                            <span className="w-2 h-2 rounded-full bg-slate-400" />
+                      {/* Proof / Certificate Links */}
+                      <td className="py-3 px-4 font-mono">
+                        <div className="flex flex-col gap-1.5 items-start">
+                          {a.certificate_url ? (
+                            <a
+                              href={a.certificate_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-bold bg-purple-50 text-purple-800 hover:bg-purple-100 border border-purple-200 transition-colors"
+                            >
+                              <FileText className="w-3 h-3 text-purple-600" />
+                              <span>View Certificate</span>
+                              <ExternalLink className="w-2.5 h-2.5 opacity-60" />
+                            </a>
+                          ) : null}
+
+                          {a.registration_screenshot ? (
+                            <a
+                              href={a.registration_screenshot}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-bold bg-blue-50 text-blue-800 hover:bg-blue-100 border border-blue-200 transition-colors"
+                            >
+                              <Eye className="w-3 h-3 text-blue-600" />
+                              <span>View Reg Proof</span>
+                              <ExternalLink className="w-2.5 h-2.5 opacity-60" />
+                            </a>
+                          ) : null}
+
+                          {!a.certificate_url && !a.registration_screenshot && (
+                            <span className="text-slate-400 text-[11px]">— No Proof Uploaded —</span>
                           )}
-                          <span>{a.attended ? 'Present' : 'Absent'}</span>
-                        </button>
+                        </div>
                       </td>
 
                       {/* Submitted Date */}

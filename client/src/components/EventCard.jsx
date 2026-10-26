@@ -6,7 +6,10 @@ import {
   Clock, 
   ArrowUpRight,
   Sparkles,
-  Users
+  Users,
+  CheckCircle2,
+  Trophy,
+  XCircle
 } from 'lucide-react';
 import { Badge } from './ui/Badge';
 import { getPosterUrl, handleImageError } from '../utils/imageUrl';
@@ -109,16 +112,28 @@ const EventCard = ({ event, onSelect }) => {
           {/* Registration Status Indicator (Inside Card Body) */}
           {event.user_request_status && (
             <div className="mb-2.5">
-              {event.user_request_status === 'approved' && (
+              {event.user_request_status === 'ranked' && (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-mono font-bold bg-amber-50 text-amber-900 border border-amber-300 shadow-2xs">
+                  <Trophy className="w-3.5 h-3.5 text-amber-600 fill-amber-500" />
+                  <span>Rank {event.user_rank_position?.toUpperCase()} (+{event.user_rank_points_awarded || event.reward_points} PTS)</span>
+                </span>
+              )}
+              {event.user_request_status === 'participated' && (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-mono font-bold bg-purple-50 text-purple-800 border border-purple-200 shadow-2xs">
+                  <Clock className="w-3.5 h-3.5 text-purple-600 animate-pulse" />
+                  <span>Participated (Cert Uploaded)</span>
+                </span>
+              )}
+              {(event.user_request_status === 'registration_approved' || event.user_request_status === 'approved') && (
                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-mono font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 shadow-2xs">
                   <span className="w-2 h-2 rounded-full bg-emerald-600" />
                   <span>Registered ✓ (Confirmed)</span>
                 </span>
               )}
-              {event.user_request_status === 'pending' && (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-mono font-bold bg-amber-50 text-amber-800 border border-amber-200 shadow-2xs">
-                  <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-                  <span>Request Pending · Can update details</span>
+              {(event.user_request_status === 'registered' || event.user_request_status === 'pending') && (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-mono font-bold bg-blue-50 text-blue-800 border border-blue-200 shadow-2xs">
+                  <Clock className="w-3.5 h-3.5 text-blue-600 animate-pulse" />
+                  <span>Registered ✓ (Under Review)</span>
                 </span>
               )}
               {event.user_request_status === 'rejected' && (
