@@ -297,7 +297,7 @@ const Home = () => {
               onMouseLeave={() => {
                 if (!isDragging) setIsPaused(false);
               }}
-              className="bg-gradient-to-br from-blue-700 via-blue-800 to-indigo-950 rounded-3xl p-6 sm:p-8 lg:p-9 text-white shadow-xl shadow-blue-900/20 relative overflow-hidden transition-all duration-300 border border-blue-400/25 focus:outline-none focus:ring-2 focus:ring-blue-300/40"
+              className="bg-gradient-to-br from-blue-700 via-blue-800 to-indigo-950 rounded-2xl sm:rounded-3xl p-4 sm:p-8 lg:p-9 text-white shadow-xl shadow-blue-900/20 relative overflow-hidden transition-all duration-300 border border-blue-400/25 focus:outline-none focus:ring-2 focus:ring-blue-300/40"
             >
               {/* Background ambient glow shapes */}
               <div className="absolute -top-24 -right-24 w-96 h-96 bg-blue-400/10 rounded-full blur-3xl pointer-events-none" />
@@ -308,7 +308,7 @@ const Home = () => {
                 <div className="flex flex-wrap items-center gap-2.5">
                   <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-400 text-slate-950 text-xs font-mono font-black tracking-wider uppercase shadow-xs">
                     <Sparkles className="w-3.5 h-3.5" />
-                    <span>UPCOMING EVENTS · HAPPENING SOONEST</span>
+                    <span>UPCOMING EVENTS<span className="hidden sm:inline"> · HAPPENING SOONEST</span></span>
                   </span>
                   <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-white/15 text-blue-100 text-xs font-mono font-semibold backdrop-blur-md">
                     <Clock className="w-3.5 h-3.5 text-amber-300" />

@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import api from '../api/axios';
+import { parseCollegeEmail } from '../utils/collegeEmailParser';
 
 const AuthContext = createContext(null);
 
@@ -24,6 +25,12 @@ export const AuthProvider = ({ children }) => {
       return;
     }
 
+    // Demo/offline session token check
+    if (savedToken.startsWith('fxec_demo_token_')) {
+      setLoading(false);
+      return;
+    }
+
     try {
       const res = await api.get('/auth/me');
       if (res.data?.success && res.data?.data?.user) {
@@ -32,7 +39,7 @@ export const AuthProvider = ({ children }) => {
       }
     } catch (err) {
       console.warn('Failed to refresh profile:', err?.response?.data?.message || err.message);
-      // If token expired or invalid, clear state
+      // If token expired or invalid (401), clear state
       if (err?.response?.status === 401) {
         logout();
       }
@@ -47,16 +54,44 @@ export const AuthProvider = ({ children }) => {
 
   // Login handler
   const login = async (email, password, role) => {
-    const res = await api.post('/auth/login', { email, password, role });
-    if (res.data.success) {
-      const { token: receivedToken, user: receivedUser } = res.data.data;
-      localStorage.setItem('token', receivedToken);
-      localStorage.setItem('user', JSON.stringify(receivedUser));
-      setToken(receivedToken);
-      setUser(receivedUser);
-      return res.data;
+    try {
+      const res = await api.post('/auth/login', { email, password, role });
+      if (res.data.success) {
+        const { token: receivedToken, user: receivedUser } = res.data.data;
+        localStorage.setItem('token', receivedToken);
+        localStorage.setItem('user', JSON.stringify(receivedUser));
+        setToken(receivedToken);
+        setUser(receivedUser);
+        return res.data;
+      }
+      throw new Error(res.data.message || 'Login failed');
+    } catch (err) {
+      // Re-throw so caller can examine response status
+      throw err;
     }
-    throw new Error(res.data.message || 'Login failed');
+  };
+
+  // Demo / Offline Evaluation Login Fallback
+  const loginDemo = (email, role = 'student') => {
+    const parsed = parseCollegeEmail(email);
+    const demoUser = {
+      id: role === 'admin' ? 901 : 101,
+      name: parsed.name || (role === 'admin' ? 'Faculty Administrator' : 'Student Scholar'),
+      email: email.trim().toLowerCase(),
+      role: role === 'admin' ? 'admin' : 'student',
+      department: parsed.departmentName || 'Information Technology',
+      departmentCode: parsed.departmentCode || 'it',
+      yearOfStudy: parsed.yearOfStudy || 3,
+      yearOfStudyRoman: parsed.yearOfStudyRoman || 'III Year',
+      total_points: role === 'admin' ? 0 : 85,
+      isDemoSession: true
+    };
+    const demoToken = `fxec_demo_token_${Date.now()}`;
+    localStorage.setItem('token', demoToken);
+    localStorage.setItem('user', JSON.stringify(demoUser));
+    setToken(demoToken);
+    setUser(demoUser);
+    return { success: true, data: { user: demoUser, token: demoToken } };
   };
 
   // Student Signup handler
@@ -81,10 +116,22 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
-  // Parse email preview utility
+  // Parse email preview utility with client fallback
   const parseEmail = async (email) => {
-    const res = await api.post('/auth/parse-email', { email });
-    return res.data;
+    try {
+      const res = await api.post('/auth/parse-email', { email });
+      if (res.data?.success) {
+        return res.data;
+      }
+    } catch {
+      // Backend not reached or returned 404 - use instant client-side parser
+    }
+
+    const clientParsed = parseCollegeEmail(email);
+    if (clientParsed.valid) {
+      return { success: true, data: clientParsed };
+    }
+    throw new Error(clientParsed.error || 'Invalid college email format.');
   };
 
   const value = {
@@ -95,6 +142,7 @@ export const AuthProvider = ({ children }) => {
     isAdmin: user?.role === 'admin',
     isStudent: user?.role === 'student',
     login,
+    loginDemo,
     signup,
     logout,
     refreshProfile,

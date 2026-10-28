@@ -110,7 +110,7 @@ const MobileAppBanner = () => {
   return (
     <>
       {/* Sticky Bottom CCBP-Style Mobile App Recommendation Bar */}
-      <div className="fixed bottom-0 left-0 right-0 z-[60] p-3 sm:p-4 bg-gradient-to-t from-slate-950/90 via-slate-950/80 to-transparent pointer-events-none animate-slide-up">
+      <div className="fixed bottom-14 md:bottom-0 left-0 right-0 z-[60] p-3 sm:p-4 bg-gradient-to-t from-slate-950/90 via-slate-950/80 to-transparent pointer-events-none animate-slide-up">
         <div className="max-w-md mx-auto bg-white/98 backdrop-blur-xl border border-slate-200/90 rounded-3xl p-4 shadow-2xl pointer-events-auto flex items-center justify-between gap-3 text-slate-800">
           
           {/* App Icon & Details */}
