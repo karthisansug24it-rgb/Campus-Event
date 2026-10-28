@@ -99,6 +99,12 @@ if (require.main === module && !process.env.NETLIFY) {
     console.log(`=======================================================`);
     try {
       await testConnection();
+      try {
+        const { autoMigrate } = require('./scripts/autoMigrate');
+        await autoMigrate();
+      } catch (mErr) {
+        console.warn('[AutoMigrate Notice]:', mErr.message);
+      }
       startDeadlineScheduler();
     } catch (err) {
       console.error('[Warning] Initial DB connection check failed. Ensure MySQL is running.');

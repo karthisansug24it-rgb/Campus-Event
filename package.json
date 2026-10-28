@@ -4,6 +4,8 @@
   "private": true,
   "description": "Francis Xavier Engineering College - Campus Event Management System Workspace",
   "scripts": {
+    "dev:all": "concurrently -k -n \"BACKEND,FRONTEND\" -c \"blue.bold,green.bold\" \"npm --prefix server run dev\" \"npm --prefix client run dev\"",
+    "start:all": "concurrently -k -n \"BACKEND,FRONTEND\" -c \"blue.bold,green.bold\" \"npm --prefix server start\" \"npm --prefix client run dev\"",
     "build": "npm --prefix client install && npm --prefix client run build",
     "install:all": "npm --prefix server install && npm --prefix client install",
     "dev": "npm --prefix client run dev",
@@ -16,5 +18,8 @@
   },
   "dependencies": {
     "serverless-http": "^4.0.0"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.6"
   }
 }

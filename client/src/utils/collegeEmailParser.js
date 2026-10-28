@@ -167,3 +167,4 @@ export function parseCollegeEmail(email, currentDate = new Date()) {
     isAlumni: false
   };
 }
+
