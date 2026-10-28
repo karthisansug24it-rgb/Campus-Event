@@ -3,6 +3,7 @@ const dotenv = require('dotenv');
 dotenv.config({ path: path.join(__dirname, '../../.env') });
 
 const { pool } = require('../config/db');
+const bcrypt = require('bcryptjs');
 
 async function autoMigrate() {
   console.log('[AutoMigrate] Starting complete database schema synchronization...');
@@ -146,14 +147,43 @@ async function autoMigrate() {
     `);
     console.log('[AutoMigrate] Verified "fcm_tokens" table.');
 
-    // 8. Seed default notification preferences
+    // 8. Ensure all Demo and Faculty Accounts exist with matching passwords
+    const adminHash = bcrypt.hashSync('Admin@123', 10);
+    const studentHash = bcrypt.hashSync('Student@123', 10);
+
+    const defaultUsers = [
+      { id: 1, name: 'FXEC Event Admin', email: 'admin@francisxavier.ac.in', hash: adminHash, role: 'admin', dept: 'it', points: 0 },
+      { id: 201, name: 'Dr. David Ayling', email: 'davidayling@francisxavier.ac.in', hash: adminHash, role: 'admin', dept: 'cse', points: 0 },
+      { id: 202, name: 'HOD - Information Technology', email: 'ithod@francisxavier.ac.in', hash: adminHash, role: 'admin', dept: 'it', points: 0 },
+      { id: 101, name: 'Karthisan S', email: 'karthisans.ug.24.it@francisxavier.ac.in', hash: studentHash, role: 'student', dept: 'it', points: 75, year: 2024, level: 'ug', section: 'A', reg: '953624104001' }
+    ];
+
+    for (const u of defaultUsers) {
+      // Check if user exists by email first (to handle auto-increment id mismatches safely)
+      const [existing] = await conn.execute('SELECT id FROM users WHERE email = ?', [u.email]);
+      if (existing.length > 0) {
+        await conn.execute(
+          `UPDATE users SET name = ?, password_hash = ?, role = ?, department_code = ? WHERE email = ?`,
+          [u.name, u.hash, u.role, u.dept, u.email]
+        );
+      } else {
+        await conn.execute(
+          `INSERT INTO users (name, email, password_hash, role, department_code, total_points, admission_year, study_level, section, register_number)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [u.name, u.email, u.hash, u.role, u.dept, u.points, u.year || null, u.level || null, u.section || null, u.reg || null]
+        );
+      }
+    }
+    console.log('[AutoMigrate] Synced verified accounts: admin, davidayling, ithod, and karthisans.');
+
+    // 9. Seed default notification preferences
     await conn.query(`
       INSERT IGNORE INTO notification_preferences (user_id)
       SELECT id FROM users;
     `);
     console.log('[AutoMigrate] Synced default notification preferences for all users.');
 
-    console.log('[AutoMigrate] Database schema is fully up to date!');
+    console.log('[AutoMigrate] Database schema and accounts are fully up to date!');
   } catch (err) {
     console.error('[AutoMigrate Error]:', err);
     throw err;
@@ -169,4 +199,3 @@ if (require.main === module) {
 }
 
 module.exports = { autoMigrate };
-
