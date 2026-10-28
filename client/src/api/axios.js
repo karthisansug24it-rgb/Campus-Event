@@ -1,16 +1,22 @@
 import axios from 'axios';
 
-const apiBase = import.meta.env.VITE_API_URL
-  ? (import.meta.env.VITE_API_URL.endsWith('/')
-      ? `${import.meta.env.VITE_API_URL}api`
-      : `${import.meta.env.VITE_API_URL}/api`)
-  : '/api';
+function resolveApiBaseUrl() {
+  const envUrl = import.meta.env.VITE_API_URL;
+  if (envUrl && typeof envUrl === 'string' && envUrl.trim()) {
+    const clean = envUrl.trim().replace(/\/+$/, '');
+    return clean.endsWith('/api') ? clean : `${clean}/api`;
+  }
+  // When hosted on Netlify or production, directly communicate with live Render backend
+  if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+    return 'https://fxec-events-backend.onrender.com/api';
+  }
+  return '/api';
+}
 
 const api = axios.create({
-  baseURL: apiBase,
+  baseURL: resolveApiBaseUrl(),
   headers: {
-    'Content-Type': 'application/json',
-    'Bypass-Tunnel-Reminder': 'true'
+    'Content-Type': 'application/json'
   }
 });
 
