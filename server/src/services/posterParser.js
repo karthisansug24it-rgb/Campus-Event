@@ -32,12 +32,8 @@ function extractTitleFromText(combinedText, lines) {
   // 2. Check major event type descriptor
   let eventTypeWord = '';
   if (/12\s*HRS?\s*HACKATHON|HACKATHON/i.test(combinedText)) eventTypeWord = 'HACKATHON';
-  else if (/SYMPOSIUM/i.test(combinedText)) eventTypeWord = 'SYMPOSIUM';
-  else if (/JOB\s*FAIR/i.test(combinedText)) eventTypeWord = 'JOB FAIR';
-  else if (/WORKSHOP/i.test(combinedText)) eventTypeWord = 'WORKSHOP';
-  else if (/CONFERENCE/i.test(combinedText)) eventTypeWord = 'CONFERENCE';
-  else if (/SPORTS|TOURNAMENT/i.test(combinedText)) eventTypeWord = 'SPORTS';
-  else if (/CULTURAL|FEST/i.test(combinedText)) eventTypeWord = 'CULTURAL FEST';
+  else if (/WORKSHOP|BOOTCAMP|TRAINING/i.test(combinedText)) eventTypeWord = 'WORKSHOP';
+  else if (/CONFERENCE|SYMPOSIUM|SEMINAR|CONCLAVE/i.test(combinedText)) eventTypeWord = 'CONFERENCE';
 
   if (acronym && eventTypeWord) {
     return `${acronym} ${eventTypeWord}`;
@@ -197,16 +193,12 @@ async function extractPosterDetails(filePath) {
                    /\b(francis\s*xavier|fxec)\b/i.test(venue.trim());
   const event_type = isInside ? 'internal' : 'external';
 
-  // 4. Category: Hackathon, Symposium, Job Fair, Workshop, Conference, Sports, etc.
-  let category = 'Other';
-  if (/hackathon/i.test(combined)) category = 'Hackathon';
-  else if (/symposium/i.test(combined)) category = 'Symposium';
-  else if (/job\s*fair/i.test(combined)) category = 'Job Fair';
-  else if (/workshop/i.test(combined)) category = 'Workshop';
-  else if (/conference/i.test(combined)) category = 'Conference';
-  else if (/sports|tournament/i.test(combined)) category = 'Sports';
-  else if (/cultural|fest/i.test(combined)) category = 'Cultural';
-  else if (/seminar|webinar/i.test(combined)) category = 'Seminar';
+  // 4. Category: strictly Hackathon, Workshop, or Conference
+  let category = 'Hackathon';
+  if (/workshop|bootcamp|hands[- ]on|masterclass|training/i.test(combined)) category = 'Workshop';
+  else if (/conference|seminar|symposium|summit|colloquium|webinar|conclave/i.test(combined)) category = 'Conference';
+  else if (/hackathon|datathon|ideathon|codefest|coding/i.test(combined)) category = 'Hackathon';
+  else category = 'Hackathon';
 
   // 5. Organizer
   const organizer = extractOrganizerFromText(combined);

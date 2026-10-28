@@ -9,7 +9,7 @@
 The Campus Event Management System (EMS) is a full-stack web application designed 
 specifically for Francis Xavier Engineering College (Autonomous), Tirunelveli. 
 It automates the end-to-end lifecycle of college events (including hackathons, 
-workshops, technical symposiums, cultural fests, and sports meets) held inside 
+workshops, and conferences) held inside 
 and outside the campus.
 
 Key Goals:
@@ -87,7 +87,7 @@ The database name is `campus_events` and comprises the following core tables:
    - `description` (TEXT): Full description, schedule, and guidelines
    - `poster_url` (VARCHAR(255)): Stored image path (/uploads/...)
    - `event_type` (ENUM('internal', 'external')): Inside College vs Outside College
-   - `category` (VARCHAR(50)): Technical, Non-Technical, Workshop, Hackathon, Cultural, Sports
+   - `category` (VARCHAR(50)): Hackathon, Workshop, Conference
    - `venue` (VARCHAR(150)): Hall or lab location
    - `organizer` (VARCHAR(150)): Club, Department, or Host
    - `event_date` (DATETIME): Date and time of the event

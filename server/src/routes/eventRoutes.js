@@ -20,7 +20,10 @@ const eventValidationRules = [
   body('title').trim().notEmpty().withMessage('Event title is required'),
   body('description').trim().notEmpty().withMessage('Event description is required'),
   body('event_type').isIn(['internal', 'external']).withMessage('Event type must be internal or external'),
-  body('category').trim().notEmpty().withMessage('Category is required'),
+  body('category')
+    .trim()
+    .isIn(['Hackathon', 'Workshop', 'Conference'])
+    .withMessage('Category must be Hackathon, Workshop, or Conference'),
   body('venue').trim().notEmpty().withMessage('Venue is required'),
   body('organizer').trim().notEmpty().withMessage('Organizer is required'),
   body('event_date').notEmpty().withMessage('Event date is required'),

@@ -496,7 +496,7 @@ const MyRequests = () => {
             title={requests.length === 0 ? "No Event Requests Yet" : "No Matching Requests"}
             description={
               requests.length === 0 
-                ? "You haven't requested registration for any campus events yet. Explore upcoming technical workshops, symposiums, and hackathons."
+                ? "You haven't requested registration for any campus events yet. Explore upcoming hackathons, workshops, and conferences."
                 : "No registration records match your current status filter or search keywords."
             }
             actionLabel={requests.length === 0 ? "Browse Events Catalogue" : "Reset Filter"}

@@ -293,7 +293,7 @@ const StudentLayout = () => {
             </h1>
 
             <p className="text-sm sm:text-base text-slate-600 font-sans max-w-xl mx-auto leading-relaxed">
-              Explore upcoming campus hackathons, workshops, symposiums, and track your verified registrations in real-time.
+              Explore upcoming campus hackathons, workshops, conferences, and track your verified registrations in real-time.
             </p>
           </div>
         </section>

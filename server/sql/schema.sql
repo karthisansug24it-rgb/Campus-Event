@@ -53,7 +53,7 @@ CREATE TABLE `events` (
   `description` TEXT NOT NULL,
   `poster_url` VARCHAR(255) NULL,
   `event_type` ENUM('internal', 'external') NOT NULL COMMENT 'internal: Inside College, external: Outside College',
-  `category` VARCHAR(50) NOT NULL COMMENT 'Hackathon, Workshop, Seminar, Cultural, Sports, Other',
+  `category` VARCHAR(50) NOT NULL COMMENT 'Hackathon, Workshop, Conference',
   `venue` VARCHAR(150) NOT NULL,
   `organizer` VARCHAR(150) NOT NULL,
   `event_date` DATETIME NOT NULL,

@@ -352,7 +352,7 @@ const Notifications = () => {
 
           <div className="space-y-3">
             {[
-              { key: 'notify_new_events', label: 'New Event Releases', desc: 'Alert me when new hackathons, workshops, or symposiums are published.' },
+              { key: 'notify_new_events', label: 'New Event Releases', desc: 'Alert me when new hackathons, workshops, or conferences are published.' },
               { key: 'notify_registration_updates', label: 'Registration Lifecycle', desc: 'Notify me when my seat is confirmed, approved, or requires proof correction.' },
               { key: 'notify_deadlines', label: 'Deadline Reminders', desc: 'Send 24-hour and 1-hour reminders before registration and certificate deadlines.' },
               { key: 'notify_event_changes', label: 'Schedule Changes & Cancellations', desc: 'Critical alerts if an event venue, date, or timing is modified.' },

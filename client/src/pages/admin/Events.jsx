@@ -39,23 +39,15 @@ import EventAttendeesModal from '../../components/admin/EventAttendeesModal';
 const CATEGORIES = [
   'All', 
   'Hackathon', 
-  'Symposium', 
-  'Job Fair', 
   'Workshop', 
-  'Conference', 
-  'Seminar', 
-  'Cultural', 
-  'Sports', 
-  'Other'
+  'Conference'
 ];
-
-
 
 const initialForm = {
   title: '',
   description: '',
   event_type: 'internal',
-  category: '',
+  category: 'Hackathon',
   venue: '',
   organizer: '',
   event_date: '',
@@ -207,7 +199,7 @@ const Events = () => {
       title: event.title || '',
       description: mainDesc,
       event_type: event.event_type || 'internal',
-      category: event.category || '',
+      category: ['Hackathon', 'Workshop', 'Conference'].find(c => c.toLowerCase() === (event.category || '').toLowerCase()) || 'Hackathon',
       venue: event.venue || '',
       organizer: event.organizer || '',
       event_date: toDateTimeLocal(event.event_date),
@@ -992,15 +984,18 @@ const Events = () => {
 
                 <div>
                   <label className="block text-xs font-mono font-bold text-slate-600 mb-1.5 uppercase tracking-wide">
-                    Category
+                    Category <span className="text-rose-500">*</span>
                   </label>
-                  <input
-                    type="text"
+                  <select
                     name="category"
                     value={formData.category}
                     onChange={handleInputChange}
                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-xs sm:text-sm font-semibold focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                  />
+                  >
+                    <option value="Hackathon">Hackathon</option>
+                    <option value="Workshop">Workshop</option>
+                    <option value="Conference">Conference</option>
+                  </select>
                 </div>
               </div>
 

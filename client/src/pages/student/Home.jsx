@@ -37,7 +37,7 @@ import {
 } from '../../components/ui';
 import { getPosterUrl, handleImageError } from '../../utils/imageUrl';
 
-const CATEGORIES = ['All', 'Hackathon', 'Workshop', 'Seminar', 'Cultural', 'Sports', 'Other'];
+const CATEGORIES = ['All', 'Hackathon', 'Workshop', 'Conference'];
 
 const Home = () => {
   const [events, setEvents] = useState([]);

@@ -26,6 +26,13 @@ function toMySQLDateTime(dateInput) {
   return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 }
 
+const ALLOWED_CATEGORIES = ['Hackathon', 'Workshop', 'Conference'];
+function normalizeCategory(cat) {
+  if (!cat) return 'Hackathon';
+  const match = ALLOWED_CATEGORIES.find(c => c.toLowerCase() === String(cat).trim().toLowerCase());
+  return match || 'Hackathon';
+}
+
 /**
  * POST /api/events/extract-poster
  * Admin only: Upload poster image and auto-extract structured event specifications.
@@ -359,7 +366,7 @@ async function createEvent(req, res) {
         description.trim(),
         posterUrl,
         event_type,
-        category,
+        normalizeCategory(category),
         venue.trim(),
         organizer.trim(),
         formattedEventDate,
@@ -474,7 +481,7 @@ async function updateEvent(req, res) {
         description ? description.trim() : existing[0].description,
         posterUrl,
         event_type || existing[0].event_type,
-        category || existing[0].category,
+        normalizeCategory(category !== undefined ? category : existing[0].category),
         venue ? venue.trim() : existing[0].venue,
         organizer ? organizer.trim() : existing[0].organizer,
         formattedEventDate,
