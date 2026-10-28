@@ -11,6 +11,8 @@ const authRoutes = require('./routes/authRoutes');
 const eventRoutes = require('./routes/eventRoutes');
 const requestRoutes = require('./routes/requestRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const notificationRoutes = require('./routes/notificationRoutes');
+const { startDeadlineScheduler } = require('./services/deadlineReminderJob');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -63,6 +65,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/events', eventRoutes);
 app.use('/api', requestRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // 7. 404 Route Handler
 app.use((req, res) => {
@@ -96,6 +99,7 @@ if (process.env.NODE_ENV !== 'test') {
     console.log(`=======================================================`);
     try {
       await testConnection();
+      startDeadlineScheduler();
     } catch (err) {
       console.error('[Warning] Initial DB connection check failed. Ensure MySQL is running.');
     }

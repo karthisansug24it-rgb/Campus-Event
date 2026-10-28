@@ -34,3 +34,10 @@ Thumbs.db
 
 # Local MySQL data
 mysql-data/
+
+# Credentials, private keys, service accounts
+*firebase-adminsdk*.json
+*serviceAccountKey*.json
+*.pem
+*.key
+~$*

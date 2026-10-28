@@ -168,9 +168,7 @@ const MyRequests = () => {
       const formData = new FormData();
       formData.append('screenshot', screenshotFile);
 
-      const res = await api.post(`/my/requests/${screenshotModalReq.id}/screenshot`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
+      const res = await api.post(`/my/requests/${screenshotModalReq.id}/screenshot`, formData);
 
       if (res.data.success) {
         setScreenshotModalReq(null);
@@ -201,9 +199,7 @@ const MyRequests = () => {
       const formData = new FormData();
       formData.append('certificate', certFile);
 
-      const res = await api.post(`/my/requests/${certModalReq.id}/certificate`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
+      const res = await api.post(`/my/requests/${certModalReq.id}/certificate`, formData);
 
       if (res.data.success) {
         setCertModalReq(null);

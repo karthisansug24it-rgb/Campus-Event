@@ -9,6 +9,7 @@ import StudentLayout from './components/student/StudentLayout';
 import Login from './pages/Login';
 import Home from './pages/student/Home';
 import MyRequests from './pages/student/MyRequests';
+import Notifications from './pages/student/Notifications';
 
 // Admin components & pages
 import AdminLayout from './components/admin/AdminLayout';
@@ -34,6 +35,14 @@ function App() {
                     element={
                       <ProtectedRoute allowedRoles={['student']}>
                         <MyRequests />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/notifications"
+                    element={
+                      <ProtectedRoute allowedRoles={['student']}>
+                        <Notifications />
                       </ProtectedRoute>
                     }
                   />

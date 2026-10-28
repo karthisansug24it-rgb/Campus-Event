@@ -1,5 +1,5 @@
-// FXEC Events Service Worker for PWA Offline & Installability
-const CACHE_NAME = 'fxec-events-v1';
+// FXEC Campus Events - Service Worker with PWA Offline Caching & Browser Push Notifications
+const CACHE_NAME = 'fxec-events-v2';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -9,7 +9,7 @@ const STATIC_ASSETS = [
   '/fxec-logo.png'
 ];
 
-// Install event
+// Install event: cache static assets and skip waiting
 self.addEventListener('install', (event) => {
   self.skipWaiting();
   event.waitUntil(
@@ -21,7 +21,7 @@ self.addEventListener('install', (event) => {
   );
 });
 
-// Activate event
+// Activate event: cleanup stale caches and claim clients
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) => {
@@ -36,9 +36,8 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Fetch event (Network first with cache fallback)
+// Fetch event: Network first with cache fallback, ignoring /api/ requests
 self.addEventListener('fetch', (event) => {
-  // Let API requests and dynamic data pass through network
   if (event.request.url.includes('/api/')) {
     return;
   }
@@ -46,7 +45,6 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(
     fetch(event.request)
       .then((response) => {
-        // Clone and update cache for successful GET responses
         if (event.request.method === 'GET' && response.status === 200) {
           const responseToCache = response.clone();
           caches.open(CACHE_NAME).then((cache) => {
@@ -56,7 +54,6 @@ self.addEventListener('fetch', (event) => {
         return response;
       })
       .catch(() => {
-        // Fallback to cache if network fails
         return caches.match(event.request).then((cachedResponse) => {
           if (cachedResponse) {
             return cachedResponse;
@@ -66,5 +63,51 @@ self.addEventListener('fetch', (event) => {
           }
         });
       })
+  );
+});
+
+// Push event: Receive Web Push notification payload and show notification
+self.addEventListener('push', (event) => {
+  if (!event.data) return;
+
+  try {
+    const data = event.data.json();
+    const title = data.title || 'FXEC Campus Events';
+    const options = {
+      body: data.body || '',
+      icon: data.icon || '/fxec-logo.png',
+      badge: data.badge || '/fxec-logo.png',
+      data: data.data || { url: '/events' },
+      tag: (data.data && data.data.category) || 'fxec-notification',
+      renotify: true,
+      vibrate: [120, 60, 120]
+    };
+
+    event.waitUntil(self.registration.showNotification(title, options));
+  } catch (err) {
+    console.error('[ServiceWorker] Push event parsing error:', err);
+  }
+});
+
+// Notification click event: Focus open window or open new window to target URL
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+
+  const targetUrl = (event.notification.data && event.notification.data.url) || '/events';
+
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      // Focus existing window if open
+      for (const client of clientList) {
+        if (client.url && 'focus' in client) {
+          client.navigate(targetUrl);
+          return client.focus();
+        }
+      }
+      // Otherwise open new window
+      if (clients.openWindow) {
+        return clients.openWindow(targetUrl);
+      }
+    })
   );
 });

@@ -7,12 +7,16 @@ const api = axios.create({
   }
 });
 
-// Request interceptor to attach JWT token
+// Request interceptor to attach JWT token and handle multipart FormData
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+    }
+    // When sending FormData, delete Content-Type so browser sets multipart/form-data with boundary
+    if (config.data instanceof FormData) {
+      delete config.headers['Content-Type'];
     }
     return config;
   },

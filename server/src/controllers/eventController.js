@@ -2,6 +2,7 @@ const { pool } = require('../config/db');
 const path = require('path');
 const fs = require('fs');
 const { extractPosterDetails } = require('../services/posterParser');
+const { notifyEventPublished, notifyEventUpdated } = require('../services/notificationService');
 
 /**
  * Safely format any valid date string or Date object to MySQL DATETIME format (YYYY-MM-DD HH:MM:SS)
@@ -376,6 +377,11 @@ async function createEvent(req, res) {
       [result.insertId]
     );
 
+    // Trigger Notification for eligible students (async)
+    notifyEventPublished(newEventRows[0]).catch(err =>
+      console.warn('[createEvent notifyEventPublished Error]:', err.message)
+    );
+
     return res.status(201).json({
       success: true,
       message: 'Event created successfully.',
@@ -486,6 +492,29 @@ async function updateEvent(req, res) {
       [eventId]
     );
 
+    // Trigger notification if critical details changed (date, venue, deadlines)
+    const criticalChanges = {};
+    if (formattedEventDate && String(existing[0].event_date) !== String(formattedEventDate)) {
+      criticalChanges.event_date = formattedEventDate;
+    }
+    if (venue && existing[0].venue !== venue.trim()) {
+      criticalChanges.venue = venue.trim();
+    }
+    if (formattedDeadline && String(existing[0].registration_deadline) !== String(formattedDeadline)) {
+      criticalChanges.registration_deadline = formattedDeadline;
+    }
+    if (formattedCertDeadline && String(existing[0].certificate_deadline) !== String(formattedCertDeadline)) {
+      criticalChanges.certificate_deadline = formattedCertDeadline;
+    }
+
+    if (Object.keys(criticalChanges).length > 0) {
+      notifyEventUpdated({
+        eventId,
+        eventTitle: updatedRows[0].title,
+        changes: criticalChanges
+      }).catch(err => console.warn('[updateEvent notifyEventUpdated Error]:', err.message));
+    }
+
     return res.json({
       success: true,
       message: 'Event updated successfully.',
@@ -519,6 +548,13 @@ async function deleteEvent(req, res) {
         message: 'Event not found.'
       });
     }
+
+    // Notify registered attendees before deletion
+    await notifyEventUpdated({
+      eventId,
+      eventTitle: existing[0].title,
+      isCancellation: true
+    }).catch(err => console.warn('[deleteEvent notifyEventUpdated Error]:', err.message));
 
     await pool.execute('DELETE FROM events WHERE id = ?', [eventId]);
 

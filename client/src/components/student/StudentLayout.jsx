@@ -6,18 +6,21 @@ import {
   Calendar, 
   FileText, 
   Sparkles, 
-  Award,
-  LogOut,
-  GraduationCap
+  Award, 
+  LogOut, 
+  GraduationCap,
+  Bell
 } from 'lucide-react';
+import NotificationBell from '../notifications/NotificationBell';
 
 const StudentLayout = () => {
   const { user, isStudent, isAuthenticated, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const [appliedCount, setAppliedCount] = useState(0);
+  const [unreadNotifCount, setUnreadNotifCount] = useState(0);
 
-  // Fetch count of applied events if logged in as student
+  // Fetch count of applied events and unread notifications if logged in as student
   useEffect(() => {
     let isMounted = true;
     if (isAuthenticated && isStudent) {
@@ -28,8 +31,17 @@ const StudentLayout = () => {
           }
         })
         .catch(() => {});
+
+      api.get('/notifications/unread-count')
+        .then((res) => {
+          if (isMounted && res.data?.success) {
+            setUnreadNotifCount(res.data.data.unreadCount || 0);
+          }
+        })
+        .catch(() => {});
     } else {
       setAppliedCount(0);
+      setUnreadNotifCount(0);
     }
     return () => {
       isMounted = false;
@@ -54,6 +66,13 @@ const StudentLayout = () => {
       icon: FileText,
       badge: appliedCount > 0 ? `${appliedCount}` : null,
       badgeVariant: 'amber'
+    },
+    {
+      to: '/notifications',
+      label: 'Notifications',
+      icon: Bell,
+      badge: unreadNotifCount > 0 ? `${unreadNotifCount}` : null,
+      badgeVariant: 'blue'
     }
   ];
 
@@ -82,45 +101,55 @@ const StudentLayout = () => {
               <NavLink
                 key={item.to}
                 to={item.to}
-                className={`flex items-center gap-1.5 py-1.5 px-2.5 rounded-lg text-[11px] font-bold transition-all ${
+                className={`flex items-center gap-1.5 py-1.5 px-2.5 rounded-lg text-[11px] font-bold transition-all relative ${
                   isActive
                     ? 'bg-blue-600 text-white shadow-xs'
                     : 'text-slate-600 hover:text-blue-700'
                 }`}
               >
                 <Icon className="w-3.5 h-3.5" />
-                <span>{item.label}</span>
+                <span className="hidden sm:inline">{item.label}</span>
+                {item.badge && (
+                  <span className={`px-1.5 py-0.2 rounded-full text-[9px] font-mono font-bold ${
+                    isActive ? 'bg-white text-blue-700' : 'bg-blue-600 text-white'
+                  }`}>
+                    {item.badge}
+                  </span>
+                )}
               </NavLink>
             );
           })}
         </div>
 
-        {/* Mobile Logout / Login */}
-        {isAuthenticated ? (
-          <button
-            onClick={handleLogout}
-            className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg"
-            title="Sign out"
-          >
-            <LogOut className="w-4 h-4" />
-          </button>
-        ) : (
-          <Link
-            to="/login"
-            className="text-xs font-bold text-blue-600 px-2 py-1 rounded-lg hover:bg-blue-50"
-          >
-            Log In
-          </Link>
-        )}
+        {/* Mobile Bell & Logout / Login */}
+        <div className="flex items-center gap-1">
+          {isAuthenticated && <NotificationBell isMobile={true} />}
+          {isAuthenticated ? (
+            <button
+              onClick={handleLogout}
+              className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg"
+              title="Sign out"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
+          ) : (
+            <Link
+              to="/login"
+              className="text-xs font-bold text-blue-600 px-2 py-1 rounded-lg hover:bg-blue-50"
+            >
+              Log In
+            </Link>
+          )}
+        </div>
       </div>
 
       {/* Desktop Left Sidebar: ChatGPT Style Full Height */}
       <aside className="hidden md:flex w-64 lg:w-72 bg-white shrink-0 border-r border-slate-200/90 flex-col justify-between sticky top-0 h-screen z-30 shadow-xs">
         
-        {/* Top of Sidebar: Brand Logo */}
+        {/* Top of Sidebar: Brand Logo & Notification Bell */}
         <div className="flex flex-col flex-1">
-          <div className="p-5 border-b border-slate-100">
-            <Link to="/events" className="flex items-center gap-3 select-none group">
+          <div className="p-5 border-b border-slate-100 flex items-center justify-between">
+            <Link to="/events" className="flex items-center gap-3 select-none group min-w-0">
               <img
                 src="/fxec-logo.png"
                 alt="FXEC Logo"
@@ -138,9 +167,15 @@ const StudentLayout = () => {
                 </p>
               </div>
             </Link>
+
+            {isAuthenticated && (
+              <div className="shrink-0 pl-1">
+                <NotificationBell isMobile={false} />
+              </div>
+            )}
           </div>
 
-          {/* Left Navigation: ONLY Browse Events & Applied Events */}
+          {/* Left Navigation: Browse Events, Applied Events & Notifications */}
           <div className="p-4 space-y-2">
             <div className="px-3 pb-2 text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400">
               STUDENT MENU
@@ -173,6 +208,8 @@ const StudentLayout = () => {
                       <span className={`px-2 py-0.5 text-[11px] font-mono font-bold rounded-full ${
                         isActive
                           ? 'bg-white/25 text-white'
+                          : item.badgeVariant === 'blue'
+                          ? 'bg-blue-100 text-blue-800 border border-blue-200'
                           : 'bg-amber-100 text-amber-800 border border-amber-200'
                       }`}>
                         {item.badge}

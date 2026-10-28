@@ -130,9 +130,7 @@ const RegisterModal = ({ event, onClose, onSuccess }) => {
         payload.append('screenshot', screenshotFile);
       }
 
-      const res = await api.post(`/events/${event.id}/requests`, payload, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
+      const res = await api.post(`/events/${event.id}/requests`, payload);
 
       if (res.data.success) {
         showToast(

@@ -378,9 +378,7 @@ const Events = () => {
 
       if (editingEventId) {
         // Update existing event
-        const res = await api.put(`/events/${editingEventId}`, data, {
-          headers: { 'Content-Type': 'multipart/form-data' }
-        });
+        const res = await api.put(`/events/${editingEventId}`, data);
         if (res.data.success) {
           showToast('Event updated successfully.', 'success');
           handleCloseModal();
@@ -388,9 +386,7 @@ const Events = () => {
         }
       } else {
         // Create new event
-        const res = await api.post('/events', data, {
-          headers: { 'Content-Type': 'multipart/form-data' }
-        });
+        const res = await api.post('/events', data);
         if (res.data.success) {
           showToast('New campus event published successfully.', 'success');
           handleCloseModal();

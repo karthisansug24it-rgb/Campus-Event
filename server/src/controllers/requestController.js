@@ -1,6 +1,7 @@
 const { pool } = require('../config/db');
 const { parseCollegeEmail } = require('../utils/emailParser');
 const { REGISTER_NUMBER_REGEX, VALID_SECTIONS } = require('./authController');
+const { notifyRegistrationStatus, notifyPointsAwarded } = require('../services/notificationService');
 
 /**
  * POST /api/events/:id/requests
@@ -147,6 +148,15 @@ async function submitRegistrationRequest(req, res) {
       [normalizedSection, regNumber, req.user.id]
     );
 
+    // Trigger Registration Received notification (async)
+    notifyRegistrationStatus({
+      requestId: insertResult.insertId,
+      userId: req.user.id,
+      eventId,
+      eventTitle: event.title,
+      status: 'registered'
+    }).catch(err => console.warn('[submitRegistrationRequest notify Error]:', err.message));
+
     return res.status(201).json({
       success: true,
       message: screenshotUrl ? 'Registered! Screenshot proof submitted for admin verification.' : 'Registered! Please upload your registration screenshot proof for admin approval.',
@@ -284,6 +294,15 @@ async function uploadParticipationCertificate(req, res) {
        WHERE id = ? AND user_id = ?`,
       [certUrl, nextStatus, requestId, req.user.id]
     );
+
+    // Trigger Certificate Submitted notification (async)
+    notifyRegistrationStatus({
+      requestId,
+      userId: req.user.id,
+      eventId: request.event_id,
+      eventTitle: request.event_title,
+      status: 'participated'
+    }).catch(err => console.warn('[uploadParticipationCertificate notify Error]:', err.message));
 
     return res.json({
       success: true,
@@ -611,6 +630,15 @@ async function approveRequest(req, res) {
 
     await connection.commit();
 
+    // Trigger Registration Approved notification (async)
+    notifyRegistrationStatus({
+      requestId,
+      userId: request.user_id,
+      eventId: request.event_id,
+      eventTitle: event.title,
+      status: 'registration_approved'
+    }).catch(err => console.warn('[approveRequest notify Error]:', err.message));
+
     return res.json({
       success: true,
       message: 'Registration screenshot verified and approved! Student seat is confirmed.'
@@ -725,6 +753,17 @@ async function rankRequest(req, res) {
 
     await connection.commit();
 
+    // Trigger Points Awarded notification (async)
+    notifyPointsAwarded({
+      requestId,
+      userId: request.user_id,
+      eventId: request.event_id,
+      eventTitle: request.event_title,
+      rankPosition: rank_position,
+      totalPoints,
+      note
+    }).catch(err => console.warn('[rankRequest notify Error]:', err.message));
+
     return res.json({
       success: true,
       message: `Verified and awarded Rank ${rank_position.toUpperCase()} with ${totalPoints} PTS!`,
@@ -758,7 +797,10 @@ async function rejectRequest(req, res) {
 
   try {
     const [requestRows] = await pool.execute(
-      'SELECT id, status FROM registration_requests WHERE id = ? LIMIT 1',
+      `SELECT rr.id, rr.user_id, rr.event_id, e.title AS event_title 
+       FROM registration_requests rr
+       JOIN events e ON rr.event_id = e.id
+       WHERE rr.id = ? LIMIT 1`,
       [requestId]
     );
 
@@ -769,6 +811,8 @@ async function rejectRequest(req, res) {
       });
     }
 
+    const reqData = requestRows[0];
+
     await pool.execute(
       `UPDATE registration_requests SET
         status = 'rejected',
@@ -778,6 +822,16 @@ async function rejectRequest(req, res) {
        WHERE id = ?`,
       [reason, req.user.id, requestId]
     );
+
+    // Trigger Registration Rejected notification (async)
+    notifyRegistrationStatus({
+      requestId,
+      userId: reqData.user_id,
+      eventId: reqData.event_id,
+      eventTitle: reqData.event_title,
+      status: 'rejected',
+      adminNote: reason
+    }).catch(err => console.warn('[rejectRequest notify Error]:', err.message));
 
     return res.json({
       success: true,
