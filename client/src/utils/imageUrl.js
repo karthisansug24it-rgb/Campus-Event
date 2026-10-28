@@ -8,7 +8,11 @@ export function getPosterUrl(url) {
   if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
     return url;
   }
-  return url.startsWith('/') ? url : `/${url}`;
+  const cleanPath = url.startsWith('/') ? url : `/${url}`;
+  const base = import.meta.env.VITE_API_URL
+    ? import.meta.env.VITE_API_URL.replace(/\/$/, '')
+    : '';
+  return base ? `${base}${cleanPath}` : cleanPath;
 }
 
 /**
@@ -19,8 +23,11 @@ export function handleImageError(e, fallbackPosterUrl) {
   if (!img.dataset.retried && fallbackPosterUrl) {
     img.dataset.retried = 'true';
     const cleanPath = fallbackPosterUrl.startsWith('/') ? fallbackPosterUrl : `/${fallbackPosterUrl}`;
-    if (!img.src.includes(':5000')) {
-      img.src = `http://localhost:5000${cleanPath}`;
+    const fallbackBase = import.meta.env.VITE_API_URL
+      ? import.meta.env.VITE_API_URL.replace(/\/$/, '')
+      : 'http://localhost:5000';
+    if (!img.src.includes(fallbackBase)) {
+      img.src = `${fallbackBase}${cleanPath}`;
       return;
     }
   }

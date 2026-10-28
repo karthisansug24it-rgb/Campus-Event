@@ -6,6 +6,7 @@ node_modules/
 # Production build
 dist/
 build/
+fxecevents/
 .next/
 out/
 
