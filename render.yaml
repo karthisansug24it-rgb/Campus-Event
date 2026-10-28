@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: fxec-events-backend
+    runtime: node
+    rootDir: server
+    buildCommand: npm install
+    startCommand: npm start
+    plan: free
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DB_HOST
+        value: gateway01.ap-southeast-1.prod.aws.tidbcloud.com
+      - key: DB_PORT
+        value: "4000"
+      - key: DB_USER
+        value: G6W4bWYgBpTZS6V.root
+      - key: DB_PASSWORD
+        value: ktJnhjm589BCTdXo
+      - key: DB_NAME
+        value: campus_events
+      - key: DB_SSL
+        value: "true"
+      - key: JWT_SECRET
+        value: fxec_campus_event_jwt_super_secret_key_2026_x89!secure
+      - key: JWT_EXPIRES_IN
+        value: 1d

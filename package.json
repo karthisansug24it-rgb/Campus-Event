@@ -13,5 +13,8 @@
     "start": "npm --prefix server start",
     "test": "npm --prefix server test",
     "init-db": "npm --prefix server run init-db"
+  },
+  "dependencies": {
+    "serverless-http": "^4.0.0"
   }
 }

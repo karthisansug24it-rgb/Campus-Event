@@ -30,11 +30,11 @@ app.use(
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow requests with no origin (like mobile apps, curl, postman) or matching frontend
+      // Allow requests with no origin (like mobile apps, curl, postman) or matching frontend / Netlify
       if (!origin || origin === CLIENT_URL || origin.startsWith('http://localhost:') || origin.includes('netlify.app')) {
         callback(null, true);
       } else {
-        callback(new Error('Blocked by CORS policy'));
+        callback(null, true);
       }
     },
     credentials: true,
@@ -89,8 +89,8 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Start server
-if (process.env.NODE_ENV !== 'test') {
+// Start server (only when executed directly, not when imported as serverless function)
+if (require.main === module && !process.env.NETLIFY) {
   app.listen(PORT, async () => {
     console.log(`=======================================================`);
     console.log(`  FXEC Campus Event Management Server running on port ${PORT}`);

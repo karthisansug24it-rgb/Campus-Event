@@ -4,7 +4,7 @@ const path = require('path');
 
 dotenv.config({ path: path.join(__dirname, '../../.env') });
 
-const pool = mysql.createPool({
+const poolConfig = {
   host: process.env.DB_HOST || 'localhost',
   port: parseInt(process.env.DB_PORT || '3306', 10),
   user: process.env.DB_USER || 'root',
@@ -16,7 +16,13 @@ const pool = mysql.createPool({
   charset: 'utf8mb4',
   timezone: '+05:30',
   namedPlaceholders: false
-});
+};
+
+if (process.env.DB_SSL === 'true' || (process.env.DB_HOST && process.env.DB_HOST.includes('tidbcloud.com'))) {
+  poolConfig.ssl = { rejectUnauthorized: true };
+}
+
+const pool = mysql.createPool(poolConfig);
 
 // Test database connection helper
 async function testConnection() {
