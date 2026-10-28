@@ -31,7 +31,7 @@ app.use(
   cors({
     origin: (origin, callback) => {
       // Allow requests with no origin (like mobile apps, curl, postman) or matching frontend
-      if (!origin || origin === CLIENT_URL || origin.startsWith('http://localhost:')) {
+      if (!origin || origin === CLIENT_URL || origin.startsWith('http://localhost:') || origin.includes('netlify.app')) {
         callback(null, true);
       } else {
         callback(new Error('Blocked by CORS policy'));
