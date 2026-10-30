@@ -40,7 +40,7 @@ function buildHtmlTemplate({ title, message, actionUrl, actionText = 'View in Ca
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${title}</title>
   <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #F8FAFC; margin: 0; padding: 24px; color: #1E293B; }
+    body { font-family: 'Georgia', serif; background-color: #F8FAFC; margin: 0; padding: 24px; color: #1E293B; }
     .card { max-width: 580px; margin: 0 auto; background: #FFFFFF; border-radius: 16px; border: 1px solid #E2E8F0; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
     .header { background: linear-gradient(135deg, #1E3A8A 0%, #2563EB 100%); padding: 24px 32px; color: #FFFFFF; text-align: left; }
     .header h1 { margin: 0; font-size: 18px; font-weight: 800; letter-spacing: -0.02em; }

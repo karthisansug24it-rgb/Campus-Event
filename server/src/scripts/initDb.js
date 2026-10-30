@@ -243,12 +243,12 @@ async function initDatabase() {
   <circle cx="700" cy="100" r="180" fill="white" opacity="0.05" />
   <circle cx="100" cy="400" r="120" fill="white" opacity="0.05" />
   
-  <text x="60" y="80" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="20" font-weight="700" fill="#93C5FD" letter-spacing="3">FRANCIS XAVIER ENGINEERING COLLEGE</text>
-  <text x="60" y="240" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="52" font-weight="900" fill="#FFFFFF">${p.title}</text>
-  <text x="60" y="295" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="24" font-weight="500" fill="#E2E8F0">${p.subtitle}</text>
+  <text x="60" y="80" font-family="Georgia, serif" font-size="20" font-weight="700" fill="#93C5FD" letter-spacing="3">FRANCIS XAVIER ENGINEERING COLLEGE</text>
+  <text x="60" y="240" font-family="Georgia, serif" font-size="52" font-weight="900" fill="#FFFFFF">${p.title}</text>
+  <text x="60" y="295" font-family="Georgia, serif" font-size="24" font-weight="500" fill="#E2E8F0">${p.subtitle}</text>
   
   <rect x="60" y="340" width="220" height="44" rx="22" fill="rgba(255,255,255,0.2)" />
-  <text x="170" y="368" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="600" fill="#FFFFFF" text-anchor="middle">Official Campus Event</text>
+  <text x="170" y="368" font-family="Georgia, serif" font-size="16" font-weight="600" fill="#FFFFFF" text-anchor="middle">Official Campus Event</text>
 </svg>`;
         fs.writeFileSync(pPath, svgContent, 'utf8');
       }

@@ -73,16 +73,16 @@
 
 /* Primary Timeless Font: Merriweather */
 .font-display {
-  font-family: 'Merriweather', Georgia, serif;
+  font-family: 'Georgia', serif !important;
   letter-spacing: -0.015em;
 }
 
 .font-serif {
-  font-family: 'Merriweather', Georgia, serif;
+  font-family: 'Georgia', serif !important;
 }
 
 .font-ui {
-  font-family: 'Source Sans 3', 'Lato', system-ui, -apple-system, sans-serif;
+  font-family: 'Georgia', serif !important;
 }
 
 /* Modal pop animation */
@@ -129,4 +129,34 @@
 .bg-dots {
   background-image: radial-gradient(rgba(37, 99, 235, 0.08) 1px, transparent 1px);
   background-size: 24px 24px;
+}
+
+
+/* Universal Georgia Serif Override */
+*, *::before, *::after,
+html, body,
+div, span, applet, object, iframe,
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+a, abbr, acronym, address, big, cite, code,
+del, dfn, em, img, ins, kbd, q, s, samp,
+small, strike, strong, sub, sup, tt, var,
+b, u, i, center,
+dl, dt, dd, ol, ul, li,
+fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td,
+article, aside, canvas, details, embed, 
+figure, figcaption, footer, header, hgroup, 
+menu, nav, output, ruby, section, summary,
+time, mark, audio, video,
+button, input, select, textarea, optgroup, option {
+  font-family: 'Georgia', serif !important;
+}
+
+.font-display,
+.font-serif,
+.font-sans,
+.font-ui,
+.font-mono,
+[class*="font-"] {
+  font-family: 'Georgia', serif !important;
 }

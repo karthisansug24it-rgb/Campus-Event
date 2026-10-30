@@ -6,6 +6,13 @@ export default {
   ],
   darkMode: 'class',
   theme: {
+    fontFamily: {
+      serif: ['Georgia', 'serif'],
+      display: ['Georgia', 'serif'],
+      sans: ['Georgia', 'serif'],
+      ui: ['Georgia', 'serif'],
+      mono: ['Georgia', 'serif'],
+    },
     extend: {
       colors: {
         background: '#FFFFFF',
