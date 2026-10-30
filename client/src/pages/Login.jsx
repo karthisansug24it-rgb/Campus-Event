@@ -271,17 +271,24 @@ const Login = () => {
       
       <div className="w-full max-w-md relative z-10 space-y-5">
         
-        {/* Brand Header */}
-        <AnimatedSection className="text-center space-y-1.5" delay={0.05}>
-          <img 
-            src="/fxec-logo.png" 
-            alt="FXEC Official Logo" 
-            className="w-16 h-16 sm:w-20 sm:h-20 mx-auto rounded-full object-contain bg-white shadow-lg shadow-blue-600/15 mb-2 hover:scale-105 transition-transform duration-300"
-          />
+        {/* Brand Header with Centered Entrance Emblem */}
+        <AnimatedSection className="text-center space-y-2.5" delay={0.05}>
+          <div className="flex justify-center mb-1">
+            <div className="relative group">
+              <div className="absolute -inset-3 bg-gradient-to-r from-amber-400/30 via-rose-400/25 to-emerald-400/30 rounded-full blur-xl opacity-70 group-hover:opacity-100 transition-all duration-700 pointer-events-none" />
+              <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-white p-2.5 shadow-xl shadow-slate-200/80 border border-slate-100 flex items-center justify-center transition-transform duration-300 group-hover:scale-105">
+                <img 
+                  src="/fxec-logo.png" 
+                  alt="FXEC Official Logo" 
+                  className="w-full h-full object-contain"
+                />
+              </div>
+            </div>
+          </div>
           <h1 className="text-xl sm:text-2xl lg:text-3xl font-extrabold font-display text-slate-900 tracking-tight leading-snug px-2">
             Francis Xavier Engineering College
           </h1>
-          <p className="text-[11px] sm:text-xs font-mono text-blue-600 font-bold uppercase tracking-wider flex items-center justify-center gap-1.5">
+          <p className="text-[11px] sm:text-xs text-blue-600 font-bold uppercase tracking-wider flex items-center justify-center gap-1.5">
             <span className="w-1.5 h-1.5 rounded-full bg-blue-600 animate-pulse" />
             Official Campus Event Management Portal
           </p>

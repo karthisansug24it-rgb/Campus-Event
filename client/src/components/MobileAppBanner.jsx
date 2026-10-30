@@ -115,11 +115,11 @@ const MobileAppBanner = () => {
           
           {/* App Icon & Details */}
           <div className="flex items-center gap-3 min-w-0">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-600 to-blue-700 shadow-md shadow-blue-600/30 flex items-center justify-center shrink-0 border border-white/40 overflow-hidden">
+            <div className="w-12 h-12 rounded-2xl bg-white shadow-md shadow-slate-200/80 flex items-center justify-center shrink-0 border border-slate-100 p-1 overflow-hidden">
               <img
                 src="/fxec-logo.png"
                 alt="FXEC Events Icon"
-                className="w-10 h-10 object-contain rounded-full"
+                className="w-full h-full object-contain"
                 onError={(e) => {
                   e.currentTarget.style.display = 'none';
                   e.currentTarget.nextElementSibling?.classList.remove('hidden');

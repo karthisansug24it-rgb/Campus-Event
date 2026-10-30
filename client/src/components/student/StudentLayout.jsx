@@ -520,16 +520,31 @@ const StudentLayout = () => {
           ───────────────────────────────────────────────────────────── */}
       <main className="flex-1 min-w-0 flex flex-col bg-[#F8FAFC] pb-20 md:pb-6">
         
-        {/* Responsive College Header Banner */}
-        <section className="bg-white border-b border-slate-200/90 py-5 sm:py-8 lg:py-10 px-4 sm:px-6 lg:px-8 text-center relative overflow-hidden">
+        {/* Responsive College Header Entrance Banner with Centered Brand Emblem */}
+        <section className="bg-white border-b border-slate-200/90 py-6 sm:py-9 lg:py-11 px-4 sm:px-6 lg:px-8 text-center relative overflow-hidden" style={{ fontFamily: "'Georgia', serif" }}>
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-36 bg-blue-100/40 rounded-full blur-3xl pointer-events-none" />
           
-          <div className="relative z-10 max-w-3xl mx-auto space-y-2 sm:space-y-3">
+          <div className="relative z-10 max-w-3xl mx-auto space-y-3 sm:space-y-4">
+            
+            {/* Centered Entrance Logo Emblem for All Devices */}
+            <div className="flex justify-center items-center">
+              <div className="relative group">
+                <div className="absolute -inset-3 bg-gradient-to-r from-amber-400/30 via-rose-400/25 to-emerald-400/30 rounded-full blur-xl opacity-75 group-hover:opacity-100 transition-all duration-700 animate-pulse-slow pointer-events-none" />
+                <div className="relative w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded-full bg-white p-2.5 shadow-xl shadow-slate-200/70 border border-slate-100 flex items-center justify-center transition-all duration-300 group-hover:scale-105">
+                  <img
+                    src="/fxec-logo.png"
+                    alt="Campus Event Logo"
+                    className="w-full h-full object-contain filter drop-shadow-xs"
+                  />
+                </div>
+              </div>
+            </div>
+
             <h1 className="text-2xl sm:text-4xl lg:text-5xl font-black font-display text-slate-900 tracking-tight leading-tight">
               Welcome to <span className="text-blue-600">FXEC Events</span>
             </h1>
 
-            <p className="text-xs sm:text-base text-slate-600 font-sans max-w-xl mx-auto leading-relaxed">
+            <p className="text-xs sm:text-base text-slate-600 max-w-xl mx-auto leading-relaxed">
               Explore upcoming campus hackathons, workshops, symposiums, and track your verified registrations in real-time.
             </p>
           </div>
