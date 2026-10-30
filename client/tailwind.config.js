@@ -43,11 +43,11 @@ export default {
         }
       },
       fontFamily: {
-        serif: ['"Merriweather"', 'Georgia', 'Cambria', '"Times New Roman"', 'serif'],
-        display: ['"Merriweather"', 'Georgia', 'serif'],
-        sans: ['"Merriweather"', '"Source Sans 3"', '"Lato"', 'Georgia', 'serif'],
-        ui: ['"Source Sans 3"', '"Lato"', 'system-ui', '-apple-system', 'sans-serif'],
-        mono: ['"JetBrains Mono"', 'Fira Code', 'monospace'],
+        serif: ['Georgia', 'serif'],
+        display: ['Georgia', 'serif'],
+        sans: ['Georgia', 'serif'],
+        ui: ['Georgia', 'serif'],
+        mono: ['Georgia', 'serif'],
       },
       boxShadow: {
         'glow-blue': '0 0 25px -4px rgba(37, 99, 235, 0.35)',

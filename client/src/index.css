@@ -3,20 +3,26 @@
 @tailwind utilities;
 
 @layer base {
-  * {
+  *, *::before, *::after {
     box-sizing: border-box;
+    font-family: 'Georgia', serif !important;
   }
 
-  html {
+  html, body {
     color-scheme: light;
     scroll-behavior: smooth;
+    font-family: 'Georgia', serif !important;
   }
 
   body {
     @apply bg-[#FAFBFC] text-slate-800 antialiased min-h-screen selection:bg-blue-700 selection:text-white;
-    font-family: 'Merriweather', Georgia, serif;
+    font-family: 'Georgia', serif !important;
     margin: 0;
     padding: 0;
+  }
+
+  button, input, select, textarea, span, p, h1, h2, h3, h4, h5, h6, a, label, div, aside, nav, table, th, td {
+    font-family: 'Georgia', serif !important;
   }
 }
 
