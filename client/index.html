@@ -33,7 +33,7 @@
     <link rel="icon" type="image/png" href="/fxec-logo.png" />
     <link rel="alternate icon" type="image/png" href="/icon-192.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
-    <meta name="theme-color" content="#2563EB" />
+    <meta name="theme-color" content="#FFFFFF" />
     
     <!-- PWA & Chrome App Installation Manifest -->
     <link rel="manifest" href="/manifest.json" />
@@ -57,9 +57,57 @@
         font-family: 'Georgia', serif !important;
       }
     </style>
+  
+    <style id="boot-animation-style">
+      @keyframes bootPulse {
+        0%, 100% { transform: scale(1); opacity: 0.95; }
+        50% { transform: scale(1.04); opacity: 1; }
+      }
+      @keyframes bootBar {
+        0% { transform: translateX(-100%); }
+        50% { transform: translateX(20%); }
+        100% { transform: translateX(200%); }
+      }
+      #boot-splash {
+        position: fixed;
+        inset: 0;
+        width: 100vw;
+        height: 100vh;
+        background-color: #FFFFFF !important;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 999999;
+        font-family: 'Georgia', serif;
+      }
+      #boot-splash img {
+        background-color: #FFFFFF !important;
+      }
+    </style>
   </head>
   <body class="bg-[#FAFBFC] text-slate-800 antialiased font-serif selection:bg-blue-700 selection:text-white" style="font-family: 'Georgia', serif;">
-    <div id="root"></div>
+    <div id="root">
+      <div id="boot-splash">
+        <div style="position: relative; width: 110px; height: 110px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px;">
+          <div style="position: absolute; inset: -12px; background: radial-gradient(circle, rgba(245,158,11,0.18) 0%, rgba(255,255,255,0) 70%); border-radius: 50%; pointer-events: none;"></div>
+          <div style="position: relative; width: 96px; height: 96px; border-radius: 50%; background-color: #FFFFFF; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.06); animation: bootPulse 2s infinite ease-in-out;">
+            <img src="/fxec-logo.png" alt="FXEC Events" style="width: 80px; height: 80px; object-fit: contain; border-radius: 50%; background-color: #FFFFFF;" />
+          </div>
+        </div>
+        <div style="text-align: center;">
+          <h2 style="font-size: 18px; font-weight: 800; color: #0F172A; margin: 0; font-family: 'Georgia', serif; letter-spacing: -0.02em;">
+            FXEC <span style="color: #2563EB;">Events</span>
+          </h2>
+          <p style="font-size: 11px; color: #64748B; margin: 4px 0 0 0; font-family: 'Georgia', serif;">
+            Francis Xavier Engineering College
+          </p>
+        </div>
+        <div style="margin-top: 24px; width: 48px; height: 3px; background-color: #E2E8F0; border-radius: 9999px; overflow: hidden; position: relative;">
+          <div style="position: absolute; top: 0; bottom: 0; left: 0; width: 50%; background-color: #2563EB; border-radius: 9999px; animation: bootBar 1.2s infinite ease-in-out;"></div>
+        </div>
+      </div>
+    </div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

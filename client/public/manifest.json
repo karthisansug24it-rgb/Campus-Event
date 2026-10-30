@@ -7,7 +7,7 @@
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#FFFFFF",
-  "theme_color": "#2563EB",
+  "theme_color": "#FFFFFF",
   "icons": [
     {
       "src": "/icon-192.png",
@@ -28,21 +28,35 @@
       "purpose": "any maskable"
     }
   ],
-  "categories": ["education", "events", "productivity"],
+  "categories": [
+    "education",
+    "events",
+    "productivity"
+  ],
   "shortcuts": [
     {
       "name": "Browse Events",
       "short_name": "Events",
       "description": "View upcoming campus hackathons and workshops",
       "url": "/events",
-      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+      "icons": [
+        {
+          "src": "/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
     },
     {
       "name": "My Applied Events",
       "short_name": "Applied",
       "description": "Check registration request status",
       "url": "/my/requests",
-      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+      "icons": [
+        {
+          "src": "/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
     }
   ]
 }
