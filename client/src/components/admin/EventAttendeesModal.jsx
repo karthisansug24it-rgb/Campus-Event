@@ -173,32 +173,32 @@ const EventAttendeesModal = ({ eventId, isOpen, onClose }) => {
 
   return (
     <div 
-      className="fixed inset-0 z-[100] bg-slate-950/75 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto"
+      className="fixed inset-0 z-[100] bg-slate-950/75 backdrop-blur-sm flex items-center justify-center p-0 sm:p-5 overflow-y-auto"
       onClick={onClose}
     >
       <div 
-        className="bg-white text-slate-800 rounded-3xl max-w-5xl w-full max-h-[92vh] flex flex-col shadow-2xl border border-slate-200 animate-modal-pop overflow-hidden"
+        className="bg-white text-slate-800 sm:rounded-3xl rounded-none max-w-5xl w-full h-full sm:h-auto sm:max-h-[92vh] flex flex-col shadow-2xl border sm:border-slate-200 animate-modal-pop overflow-hidden" style={{ fontFamily: "'Georgia', serif" }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
         <div className="p-5 sm:p-6 border-b border-slate-200/90 bg-slate-50/70 flex items-start justify-between gap-4">
           <div className="space-y-1.5">
             <div className="flex flex-wrap items-center gap-2">
-              <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold tracking-wider uppercase border ${
+              <span className={`px-2.5 py-0.5 rounded-full text-[10px]  font-bold tracking-wider uppercase border ${
                 eventData?.is_past
                   ? 'bg-amber-100 text-amber-800 border-amber-300'
                   : 'bg-emerald-100 text-emerald-800 border-emerald-300'
               }`}>
                 {eventData?.is_past ? 'Completed · Past Event' : 'Upcoming Event'}
               </span>
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase bg-blue-50 text-blue-700 border border-blue-200">
+              <span className="px-2.5 py-0.5 rounded-full text-[10px]  font-bold uppercase bg-blue-50 text-blue-700 border border-blue-200">
                 {eventData?.category} · {eventData?.event_type === 'internal' ? 'Inside College' : 'External'}
               </span>
             </div>
             <h2 className="text-xl sm:text-2xl font-black font-display text-slate-900 tracking-tight">
               {eventData?.title || 'Event Registrations'}
             </h2>
-            <div className="flex flex-wrap items-center gap-4 text-xs text-slate-500 font-mono">
+            <div className="flex flex-wrap items-center gap-4 text-xs text-slate-500 ">
               <span className="flex items-center gap-1.5">
                 <Calendar className="w-3.5 h-3.5 text-blue-600" />
                 {formatDate(eventData?.event_date)}
@@ -226,7 +226,7 @@ const EventAttendeesModal = ({ eventId, isOpen, onClose }) => {
         </div>
 
         {/* Modal Stats Bar */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 bg-white border-b border-slate-200/80 text-xs font-mono">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 bg-white border-b border-slate-200/80 text-xs ">
           <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200/90 flex flex-col">
             <span className="text-[10px] uppercase font-bold text-slate-400">Total Registered</span>
             <span className="text-lg font-black text-slate-900 mt-0.5">{stats.total}</span>
@@ -332,7 +332,7 @@ const EventAttendeesModal = ({ eventId, isOpen, onClose }) => {
           {loading ? (
             <div className="py-20 text-center">
               <Loader2 className="w-8 h-8 animate-spin text-blue-600 mx-auto mb-3" />
-              <p className="text-xs font-mono font-bold text-slate-500 uppercase tracking-wider">
+              <p className="text-xs  font-bold text-slate-500 uppercase tracking-wider">
                 Retrieving student records...
               </p>
             </div>
@@ -342,7 +342,7 @@ const EventAttendeesModal = ({ eventId, isOpen, onClose }) => {
               <span>{error}</span>
             </div>
           ) : filteredAttendees.length === 0 ? (
-            <div className="py-16 text-center text-slate-400 font-mono text-xs">
+            <div className="py-16 text-center text-slate-400  text-xs">
               <Users className="w-10 h-10 mx-auto text-slate-300 mb-2" />
               <p className="font-bold text-slate-600">No registered students found</p>
               <p className="text-[11px] text-slate-400 mt-1">Try adjusting the status, department, or year filters.</p>
@@ -350,7 +350,7 @@ const EventAttendeesModal = ({ eventId, isOpen, onClose }) => {
           ) : (
             <div className="overflow-x-auto rounded-2xl border border-slate-200 shadow-xs">
               <table className="w-full text-left text-xs">
-                <thead className="bg-slate-50 text-slate-500 font-mono font-bold uppercase tracking-wider text-[10px] border-b border-slate-200">
+                <thead className="bg-slate-50 text-slate-500  font-bold uppercase tracking-wider text-[10px] border-b border-slate-200">
                   <tr>
                     <th className="py-3 px-4">#</th>
                     <th className="py-3 px-4">Student Details</th>
@@ -363,24 +363,24 @@ const EventAttendeesModal = ({ eventId, isOpen, onClose }) => {
                 <tbody className="divide-y divide-slate-100">
                   {filteredAttendees.map((a, idx) => (
                     <tr key={a.id} className="hover:bg-slate-50/60 transition-colors">
-                      <td className="py-3 px-4 font-mono text-slate-400 text-[11px]">
+                      <td className="py-3 px-4  text-slate-400 text-[11px]">
                         {idx + 1}
                       </td>
 
                       {/* Student Profile */}
                       <td className="py-3 px-4">
                         <div className="flex items-center gap-2.5">
-                          <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 font-bold font-mono text-xs flex items-center justify-center shrink-0">
+                          <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 font-bold  text-xs flex items-center justify-center shrink-0">
                             {a.name?.charAt(0)?.toUpperCase() || 'S'}
                           </div>
                           <div>
                             <p className="font-bold text-slate-900">{a.name}</p>
-                            <p className="text-[11px] text-slate-500 font-mono select-all">{a.email}</p>
+                            <p className="text-[11px] text-slate-500  select-all">{a.email}</p>
                             <div className="flex items-center gap-1.5 mt-0.5">
-                              <span className="font-mono text-[10px] text-blue-700 bg-blue-50 px-1.5 py-0.2 rounded border border-blue-200">
+                              <span className=" text-[10px] text-blue-700 bg-blue-50 px-1.5 py-0.2 rounded border border-blue-200">
                                 {a.register_number}
                               </span>
-                              <span className="font-mono text-[10px] text-slate-600 bg-slate-100 px-1.5 py-0.2 rounded border border-slate-200">
+                              <span className=" text-[10px] text-slate-600 bg-slate-100 px-1.5 py-0.2 rounded border border-slate-200">
                                 Sec {a.section}
                               </span>
                             </div>
@@ -389,7 +389,7 @@ const EventAttendeesModal = ({ eventId, isOpen, onClose }) => {
                       </td>
 
                       {/* Department & Year */}
-                      <td className="py-3 px-4 font-mono space-y-1">
+                      <td className="py-3 px-4  space-y-1">
                         <div className="flex items-center gap-1.5">
                           <span className="px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 border border-blue-200 font-bold text-[10px]">
                             Year {a.year_of_study}
@@ -407,7 +407,7 @@ const EventAttendeesModal = ({ eventId, isOpen, onClose }) => {
                       <td className="py-3 px-4">
                         {a.status === 'ranked' ? (
                           <div className="space-y-1">
-                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-mono font-black bg-amber-50 text-amber-900 border border-amber-300 shadow-2xs">
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px]  font-black bg-amber-50 text-amber-900 border border-amber-300 shadow-2xs">
                               <Trophy className="w-3.5 h-3.5 text-amber-600 fill-amber-500" />
                               <span>Rank {a.rank_position?.toUpperCase()} (+{a.rank_points_awarded} PTS)</span>
                             </span>
@@ -418,23 +418,23 @@ const EventAttendeesModal = ({ eventId, isOpen, onClose }) => {
                             )}
                           </div>
                         ) : a.status === 'participated' ? (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-mono font-bold bg-purple-50 text-purple-800 border border-purple-200 shadow-2xs">
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px]  font-bold bg-purple-50 text-purple-800 border border-purple-200 shadow-2xs">
                             <Clock className="w-3 h-3 text-purple-600" />
                             <span>Participated (Cert Uploaded)</span>
                           </span>
                         ) : (a.status === 'registration_approved' || a.status === 'approved') ? (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-mono font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 shadow-2xs">
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px]  font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 shadow-2xs">
                             <CheckCircle2 className="w-3 h-3 text-emerald-600" />
                             <span>Approved (Seat Confirmed)</span>
                           </span>
                         ) : (a.status === 'registered' || a.status === 'pending') ? (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-mono font-bold bg-blue-50 text-blue-800 border border-blue-200 shadow-2xs">
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px]  font-bold bg-blue-50 text-blue-800 border border-blue-200 shadow-2xs">
                             <Clock className="w-3 h-3 text-blue-600 animate-pulse" />
                             <span>Registered (Pending Review)</span>
                           </span>
                         ) : (
                           <div>
-                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-mono font-bold bg-rose-50 text-rose-700 border border-rose-200 shadow-2xs" title={a.admin_note}>
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px]  font-bold bg-rose-50 text-rose-700 border border-rose-200 shadow-2xs" title={a.admin_note}>
                               <XCircle className="w-3 h-3 text-rose-600" />
                               <span>Rejected</span>
                             </span>
@@ -448,7 +448,7 @@ const EventAttendeesModal = ({ eventId, isOpen, onClose }) => {
                       </td>
 
                       {/* Proof / Certificate Links */}
-                      <td className="py-3 px-4 font-mono">
+                      <td className="py-3 px-4 ">
                         <div className="flex flex-col gap-1.5 items-start">
                           {a.certificate_url ? (
                             <a
@@ -483,7 +483,7 @@ const EventAttendeesModal = ({ eventId, isOpen, onClose }) => {
                       </td>
 
                       {/* Submitted Date */}
-                      <td className="py-3 px-4 font-mono text-slate-500 text-[11px]">
+                      <td className="py-3 px-4  text-slate-500 text-[11px]">
                         {formatDate(a.created_at)}
                       </td>
                     </tr>
@@ -495,7 +495,7 @@ const EventAttendeesModal = ({ eventId, isOpen, onClose }) => {
         </div>
 
         {/* Modal Footer */}
-        <div className="p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between text-xs font-mono">
+        <div className="p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between text-xs ">
           <span className="text-slate-500">
             Showing <strong className="text-slate-800">{filteredAttendees.length}</strong> of {attendees.length} student records
           </span>

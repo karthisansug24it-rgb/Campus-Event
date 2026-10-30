@@ -488,7 +488,7 @@ const Events = () => {
               <button
                 type="button"
                 onClick={() => setSelectedTimeline('all')}
-                className={`px-3 py-1.5 rounded-xl text-xs font-mono font-bold whitespace-nowrap transition-all ${
+                className={`px-3 py-1.5 rounded-xl text-xs  font-bold whitespace-nowrap transition-all ${
                   selectedTimeline === 'all'
                     ? 'bg-blue-600 text-white shadow-xs'
                     : 'text-slate-600 hover:text-blue-700'
@@ -499,7 +499,7 @@ const Events = () => {
               <button
                 type="button"
                 onClick={() => setSelectedTimeline('upcoming')}
-                className={`px-3 py-1.5 rounded-xl text-xs font-mono font-bold whitespace-nowrap transition-all ${
+                className={`px-3 py-1.5 rounded-xl text-xs  font-bold whitespace-nowrap transition-all ${
                   selectedTimeline === 'upcoming'
                     ? 'bg-blue-600 text-white shadow-xs'
                     : 'text-slate-600 hover:text-blue-700'
@@ -510,7 +510,7 @@ const Events = () => {
               <button
                 type="button"
                 onClick={() => setSelectedTimeline('past')}
-                className={`px-3 py-1.5 rounded-xl text-xs font-mono font-bold whitespace-nowrap transition-all flex items-center gap-1 ${
+                className={`px-3 py-1.5 rounded-xl text-xs  font-bold whitespace-nowrap transition-all flex items-center gap-1 ${
                   selectedTimeline === 'past'
                     ? 'bg-amber-600 text-white shadow-xs'
                     : 'text-slate-600 hover:text-amber-700'
@@ -526,7 +526,7 @@ const Events = () => {
               <button
                 type="button"
                 onClick={() => setSelectedType('all')}
-                className={`px-2.5 py-1.5 rounded-xl text-xs font-mono font-bold whitespace-nowrap transition-all ${
+                className={`px-2.5 py-1.5 rounded-xl text-xs  font-bold whitespace-nowrap transition-all ${
                   selectedType === 'all'
                     ? 'bg-slate-900 text-white shadow-xs'
                     : 'bg-slate-50 text-slate-600 hover:text-slate-900 border border-slate-200'
@@ -537,7 +537,7 @@ const Events = () => {
               <button
                 type="button"
                 onClick={() => setSelectedType('internal')}
-                className={`px-2.5 py-1.5 rounded-xl text-xs font-mono font-bold whitespace-nowrap transition-all ${
+                className={`px-2.5 py-1.5 rounded-xl text-xs  font-bold whitespace-nowrap transition-all ${
                   selectedType === 'internal'
                     ? 'bg-slate-900 text-white shadow-xs'
                     : 'bg-slate-50 text-slate-600 hover:text-slate-900 border border-slate-200'
@@ -548,7 +548,7 @@ const Events = () => {
               <button
                 type="button"
                 onClick={() => setSelectedType('external')}
-                className={`px-2.5 py-1.5 rounded-xl text-xs font-mono font-bold whitespace-nowrap transition-all ${
+                className={`px-2.5 py-1.5 rounded-xl text-xs  font-bold whitespace-nowrap transition-all ${
                   selectedType === 'external'
                     ? 'bg-slate-900 text-white shadow-xs'
                     : 'bg-slate-50 text-slate-600 hover:text-slate-900 border border-slate-200'
@@ -562,7 +562,7 @@ const Events = () => {
 
         {/* Category Pills */}
         <div className="flex items-center gap-2 pt-3 border-t border-slate-100 overflow-x-auto scrollbar-none">
-          <span className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-wider mr-1 hidden sm:inline">
+          <span className="text-[10px]  font-bold text-slate-400 uppercase tracking-wider mr-1 hidden sm:inline">
             CATEGORY:
           </span>
           {CATEGORIES.map((cat) => (
@@ -570,7 +570,7 @@ const Events = () => {
               key={cat}
               type="button"
               onClick={() => setSelectedCategory(cat)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-mono font-bold whitespace-nowrap transition-all ${
+              className={`px-3 py-1.5 rounded-xl text-xs  font-bold whitespace-nowrap transition-all ${
                 selectedCategory === cat
                   ? 'bg-slate-900 text-white font-black shadow-xs'
                   : 'bg-slate-100/70 text-slate-600 hover:text-blue-700 hover:bg-blue-50 border border-slate-200/80'
@@ -586,7 +586,7 @@ const Events = () => {
       {loading ? (
         <div className="py-24 text-center">
           <Loader2 className="w-8 h-8 animate-spin text-blue-600 mx-auto mb-3" />
-          <p className="text-xs font-mono font-bold text-slate-500 uppercase tracking-wider">
+          <p className="text-xs  font-bold text-slate-500 uppercase tracking-wider">
             Loading Events Directory...
           </p>
         </div>
@@ -621,7 +621,7 @@ const Events = () => {
         <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xs overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs sm:text-sm">
-              <thead className="bg-slate-50/80 border-b border-slate-200/80 text-[11px] font-mono font-bold uppercase tracking-wider text-slate-500">
+              <thead className="bg-slate-50/80 border-b border-slate-200/80 text-[11px]  font-bold uppercase tracking-wider text-slate-500">
                 <tr>
                   <th className="py-4 px-6">Event & Timeline</th>
                   <th className="py-4 px-4">Category / Type</th>
@@ -658,11 +658,11 @@ const Events = () => {
                           <div className="space-y-1 max-w-xs">
                             <div className="flex items-center gap-1.5">
                               {isPast ? (
-                                <span className="px-2 py-0.5 rounded-md text-[9px] font-mono font-bold bg-amber-100 text-amber-800 border border-amber-300">
+                                <span className="px-2 py-0.5 rounded-md text-[9px]  font-bold bg-amber-100 text-amber-800 border border-amber-300">
                                   Completed · Past Event
                                 </span>
                               ) : (
-                                <span className="px-2 py-0.5 rounded-md text-[9px] font-mono font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                                <span className="px-2 py-0.5 rounded-md text-[9px]  font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
                                   Upcoming Event
                                 </span>
                               )}
@@ -683,7 +683,7 @@ const Events = () => {
                           <Badge variant="blue" size="xs">
                             {evt.category}
                           </Badge>
-                          <p className="text-[11px] font-mono text-slate-500 font-medium">
+                          <p className="text-[11px]  text-slate-500 font-medium">
                             {evt.event_type === 'internal' ? 'Inside College' : 'Outside College'}
                           </p>
                         </div>
@@ -709,7 +709,7 @@ const Events = () => {
                       {/* Registered Students Quota */}
                       <td className="py-4 px-4">
                         <div className="space-y-1">
-                          <div className="flex items-center gap-1.5 text-xs font-mono font-bold">
+                          <div className="flex items-center gap-1.5 text-xs  font-bold">
                             <Users className="w-3.5 h-3.5 text-blue-600" />
                             <span className="text-slate-900">
                               {evt.approved_count || 0}
@@ -719,7 +719,7 @@ const Events = () => {
                             </span>
                           </div>
                           {evt.pending_count > 0 && (
-                            <span className="inline-block px-1.5 py-0.2 rounded bg-amber-50 text-amber-700 border border-amber-200 text-[10px] font-mono font-bold">
+                            <span className="inline-block px-1.5 py-0.2 rounded bg-amber-50 text-amber-700 border border-amber-200 text-[10px]  font-bold">
                               {evt.pending_count} pending review
                             </span>
                           )}
@@ -728,7 +728,7 @@ const Events = () => {
 
                       {/* Reward Points */}
                       <td className="py-4 px-4">
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-mono font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs  font-bold bg-blue-50 text-blue-700 border border-blue-200">
                           <Award className="w-3.5 h-3.5 text-blue-600" />
                           <span>+{evt.reward_points || 0} Pts</span>
                         </span>
@@ -776,13 +776,13 @@ const Events = () => {
       {/* Event Editor Modal (Create / Edit) */}
       {isModalOpen && (
         <div 
-          className="fixed inset-0 z-[70] overflow-y-auto bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5"
+          className="fixed inset-0 z-[70] overflow-y-auto bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-0 sm:p-5"
           onClick={!modalSubmitting ? handleCloseModal : undefined}
           role="dialog"
           aria-modal="true"
         >
           <div 
-            className="relative bg-white text-slate-800 rounded-3xl max-w-2xl w-full shadow-2xl border border-slate-200 overflow-hidden animate-modal-pop my-auto max-h-[92vh] flex flex-col"
+            className="relative bg-white text-slate-800 sm:rounded-3xl rounded-none max-w-2xl w-full h-full sm:h-auto sm:max-h-[92vh] shadow-2xl border sm:border-slate-200 overflow-hidden animate-modal-pop my-auto flex flex-col" style={{ fontFamily: "'Georgia', serif" }}
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
@@ -791,7 +791,7 @@ const Events = () => {
                 <h3 className="font-display font-extrabold text-lg text-slate-900 tracking-tight">
                   {editingEventId ? 'Edit Campus Event' : 'Publish New Campus Event'}
                 </h3>
-                <p className="text-xs text-slate-500 font-sans mt-0.5">
+                <p className="text-xs text-slate-500  mt-0.5">
                   Upload an event poster and enter all event details manually.
                 </p>
               </div>
@@ -818,11 +818,11 @@ const Events = () => {
               {/* Event Poster Upload Zone */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <label className="block text-xs font-mono font-bold text-slate-700 uppercase tracking-wide flex items-center gap-1.5">
+                  <label className="block text-xs  font-bold text-slate-700 uppercase tracking-wide flex items-center gap-1.5">
                     <Upload className="w-3.5 h-3.5 text-blue-600" />
                     <span>Event Poster Image</span>
                   </label>
-                  <span className="text-[11px] font-mono font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full border border-slate-200">
+                  <span className="text-[11px]  font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full border border-slate-200">
                     JPG, PNG, WebP (Max 8MB)
                   </span>
                 </div>
@@ -884,7 +884,7 @@ const Events = () => {
 
               {/* Title Input */}
               <div>
-                <label className="block text-xs font-mono font-bold text-slate-600 mb-1.5 uppercase tracking-wide">
+                <label className="block text-xs  font-bold text-slate-600 mb-1.5 uppercase tracking-wide">
                   Event Title <span className="text-rose-500">*</span>
                 </label>
                 <input
@@ -898,7 +898,7 @@ const Events = () => {
 
               {/* Description */}
               <div className="space-y-2">
-                <label className="block text-xs font-mono font-bold text-slate-700 uppercase tracking-wide flex items-center gap-1.5">
+                <label className="block text-xs  font-bold text-slate-700 uppercase tracking-wide flex items-center gap-1.5">
                   <FileText className="w-3.5 h-3.5 text-blue-600" />
                   <span>Description <span className="text-rose-500">*</span></span>
                 </label>
@@ -908,7 +908,7 @@ const Events = () => {
                   rows={5}
                   value={formData.description}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 text-xs sm:text-sm font-mono text-slate-800 focus:outline-none leading-relaxed"
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 text-xs sm:text-sm  text-slate-800 focus:outline-none leading-relaxed"
                 />
               </div>
 
@@ -921,7 +921,7 @@ const Events = () => {
                       className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3 relative group transition-all animate-fadeIn"
                     >
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-mono font-bold text-slate-700 uppercase tracking-wide flex items-center gap-1.5">
+                        <span className="text-xs  font-bold text-slate-700 uppercase tracking-wide flex items-center gap-1.5">
                           <Tag className="w-3.5 h-3.5 text-blue-600" />
                           Topic #{index + 1}
                         </span>
@@ -937,7 +937,7 @@ const Events = () => {
 
                       <div className="space-y-2">
                         <div>
-                          <label className="block text-[11px] font-mono font-bold text-slate-600 mb-1 uppercase tracking-wide">
+                          <label className="block text-[11px]  font-bold text-slate-600 mb-1 uppercase tracking-wide">
                             Topic Name <span className="text-rose-500">*</span>
                           </label>
                           <input
@@ -949,14 +949,14 @@ const Events = () => {
                         </div>
 
                         <div>
-                          <label className="block text-[11px] font-mono font-bold text-slate-600 mb-1 uppercase tracking-wide">
+                          <label className="block text-[11px]  font-bold text-slate-600 mb-1 uppercase tracking-wide">
                             Details <span className="text-rose-500">*</span>
                           </label>
                           <textarea
                             rows={3}
                             value={topic.details}
                             onChange={(e) => handleTopicCardChange(topic.id, 'details', e.target.value)}
-                            className="w-full px-3.5 py-2 rounded-xl border border-slate-200 bg-white text-xs sm:text-sm font-mono focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 leading-relaxed"
+                            className="w-full px-3.5 py-2 rounded-xl border border-slate-200 bg-white text-xs sm:text-sm  focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 leading-relaxed"
                           />
                         </div>
                       </div>
@@ -968,7 +968,7 @@ const Events = () => {
               {/* Event Type & Category */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-mono font-bold text-slate-600 mb-1.5 uppercase tracking-wide">
+                  <label className="block text-xs  font-bold text-slate-600 mb-1.5 uppercase tracking-wide">
                     Event Type
                   </label>
                   <select
@@ -983,7 +983,7 @@ const Events = () => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-mono font-bold text-slate-600 mb-1.5 uppercase tracking-wide">
+                  <label className="block text-xs  font-bold text-slate-600 mb-1.5 uppercase tracking-wide">
                     Category <span className="text-rose-500">*</span>
                   </label>
                   <select
@@ -1002,7 +1002,7 @@ const Events = () => {
               {/* Venue & Organizer */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-mono font-bold text-slate-600 mb-1.5 uppercase tracking-wide">
+                  <label className="block text-xs  font-bold text-slate-600 mb-1.5 uppercase tracking-wide">
                     Venue / Location <span className="text-rose-500">*</span>
                   </label>
                   <input
@@ -1015,7 +1015,7 @@ const Events = () => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-mono font-bold text-slate-600 mb-1.5 uppercase tracking-wide">
+                  <label className="block text-xs  font-bold text-slate-600 mb-1.5 uppercase tracking-wide">
                     Department <span className="text-rose-500">*</span>
                   </label>
                   <input
@@ -1031,7 +1031,7 @@ const Events = () => {
               {/* Event Date, Registration Deadline & Certificate Deadline */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
                 <div>
-                  <label className="block text-xs font-mono font-bold text-slate-600 mb-1.5 uppercase tracking-wide flex items-center gap-1.5">
+                  <label className="block text-xs  font-bold text-slate-600 mb-1.5 uppercase tracking-wide flex items-center gap-1.5">
                     <Calendar className="w-3.5 h-3.5 text-blue-600" />
                     <span>Event Date <span className="text-rose-500">*</span></span>
                   </label>
@@ -1040,12 +1040,12 @@ const Events = () => {
                     name="event_date"
                     value={formData.event_date}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-mono font-medium focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs  font-medium focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-mono font-bold text-slate-600 mb-1.5 uppercase tracking-wide flex items-center gap-1.5">
+                  <label className="block text-xs  font-bold text-slate-600 mb-1.5 uppercase tracking-wide flex items-center gap-1.5">
                     <Clock className="w-3.5 h-3.5 text-amber-600" />
                     <span>Reg Deadline</span>
                   </label>
@@ -1054,15 +1054,15 @@ const Events = () => {
                     name="registration_deadline"
                     value={formData.registration_deadline}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-mono font-medium focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs  font-medium focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                   />
-                  <p className="text-[10px] text-slate-400 mt-1 font-sans">
+                  <p className="text-[10px] text-slate-400 mt-1 ">
                     Defaults to event date.
                   </p>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-mono font-bold text-slate-600 mb-1.5 uppercase tracking-wide flex items-center gap-1.5">
+                  <label className="block text-xs  font-bold text-slate-600 mb-1.5 uppercase tracking-wide flex items-center gap-1.5">
                     <Award className="w-3.5 h-3.5 text-purple-600" />
                     <span>Cert Deadline</span>
                   </label>
@@ -1071,9 +1071,9 @@ const Events = () => {
                     name="certificate_deadline"
                     value={formData.certificate_deadline}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-mono font-medium focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-100"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs  font-medium focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-100"
                   />
-                  <p className="text-[10px] text-slate-400 mt-1 font-sans">
+                  <p className="text-[10px] text-slate-400 mt-1 ">
                     Optional certificate upload cut-off.
                   </p>
                 </div>
@@ -1083,11 +1083,11 @@ const Events = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
-                    <label className="block text-xs font-mono font-bold text-slate-600 uppercase tracking-wide flex items-center gap-1.5">
+                    <label className="block text-xs  font-bold text-slate-600 uppercase tracking-wide flex items-center gap-1.5">
                       <Users className="w-3.5 h-3.5 text-blue-600" />
                       <span>Seat Limit / Max Capacity</span>
                     </label>
-                    <span className="text-[10px] font-mono text-slate-400">Optional</span>
+                    <span className="text-[10px]  text-slate-400">Optional</span>
                   </div>
                   <input
                     type="number"
@@ -1096,15 +1096,15 @@ const Events = () => {
                     placeholder="e.g. 50, 100, 250 (Empty = Unlimited)"
                     value={formData.max_seats}
                     onChange={handleInputChange}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm font-mono font-medium focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 placeholder:text-slate-400"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm  font-medium focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 placeholder:text-slate-400"
                   />
-                  <p className="text-[11px] text-slate-500 mt-1 font-sans">
+                  <p className="text-[11px] text-slate-500 mt-1 ">
                     Limits maximum student approvals. Leave empty for unlimited seats.
                   </p>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-mono font-bold text-slate-600 mb-1.5 uppercase tracking-wide flex items-center gap-1.5">
+                  <label className="block text-xs  font-bold text-slate-600 mb-1.5 uppercase tracking-wide flex items-center gap-1.5">
                     <Award className="w-3.5 h-3.5 text-amber-500" />
                     <span>Reward Points <span className="text-rose-500">*</span></span>
                   </label>
@@ -1115,9 +1115,9 @@ const Events = () => {
                     placeholder="e.g. 50, 100"
                     value={formData.reward_points}
                     onChange={handleInputChange}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm font-mono font-medium focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm  font-medium focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                   />
-                  <p className="text-[11px] text-slate-500 mt-1 font-sans">
+                  <p className="text-[11px] text-slate-500 mt-1 ">
                     Reward points credited upon certificate verification & ranking.
                   </p>
                 </div>

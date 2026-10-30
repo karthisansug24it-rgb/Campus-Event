@@ -81,7 +81,7 @@ const Dashboard = () => {
     return (
       <div className="py-28 text-center">
         <Loader2 className="w-10 h-10 animate-spin text-blue-600 mx-auto mb-3" />
-        <p className="text-xs font-mono font-bold text-slate-500 uppercase tracking-wider">
+        <p className="text-xs  font-bold text-slate-500 uppercase tracking-wider">
           Aggregating Campus Operations Data...
         </p>
       </div>
@@ -174,13 +174,13 @@ const Dashboard = () => {
               <h3 className="font-display font-extrabold text-lg text-slate-900 tracking-tight">
                 Pending Verification Queue
               </h3>
-              <p className="text-xs text-slate-500 font-sans mt-0.5">
+              <p className="text-xs text-slate-500  mt-0.5">
                 Students waiting for registration clearance
               </p>
             </div>
             <Link
               to="/admin/requests"
-              className="text-xs font-mono font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1 group"
+              className="text-xs  font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1 group"
             >
               <span>View All ({stats?.pendingRequests ?? 0})</span>
               <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
@@ -205,11 +205,11 @@ const Dashboard = () => {
                       <span className="font-bold text-sm text-slate-900 truncate">
                         {req.student_name}
                       </span>
-                      <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-blue-100/80 text-blue-800">
+                      <span className="text-[10px]  font-bold px-2 py-0.5 rounded-md bg-blue-100/80 text-blue-800">
                         Sec {req.section}
                       </span>
                     </div>
-                    <p className="text-xs text-slate-500 font-mono truncate">
+                    <p className="text-xs text-slate-500  truncate">
                       {req.department_name} · <strong className="text-slate-700">{req.register_number}</strong>
                     </p>
                     <p className="text-xs text-blue-700 font-medium truncate">
@@ -235,13 +235,13 @@ const Dashboard = () => {
               <h3 className="font-display font-extrabold text-lg text-slate-900 tracking-tight">
                 Published Events
               </h3>
-              <p className="text-xs text-slate-500 font-sans mt-0.5">
+              <p className="text-xs text-slate-500  mt-0.5">
                 Active campus programs
               </p>
             </div>
             <Link
               to="/admin/events"
-              className="text-xs font-mono font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1 group"
+              className="text-xs  font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1 group"
             >
               <span>Manage ({events.length})</span>
               <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
@@ -269,13 +269,13 @@ const Dashboard = () => {
                 </div>
 
                 <div className="space-y-0.5 truncate flex-1">
-                  <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-blue-700">
+                  <span className="text-[10px]  font-bold uppercase tracking-wider text-blue-700">
                     {evt.category}
                   </span>
                   <h4 className="font-bold text-xs sm:text-sm text-slate-900 truncate">
                     {evt.title}
                   </h4>
-                  <div className="flex items-center gap-2 text-[11px] font-mono text-slate-500">
+                  <div className="flex items-center gap-2 text-[11px]  text-slate-500">
                     <span>{formatDate(evt.event_date)}</span>
                     <span>·</span>
                     <span className="text-blue-700 font-bold">

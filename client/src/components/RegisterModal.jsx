@@ -151,14 +151,14 @@ const RegisterModal = ({ event, onClose, onSuccess }) => {
 
   return (
     <div 
-      className="fixed inset-0 z-[60] overflow-y-auto bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6"
+      className="fixed inset-0 z-[60] overflow-y-auto bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-0 sm:p-6"
       onClick={!submitting ? onClose : undefined}
       role="dialog"
       aria-modal="true"
       aria-labelledby="register-dialog-title"
     >
       <div 
-        className="relative bg-white text-slate-800 rounded-3xl max-w-lg w-full shadow-2xl border border-slate-200 overflow-hidden animate-modal-pop my-auto"
+        className="relative bg-white text-slate-800 sm:rounded-3xl rounded-none max-w-lg w-full h-full sm:h-auto sm:max-h-[92vh] shadow-2xl border sm:border-slate-200 overflow-hidden animate-modal-pop my-auto flex flex-col" style={{ fontFamily: "'Georgia', serif" }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -171,7 +171,7 @@ const RegisterModal = ({ event, onClose, onSuccess }) => {
               <h3 id="register-dialog-title" className="font-display font-extrabold text-base tracking-tight text-slate-900">
                 {isUpdate ? 'Update Registration Details' : 'Event Registration Request'}
               </h3>
-              <p className="text-xs text-blue-700 font-mono font-semibold truncate max-w-xs mt-0.5">
+              <p className="text-xs text-blue-700  font-semibold truncate max-w-xs mt-0.5">
                 {event?.title}
               </p>
             </div>
@@ -233,10 +233,10 @@ const RegisterModal = ({ event, onClose, onSuccess }) => {
           {/* Verified Read-Only College Email */}
           <div>
             <div className="flex items-center justify-between mb-1.5">
-              <label className="text-xs font-mono font-bold text-slate-600 uppercase tracking-wide">
+              <label className="text-xs  font-bold text-slate-600 uppercase tracking-wide">
                 College Email (Read-only)
               </label>
-              <span className="text-[10px] text-blue-700 font-mono font-bold bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200">
+              <span className="text-[10px] text-blue-700  font-bold bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200">
                 Verified Account
               </span>
             </div>
@@ -249,7 +249,7 @@ const RegisterModal = ({ event, onClose, onSuccess }) => {
                 value={formData.email}
                 readOnly
                 disabled
-                className="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-500 text-xs sm:text-sm font-mono cursor-not-allowed select-none"
+                className="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-500 text-xs sm:text-sm  cursor-not-allowed select-none"
               />
             </div>
             {fieldErrors.email && (
@@ -263,10 +263,10 @@ const RegisterModal = ({ event, onClose, onSuccess }) => {
           {/* Student Full Name */}
           <div>
             <div className="flex items-center justify-between mb-1.5">
-              <label className="text-xs font-mono font-bold text-slate-600 uppercase tracking-wide">
+              <label className="text-xs  font-bold text-slate-600 uppercase tracking-wide">
                 Student Full Name <span className="text-rose-500">*</span>
               </label>
-              <span className="text-[10px] text-slate-400 font-mono">Official FXEC Name</span>
+              <span className="text-[10px] text-slate-400 ">Official FXEC Name</span>
             </div>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
@@ -296,7 +296,7 @@ const RegisterModal = ({ event, onClose, onSuccess }) => {
           {/* Department & Year of Study (Verified Academic Chips) */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-mono font-bold text-slate-600 mb-1.5 uppercase tracking-wide">
+              <label className="block text-xs  font-bold text-slate-600 mb-1.5 uppercase tracking-wide">
                 Department
               </label>
               <div className="relative">
@@ -314,14 +314,14 @@ const RegisterModal = ({ event, onClose, onSuccess }) => {
             </div>
 
             <div>
-              <label className="block text-xs font-mono font-bold text-slate-600 mb-1.5 uppercase tracking-wide">
+              <label className="block text-xs  font-bold text-slate-600 mb-1.5 uppercase tracking-wide">
                 Year of Study
               </label>
               <div className="h-10 px-3.5 rounded-xl border border-blue-200/90 bg-blue-50/70 flex items-center justify-between">
-                <span className="text-xs font-mono font-bold text-blue-900">
+                <span className="text-xs  font-bold text-blue-900">
                   {formData.yearOfStudyRoman ? `${formData.yearOfStudyRoman} Year` : 'Undergraduate'}
                 </span>
-                <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-blue-100 text-blue-700 uppercase border border-blue-200">
+                <span className="text-[10px]  font-bold px-2 py-0.5 rounded bg-blue-100 text-blue-700 uppercase border border-blue-200">
                   Verified
                 </span>
               </div>
@@ -331,7 +331,7 @@ const RegisterModal = ({ event, onClose, onSuccess }) => {
           {/* Section & Register Number */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-mono font-bold text-slate-600 mb-1.5 uppercase tracking-wide">
+              <label className="block text-xs  font-bold text-slate-600 mb-1.5 uppercase tracking-wide">
                 Section (A - D) <span className="text-rose-500">*</span>
               </label>
               <select
@@ -353,7 +353,7 @@ const RegisterModal = ({ event, onClose, onSuccess }) => {
             </div>
 
             <div>
-              <label className="block text-xs font-mono font-bold text-slate-600 mb-1.5 uppercase tracking-wide">
+              <label className="block text-xs  font-bold text-slate-600 mb-1.5 uppercase tracking-wide">
                 Register Number <span className="text-rose-500">*</span>
               </label>
               <div className="relative">
@@ -366,7 +366,7 @@ const RegisterModal = ({ event, onClose, onSuccess }) => {
                   value={formData.registerNumber}
                   onChange={handleChange}
                   placeholder="953624104001"
-                  className={`w-full pl-10 pr-3.5 py-2.5 rounded-xl border text-xs sm:text-sm font-mono font-semibold uppercase placeholder:normal-case focus:outline-none transition-all ${
+                  className={`w-full pl-10 pr-3.5 py-2.5 rounded-xl border text-xs sm:text-sm  font-semibold uppercase placeholder:normal-case focus:outline-none transition-all ${
                     fieldErrors.registerNumber
                       ? 'border-rose-300 bg-rose-50/40 text-rose-900 ring-1 ring-rose-300'
                       : 'border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 bg-white text-slate-800'
@@ -384,9 +384,9 @@ const RegisterModal = ({ event, onClose, onSuccess }) => {
 
           {/* Optional Registration Screenshot Upload */}
           <div className="pt-1">
-            <label className="block text-xs font-mono font-bold text-slate-600 mb-1.5 uppercase tracking-wide flex items-center justify-between">
+            <label className="block text-xs  font-bold text-slate-600 mb-1.5 uppercase tracking-wide flex items-center justify-between">
               <span>Registration Screenshot Proof</span>
-              <span className="text-[10px] text-slate-400 font-normal font-sans">(Optional: upload now or later)</span>
+              <span className="text-[10px] text-slate-400 font-normal ">(Optional: upload now or later)</span>
             </label>
             <div className="border border-dashed border-slate-300 hover:border-blue-400 rounded-2xl p-3.5 bg-slate-50/60 relative cursor-pointer text-center transition-colors">
               <input
@@ -405,8 +405,8 @@ const RegisterModal = ({ event, onClose, onSuccess }) => {
                 <div className="flex items-center gap-3 text-left">
                   <img src={screenshotPreview} alt="Preview" className="w-12 h-12 object-cover rounded-xl border border-slate-200" />
                   <div className="flex-1 truncate">
-                    <p className="text-xs font-bold font-mono text-blue-700 truncate">{screenshotFile?.name}</p>
-                    <p className="text-[10px] text-slate-400 font-mono">Proof ready to submit with application</p>
+                    <p className="text-xs font-bold  text-blue-700 truncate">{screenshotFile?.name}</p>
+                    <p className="text-[10px] text-slate-400 ">Proof ready to submit with application</p>
                   </div>
                   <button
                     type="button"

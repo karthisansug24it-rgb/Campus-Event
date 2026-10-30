@@ -441,7 +441,7 @@ const Requests = () => {
       {/* Page Header */}
       <AnimatedSection delay={0.05}>
         <PageHeader
-          badge="ADMISSIONS & RANKING CONSOLE"
+          badge="ADMISSIONS & RANKING"
           title="Registration Approvals & Certificate Ranking"
           subtitle="Verify student registration screenshots, approve seats, inspect uploaded participation certificates, and award official Ranks 1, 2, 3 with reward points."
           actions={
@@ -473,7 +473,7 @@ const Requests = () => {
                     <ShieldCheck className="w-4 h-4" />
                   </div>
                   <div className="truncate">
-                    <p className="text-[11px] font-mono font-bold uppercase tracking-wider text-blue-700">Proof Approvals Pending</p>
+                    <p className="text-[11px]  font-bold uppercase tracking-wider text-blue-700">Proof Approvals Pending</p>
                     <p className="text-xs font-bold truncate"><strong>{alerts.pendingScreenshots}</strong> registration screenshot(s) awaiting approval</p>
                   </div>
                 </div>
@@ -492,7 +492,7 @@ const Requests = () => {
                     <Trophy className="w-4 h-4" />
                   </div>
                   <div className="truncate">
-                    <p className="text-[11px] font-mono font-bold uppercase tracking-wider text-purple-700">Certificates Awaiting Ranking</p>
+                    <p className="text-[11px]  font-bold uppercase tracking-wider text-purple-700">Certificates Awaiting Ranking</p>
                     <p className="text-xs font-bold truncate"><strong>{alerts.pendingCertificates}</strong> certificate(s) ready to verify & rank</p>
                   </div>
                 </div>
@@ -507,7 +507,7 @@ const Requests = () => {
                   <Clock className="w-4 h-4" />
                 </div>
                 <div className="truncate">
-                  <p className="text-[11px] font-mono font-bold uppercase tracking-wider text-amber-700">Registration Deadlines Approaching</p>
+                  <p className="text-[11px]  font-bold uppercase tracking-wider text-amber-700">Registration Deadlines Approaching</p>
                   <p className="text-xs font-bold truncate">{alerts.closingSoon.length} event(s) closing within 48 hours</p>
                 </div>
               </div>
@@ -521,14 +521,14 @@ const Requests = () => {
         <div className="flex items-center justify-between gap-2 border-b border-slate-100 pb-3">
           <div className="flex items-center gap-2">
             <Filter className="w-4 h-4 text-blue-600" />
-            <h3 className="text-xs font-mono font-bold uppercase tracking-wider text-slate-800">
+            <h3 className="text-xs  font-bold uppercase tracking-wider text-slate-800">
               Filter Students By Academic Cohort & Event
             </h3>
           </div>
           {hasActiveFilters && (
             <button
               onClick={handleResetFilters}
-              className="text-xs font-mono font-bold text-rose-600 hover:text-rose-700 flex items-center gap-1 transition-colors"
+              className="text-xs  font-bold text-rose-600 hover:text-rose-700 flex items-center gap-1 transition-colors"
             >
               <RotateCcw className="w-3.5 h-3.5" />
               <span>Reset Filters</span>
@@ -540,7 +540,7 @@ const Requests = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
           {/* 1. Department Filter */}
           <div className="space-y-1">
-            <label className="text-[11px] font-mono font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+            <label className="text-[11px]  font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
               <Building className="w-3.5 h-3.5 text-blue-600" />
               <span>DEPARTMENT:</span>
             </label>
@@ -560,7 +560,7 @@ const Requests = () => {
 
           {/* 2. Year of Study Filter */}
           <div className="space-y-1">
-            <label className="text-[11px] font-mono font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+            <label className="text-[11px]  font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
               <GraduationCap className="w-3.5 h-3.5 text-blue-600" />
               <span>YEAR OF STUDY:</span>
             </label>
@@ -579,7 +579,7 @@ const Requests = () => {
 
           {/* 3. Event Filter */}
           <div className="space-y-1">
-            <label className="text-[11px] font-mono font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+            <label className="text-[11px]  font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
               <Calendar className="w-3.5 h-3.5 text-blue-600" />
               <span>TARGET EVENT:</span>
             </label>
@@ -612,7 +612,7 @@ const Requests = () => {
 
           {/* 4. Event Timeline Filter */}
           <div className="space-y-1">
-            <label className="text-[11px] font-mono font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+            <label className="text-[11px]  font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
               <History className="w-3.5 h-3.5 text-blue-600" />
               <span>TIMELINE:</span>
             </label>
@@ -649,7 +649,7 @@ const Requests = () => {
           <button
             type="button"
             onClick={() => setActiveTab('registered')}
-            className={`px-3.5 py-2 rounded-xl text-xs font-mono font-bold flex items-center justify-center gap-1.5 transition-all whitespace-nowrap ${
+            className={`px-3.5 py-2 rounded-xl text-xs  font-bold flex items-center justify-center gap-1.5 transition-all whitespace-nowrap ${
               activeTab === 'registered'
                 ? 'bg-blue-600 text-white shadow-xs font-black'
                 : 'text-slate-600 hover:text-blue-700 hover:bg-white/60'
@@ -668,7 +668,7 @@ const Requests = () => {
           <button
             type="button"
             onClick={() => setActiveTab('registration_approved')}
-            className={`px-3.5 py-2 rounded-xl text-xs font-mono font-bold flex items-center justify-center gap-1.5 transition-all whitespace-nowrap ${
+            className={`px-3.5 py-2 rounded-xl text-xs  font-bold flex items-center justify-center gap-1.5 transition-all whitespace-nowrap ${
               activeTab === 'registration_approved'
                 ? 'bg-emerald-600 text-white shadow-xs font-black'
                 : 'text-slate-600 hover:text-emerald-700 hover:bg-white/60'
@@ -682,7 +682,7 @@ const Requests = () => {
           <button
             type="button"
             onClick={() => setActiveTab('participated')}
-            className={`px-3.5 py-2 rounded-xl text-xs font-mono font-bold flex items-center justify-center gap-1.5 transition-all whitespace-nowrap ${
+            className={`px-3.5 py-2 rounded-xl text-xs  font-bold flex items-center justify-center gap-1.5 transition-all whitespace-nowrap ${
               activeTab === 'participated'
                 ? 'bg-purple-600 text-white shadow-xs font-black'
                 : 'text-slate-600 hover:text-purple-700 hover:bg-white/60'
@@ -701,7 +701,7 @@ const Requests = () => {
           <button
             type="button"
             onClick={() => setActiveTab('ranked')}
-            className={`px-3.5 py-2 rounded-xl text-xs font-mono font-bold flex items-center justify-center gap-1.5 transition-all whitespace-nowrap ${
+            className={`px-3.5 py-2 rounded-xl text-xs  font-bold flex items-center justify-center gap-1.5 transition-all whitespace-nowrap ${
               activeTab === 'ranked'
                 ? 'bg-amber-600 text-white shadow-xs font-black'
                 : 'text-slate-600 hover:text-amber-700 hover:bg-white/60'
@@ -715,7 +715,7 @@ const Requests = () => {
           <button
             type="button"
             onClick={() => setActiveTab('rejected')}
-            className={`px-3.5 py-2 rounded-xl text-xs font-mono font-bold flex items-center justify-center gap-1.5 transition-all whitespace-nowrap ${
+            className={`px-3.5 py-2 rounded-xl text-xs  font-bold flex items-center justify-center gap-1.5 transition-all whitespace-nowrap ${
               activeTab === 'rejected'
                 ? 'bg-slate-900 text-white shadow-xs font-black'
                 : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
@@ -729,7 +729,7 @@ const Requests = () => {
           <button
             type="button"
             onClick={() => setActiveTab('all')}
-            className={`px-3.5 py-2 rounded-xl text-xs font-mono font-bold flex items-center justify-center gap-1.5 transition-all whitespace-nowrap ${
+            className={`px-3.5 py-2 rounded-xl text-xs  font-bold flex items-center justify-center gap-1.5 transition-all whitespace-nowrap ${
               activeTab === 'all'
                 ? 'bg-blue-600 text-white shadow-xs font-black'
                 : 'text-slate-600 hover:text-blue-700 hover:bg-white/60'
@@ -769,18 +769,18 @@ const Requests = () => {
 
       {/* Floating Selection Action Bar */}
       {selectedIds.size > 0 && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-slate-900 text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-4 animate-modal-pop border border-slate-700">
-          <div className="flex items-center gap-2 text-xs font-mono">
-            <span className="w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold">
+        <div className="fixed bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 z-40 bg-slate-900/95 backdrop-blur-md text-white px-4 sm:px-5 py-2.5 sm:py-3 rounded-2xl shadow-2xl flex items-center gap-3 sm:gap-4 animate-modal-pop border border-slate-700 max-w-[calc(100vw-24px)] w-max flex-wrap justify-center sm:justify-between" style={{ fontFamily: "'Georgia', serif" }}>
+          <div className="flex items-center gap-2 text-xs">
+            <span className="w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-xs">
               {selectedIds.size}
             </span>
-            <span>Student(s) Selected</span>
+            <span className="font-bold">Student(s) Selected</span>
           </div>
-          <div className="h-4 w-px bg-slate-700" />
+          <div className="h-4 w-px bg-slate-700 hidden sm:block" />
           <div className="flex items-center gap-2">
             <button
               onClick={() => setSelectedIds(new Set())}
-              className="text-xs font-mono text-slate-400 hover:text-white px-2 py-1 transition-colors"
+              className="text-xs text-slate-300 hover:text-white px-2 py-1 transition-colors underline sm:no-underline"
             >
               Deselect All
             </button>
@@ -792,17 +792,17 @@ const Requests = () => {
               icon={CheckCircle2}
               className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold"
             >
-              Accept Selected ({selectedIds.size})
+              Accept ({selectedIds.size})
             </Button>
             <Button
               variant="danger"
               size="xs"
               onClick={handleOpenBulkReject}
-              disabled={bulkProcessing}
+              loading={bulkProcessing}
               icon={XCircle}
               className="bg-rose-600 hover:bg-rose-700 text-white font-bold"
             >
-              Reject Selected ({selectedIds.size})
+              Reject
             </Button>
           </div>
         </div>
@@ -813,7 +813,7 @@ const Requests = () => {
         {loading ? (
           <div className="py-24 text-center">
             <Loader2 className="w-8 h-8 animate-spin text-blue-600 mx-auto mb-3" />
-            <p className="text-xs font-mono font-bold text-slate-500 uppercase tracking-wider">
+            <p className="text-xs  font-bold text-slate-500 uppercase tracking-wider">
               Loading requests data...
             </p>
           </div>
@@ -831,7 +831,7 @@ const Requests = () => {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="bg-slate-50/80 text-slate-500 font-mono font-bold uppercase tracking-wider text-[10px] border-b border-slate-200/80">
+              <thead className="bg-slate-50/80 text-slate-500  font-bold uppercase tracking-wider text-[10px] border-b border-slate-200/80">
                 <tr>
                   {/* Select All Checkbox */}
                   <th className="py-4 px-4 w-10 text-center">
@@ -905,7 +905,7 @@ const Requests = () => {
                             </div>
                           </div>
                           <div className="space-y-1 truncate">
-                            <span className={`inline-block px-2 py-0.5 rounded text-[9px] font-mono font-bold border ${
+                            <span className={`inline-block px-2 py-0.5 rounded text-[9px]  font-bold border ${
                               r.event_type === 'internal' 
                                 ? 'bg-blue-50 text-blue-700 border-blue-200' 
                                 : 'bg-slate-100 text-slate-800 border-slate-200'
@@ -915,7 +915,7 @@ const Requests = () => {
                             <p className="font-extrabold text-slate-900 text-sm leading-snug truncate">
                               {r.event_title}
                             </p>
-                            <div className="flex items-center gap-1 text-[11px] text-slate-500 font-mono">
+                            <div className="flex items-center gap-1 text-[11px] text-slate-500 ">
                               <Calendar className="w-3 h-3 text-blue-600 shrink-0" />
                               <span>{formatDate(r.event_date)}</span>
                             </div>
@@ -927,15 +927,15 @@ const Requests = () => {
                       <td className="py-4 px-4">
                         <div className="space-y-1">
                           <p className="font-extrabold text-slate-900 text-sm">{r.student_name}</p>
-                          <p className="text-[11px] text-slate-500 font-mono select-all">{r.student_email}</p>
+                          <p className="text-[11px] text-slate-500  select-all">{r.student_email}</p>
                           <div className="flex items-center gap-2 pt-0.5">
-                            <span className="px-2 py-0.5 rounded-md bg-slate-100 border border-slate-200 font-mono font-bold text-slate-700 text-[10px]">
+                            <span className="px-2 py-0.5 rounded-md bg-slate-100 border border-slate-200  font-bold text-slate-700 text-[10px]">
                               Sec {r.section}
                             </span>
-                            <span className="px-2 py-0.5 rounded-md bg-blue-50 border border-blue-200 font-mono font-bold text-blue-700 text-[10px]">
+                            <span className="px-2 py-0.5 rounded-md bg-blue-50 border border-blue-200  font-bold text-blue-700 text-[10px]">
                               {r.register_number}
                             </span>
-                            <span className="px-2 py-0.5 rounded-md bg-slate-50 border border-slate-200 font-mono text-[10px] text-slate-600">
+                            <span className="px-2 py-0.5 rounded-md bg-slate-50 border border-slate-200  text-[10px] text-slate-600">
                               Yr {r.year_of_study} ({r.department_code?.toUpperCase()})
                             </span>
                           </div>
@@ -943,7 +943,7 @@ const Requests = () => {
                       </td>
 
                       {/* Stage & Proofs (Screenshot / Certificate) */}
-                      <td className="py-4 px-4 space-y-1.5 font-mono">
+                      <td className="py-4 px-4 space-y-1.5 ">
                         {/* Status Stage Pill */}
                         <div>
                           <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase ${
@@ -995,13 +995,13 @@ const Requests = () => {
                       </td>
 
                       {/* Submitted Time */}
-                      <td className="py-4 px-4 text-slate-500 font-mono text-xs">
+                      <td className="py-4 px-4 text-slate-500  text-xs">
                         {formatDate(r.requested_at)}
                       </td>
 
                       {/* Ranked info column */}
                       {activeTab === 'ranked' && (
-                        <td className="py-4 px-4 font-mono">
+                        <td className="py-4 px-4 ">
                           <div className="space-y-1">
                             <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-amber-50 border border-amber-300 text-amber-900 font-black text-xs">
                               <Trophy className="w-3.5 h-3.5 text-amber-600" />
@@ -1083,7 +1083,7 @@ const Requests = () => {
                             Re-approve
                           </Button>
                         ) : (
-                          <span className="text-slate-400 font-mono text-xs">Seat Confirmed ✓</span>
+                          <span className="text-slate-400  text-xs">Seat Confirmed ✓</span>
                         )}
                       </td>
                     </tr>
@@ -1097,64 +1097,72 @@ const Requests = () => {
 
       {/* Proof Lightbox Inspector Modal */}
       {inspectingProof && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
-          <div className="bg-white rounded-3xl max-w-3xl w-full p-6 shadow-2xl border border-slate-200 space-y-4 max-h-[92vh] flex flex-col animate-modal-pop">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100 shrink-0">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-0 sm:p-4 bg-slate-950/80 backdrop-blur-md overflow-y-auto">
+          <div className="bg-white sm:rounded-3xl rounded-none max-w-3xl w-full h-full sm:h-auto sm:max-h-[92vh] shadow-2xl border sm:border-slate-200 flex flex-col animate-modal-pop overflow-hidden" style={{ fontFamily: "'Georgia', serif" }}>
+            
+            {/* Header (Sticky at top) */}
+            <div className="flex items-center justify-between p-4 sm:p-6 pb-3 sm:pb-4 border-b border-slate-100 shrink-0 bg-white sticky top-0 z-20">
               <div>
-                <span className="text-[10px] font-mono font-bold text-blue-600 uppercase tracking-wider">REGISTRATION PROOF VERIFICATION</span>
-                <h3 className="text-lg font-bold text-slate-900">{inspectingProof.student_name} ({inspectingProof.register_number})</h3>
-                <p className="text-xs text-slate-500 font-mono">{inspectingProof.event_title}</p>
+                <span className="text-[10px] font-bold text-blue-600 uppercase tracking-wider block">REGISTRATION PROOF VERIFICATION</span>
+                <h3 className="text-base sm:text-lg font-bold text-slate-900 mt-0.5">{inspectingProof.student_name} ({inspectingProof.register_number})</h3>
+                <p className="text-xs text-slate-500">{inspectingProof.event_title}</p>
               </div>
               <button 
                 onClick={() => setInspectingProof(null)}
-                className="p-1 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100"
+                className="p-1.5 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+                aria-label="Close modal"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            {/* Proof Image Box */}
-            <div className="flex-1 overflow-auto bg-slate-900 rounded-2xl p-3 flex items-center justify-center min-h-[300px]">
-              <img 
-                src={getUploadUrl(inspectingProof.registration_screenshot)} 
-                alt="Registration proof screenshot" 
-                className="max-h-[50vh] max-w-full object-contain rounded-xl shadow-lg"
-              />
+            {/* Scrollable Body (Scrolls freely on mobile and desktop) */}
+            <div className="flex-1 overflow-y-auto overscroll-contain p-4 sm:p-6 space-y-4">
+              {/* Proof Image Box */}
+              <div className="bg-slate-900 rounded-2xl p-3 flex items-center justify-center min-h-[200px] sm:min-h-[300px]">
+                <img 
+                  src={getUploadUrl(inspectingProof.registration_screenshot)} 
+                  alt="Registration proof screenshot" 
+                  className="max-h-[45vh] sm:max-h-[50vh] max-w-full object-contain rounded-xl shadow-lg"
+                />
+              </div>
+
+              {/* Student & Event Summary */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs p-3.5 rounded-2xl bg-slate-50 border border-slate-200">
+                <div>
+                  <span className="text-slate-400 text-[10px] uppercase font-bold">DEPARTMENT:</span>
+                  <p className="font-bold text-slate-800 mt-0.5">{inspectingProof.department_name}</p>
+                </div>
+                <div>
+                  <span className="text-slate-400 text-[10px] uppercase font-bold">SECTION:</span>
+                  <p className="font-bold text-slate-800 mt-0.5">Section {inspectingProof.section}</p>
+                </div>
+                <div>
+                  <span className="text-slate-400 text-[10px] uppercase font-bold">YEAR:</span>
+                  <p className="font-bold text-slate-800 mt-0.5">Year {inspectingProof.year_of_study}</p>
+                </div>
+                <div>
+                  <span className="text-slate-400 text-[10px] uppercase font-bold">EMAIL:</span>
+                  <p className="font-bold text-slate-800 truncate mt-0.5">{inspectingProof.student_email}</p>
+                </div>
+              </div>
+
+              <div className="h-4" />
             </div>
 
-            {/* Student & Event Summary */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs font-mono p-3 rounded-2xl bg-slate-50 border border-slate-200 shrink-0">
-              <div>
-                <span className="text-slate-400 text-[10px]">DEPARTMENT:</span>
-                <p className="font-bold text-slate-800">{inspectingProof.department_name}</p>
-              </div>
-              <div>
-                <span className="text-slate-400 text-[10px]">SECTION:</span>
-                <p className="font-bold text-slate-800">Section {inspectingProof.section}</p>
-              </div>
-              <div>
-                <span className="text-slate-400 text-[10px]">YEAR:</span>
-                <p className="font-bold text-slate-800">Year {inspectingProof.year_of_study}</p>
-              </div>
-              <div>
-                <span className="text-slate-400 text-[10px]">EMAIL:</span>
-                <p className="font-bold text-slate-800 truncate">{inspectingProof.student_email}</p>
-              </div>
-            </div>
-
-            {/* Actions Bar */}
-            <div className="flex items-center justify-between pt-2 border-t border-slate-100 shrink-0">
+            {/* Actions Bar (Sticky at bottom, always visible) */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-4 sm:p-6 py-3 border-t border-slate-100 shrink-0 bg-white/95 backdrop-blur-sm sticky bottom-0 z-20">
               <a 
                 href={getUploadUrl(inspectingProof.registration_screenshot)} 
                 target="_blank" 
                 rel="noreferrer"
-                className="text-xs font-mono text-blue-600 hover:underline flex items-center gap-1"
+                className="text-xs text-blue-600 hover:underline flex items-center justify-center sm:justify-start gap-1 py-1"
               >
                 <ExternalLink className="w-3.5 h-3.5" />
-                <span>Open Original Image</span>
+                <span>Open Original Image in Full Window</span>
               </a>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center justify-end gap-2">
                 <Button
                   variant="outline"
                   size="sm"
@@ -1182,151 +1190,161 @@ const Requests = () => {
 
       {/* Certificate Verification & Ranking Modal */}
       {rankingRequest && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
-          <div className="bg-white rounded-3xl max-w-3xl w-full p-6 shadow-2xl border border-slate-200 space-y-4 max-h-[94vh] flex flex-col animate-modal-pop">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100 shrink-0">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-0 sm:p-4 bg-slate-950/80 backdrop-blur-md overflow-y-auto">
+          <div className="bg-white sm:rounded-3xl rounded-none max-w-3xl w-full h-full sm:h-auto sm:max-h-[92vh] shadow-2xl border sm:border-slate-200 flex flex-col animate-modal-pop overflow-hidden" style={{ fontFamily: "'Georgia', serif" }}>
+            
+            {/* Modal Header (Sticky at top) */}
+            <div className="flex items-center justify-between p-4 sm:p-6 pb-3 sm:pb-4 border-b border-slate-100 shrink-0 bg-white sticky top-0 z-20">
               <div>
-                <span className="text-[10px] font-mono font-bold text-purple-600 uppercase tracking-wider">STAGE 4: VERIFY & AWARD RANK</span>
-                <h3 className="text-lg font-bold text-slate-900">{rankingRequest.student_name} · {rankingRequest.event_title}</h3>
-                <p className="text-xs text-slate-500 font-mono">Roll: {rankingRequest.register_number} · Dept: {rankingRequest.department_name}</p>
+                <span className="text-[10px] font-bold text-purple-600 uppercase tracking-wider block">STAGE 4: VERIFY & AWARD RANK</span>
+                <h3 className="text-base sm:text-lg font-bold text-slate-900 mt-0.5">{rankingRequest.student_name} · {rankingRequest.event_title}</h3>
+                <p className="text-xs text-slate-500">Roll: {rankingRequest.register_number} · Dept: {rankingRequest.department_name}</p>
               </div>
               <button 
                 onClick={() => setRankingRequest(null)}
-                className="p-1 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100"
+                className="p-1.5 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+                aria-label="Close modal"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            {/* Certificate Preview */}
-            <div className="flex-1 overflow-auto bg-slate-900 rounded-2xl p-3 flex items-center justify-center min-h-[220px]">
-              {rankingRequest.certificate_url?.toLowerCase().endsWith('.pdf') ? (
-                <div className="text-center text-white space-y-2 p-6">
-                  <FileText className="w-16 h-16 mx-auto text-purple-400" />
-                  <p className="font-bold text-sm">PDF Participation Certificate Uploaded</p>
-                  <a 
-                    href={getUploadUrl(rankingRequest.certificate_url)} 
-                    target="_blank" 
-                    rel="noreferrer"
-                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-purple-600 text-white font-bold text-xs hover:bg-purple-700 transition-colors"
-                  >
-                    <ExternalLink className="w-4 h-4" />
-                    <span>Open Certificate PDF in New Window</span>
-                  </a>
+            {/* Modal Scrollable Body (Scrolls freely on mobile and desktop) */}
+            <form onSubmit={handleConfirmRank} className="flex-1 flex flex-col min-h-0 overflow-hidden">
+              <div className="flex-1 overflow-y-auto overscroll-contain p-4 sm:p-6 space-y-4">
+                
+                {/* Certificate Preview Box */}
+                <div className="bg-slate-900 rounded-2xl p-3 flex items-center justify-center min-h-[180px] sm:min-h-[220px]">
+                  {rankingRequest.certificate_url?.toLowerCase().endsWith('.pdf') ? (
+                    <div className="text-center text-white space-y-2 p-4 sm:p-6">
+                      <FileText className="w-12 h-12 sm:w-16 sm:h-16 mx-auto text-purple-400" />
+                      <p className="font-bold text-sm">PDF Participation Certificate Uploaded</p>
+                      <a 
+                        href={getUploadUrl(rankingRequest.certificate_url)} 
+                        target="_blank" 
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-purple-600 text-white font-bold text-xs hover:bg-purple-700 transition-colors"
+                      >
+                        <ExternalLink className="w-4 h-4" />
+                        <span>Open Certificate PDF in New Window</span>
+                      </a>
+                    </div>
+                  ) : (
+                    <img 
+                      src={getUploadUrl(rankingRequest.certificate_url)} 
+                      alt="Student Certificate" 
+                      className="max-h-[30vh] sm:max-h-[38vh] max-w-full object-contain rounded-xl shadow-lg"
+                    />
+                  )}
                 </div>
-              ) : (
-                <img 
-                  src={getUploadUrl(rankingRequest.certificate_url)} 
-                  alt="Student Certificate" 
-                  className="max-h-[38vh] max-w-full object-contain rounded-xl shadow-lg"
-                />
-              )}
-            </div>
 
-            {/* Ranking Position Cards Selector */}
-            <form onSubmit={handleConfirmRank} className="space-y-4 shrink-0">
-              <div className="space-y-2">
-                <label className="block text-xs font-mono font-bold text-slate-600 uppercase tracking-wider">
-                  Select Award Rank & Certificate Level:
-                </label>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                  {/* Rank 1 */}
-                  <div
-                    onClick={() => handleRankSelect('1')}
-                    className={`p-3 rounded-2xl border-2 cursor-pointer transition-all flex flex-col items-center justify-center text-center gap-1 ${
-                      selectedRank === '1'
-                        ? 'border-amber-500 bg-amber-50/80 text-amber-900 shadow-xs'
-                        : 'border-slate-200 hover:border-amber-300 bg-white text-slate-700'
-                    }`}
-                  >
-                    <Trophy className="w-6 h-6 text-amber-600 fill-amber-500" />
-                    <span className="text-xs font-black font-mono">Rank 1</span>
-                    <span className="text-[10px] text-amber-700 font-bold uppercase">1st Prize / Winner</span>
-                    <span className="text-[10px] text-slate-500 font-mono">+50 Bonus PTS</span>
-                  </div>
+                {/* Ranking Position Cards Selector */}
+                <div className="space-y-2">
+                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider">
+                    Select Award Rank & Certificate Level:
+                  </label>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                    {/* Rank 1 */}
+                    <div
+                      onClick={() => handleRankSelect('1')}
+                      className={`p-3 rounded-2xl border-2 cursor-pointer transition-all flex flex-col items-center justify-center text-center gap-1 ${
+                        selectedRank === '1'
+                          ? 'border-amber-500 bg-amber-50/80 text-amber-900 shadow-xs'
+                          : 'border-slate-200 hover:border-amber-300 bg-white text-slate-700'
+                      }`}
+                    >
+                      <Trophy className="w-6 h-6 text-amber-600 fill-amber-500" />
+                      <span className="text-xs font-black">Rank 1</span>
+                      <span className="text-[10px] text-amber-700 font-bold uppercase">1st Prize / Winner</span>
+                      <span className="text-[10px] text-slate-500">+50 Bonus PTS</span>
+                    </div>
 
-                  {/* Rank 2 */}
-                  <div
-                    onClick={() => handleRankSelect('2')}
-                    className={`p-3 rounded-2xl border-2 cursor-pointer transition-all flex flex-col items-center justify-center text-center gap-1 ${
-                      selectedRank === '2'
-                        ? 'border-slate-500 bg-slate-100 text-slate-900 shadow-xs'
-                        : 'border-slate-200 hover:border-slate-400 bg-white text-slate-700'
-                    }`}
-                  >
-                    <Medal className="w-6 h-6 text-slate-600 fill-slate-400" />
-                    <span className="text-xs font-black font-mono">Rank 2</span>
-                    <span className="text-[10px] text-slate-700 font-bold uppercase">2nd Runner Up</span>
-                    <span className="text-[10px] text-slate-500 font-mono">+30 Bonus PTS</span>
-                  </div>
+                    {/* Rank 2 */}
+                    <div
+                      onClick={() => handleRankSelect('2')}
+                      className={`p-3 rounded-2xl border-2 cursor-pointer transition-all flex flex-col items-center justify-center text-center gap-1 ${
+                        selectedRank === '2'
+                          ? 'border-slate-500 bg-slate-100 text-slate-900 shadow-xs'
+                          : 'border-slate-200 hover:border-slate-400 bg-white text-slate-700'
+                      }`}
+                    >
+                      <Medal className="w-6 h-6 text-slate-600 fill-slate-400" />
+                      <span className="text-xs font-black">Rank 2</span>
+                      <span className="text-[10px] text-slate-700 font-bold uppercase">2nd Runner Up</span>
+                      <span className="text-[10px] text-slate-500">+30 Bonus PTS</span>
+                    </div>
 
-                  {/* Rank 3 */}
-                  <div
-                    onClick={() => handleRankSelect('3')}
-                    className={`p-3 rounded-2xl border-2 cursor-pointer transition-all flex flex-col items-center justify-center text-center gap-1 ${
-                      selectedRank === '3'
-                        ? 'border-amber-600 bg-amber-50 text-amber-950 shadow-xs'
-                        : 'border-slate-200 hover:border-amber-400 bg-white text-slate-700'
-                    }`}
-                  >
-                    <Medal className="w-6 h-6 text-amber-700 fill-amber-600" />
-                    <span className="text-xs font-black font-mono">Rank 3</span>
-                    <span className="text-[10px] text-amber-800 font-bold uppercase">3rd Place</span>
-                    <span className="text-[10px] text-slate-500 font-mono">+20 Bonus PTS</span>
-                  </div>
+                    {/* Rank 3 */}
+                    <div
+                      onClick={() => handleRankSelect('3')}
+                      className={`p-3 rounded-2xl border-2 cursor-pointer transition-all flex flex-col items-center justify-center text-center gap-1 ${
+                        selectedRank === '3'
+                          ? 'border-amber-600 bg-amber-50 text-amber-950 shadow-xs'
+                          : 'border-slate-200 hover:border-amber-400 bg-white text-slate-700'
+                      }`}
+                    >
+                      <Medal className="w-6 h-6 text-amber-700 fill-amber-600" />
+                      <span className="text-xs font-black">Rank 3</span>
+                      <span className="text-[10px] text-amber-800 font-bold uppercase">3rd Place</span>
+                      <span className="text-[10px] text-slate-500">+20 Bonus PTS</span>
+                    </div>
 
-                  {/* Participated */}
-                  <div
-                    onClick={() => handleRankSelect('participated')}
-                    className={`p-3 rounded-2xl border-2 cursor-pointer transition-all flex flex-col items-center justify-center text-center gap-1 ${
-                      selectedRank === 'participated'
-                        ? 'border-emerald-500 bg-emerald-50/80 text-emerald-900 shadow-xs'
-                        : 'border-slate-200 hover:border-emerald-300 bg-white text-slate-700'
-                    }`}
-                  >
-                    <Award className="w-6 h-6 text-emerald-600" />
-                    <span className="text-xs font-black font-mono">Participated</span>
-                    <span className="text-[10px] text-emerald-700 font-bold uppercase">Participant</span>
-                    <span className="text-[10px] text-slate-500 font-mono">Base Event PTS</span>
+                    {/* Participated */}
+                    <div
+                      onClick={() => handleRankSelect('participated')}
+                      className={`p-3 rounded-2xl border-2 cursor-pointer transition-all flex flex-col items-center justify-center text-center gap-1 ${
+                        selectedRank === 'participated'
+                          ? 'border-emerald-500 bg-emerald-50/80 text-emerald-900 shadow-xs'
+                          : 'border-slate-200 hover:border-emerald-300 bg-white text-slate-700'
+                      }`}
+                    >
+                      <Award className="w-6 h-6 text-emerald-600" />
+                      <span className="text-xs font-black">Participated</span>
+                      <span className="text-[10px] text-emerald-700 font-bold uppercase">Participant</span>
+                      <span className="text-[10px] text-slate-500">Base Event PTS</span>
+                    </div>
                   </div>
                 </div>
+
+                {/* Points Adjustment & Feedback Note */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-600 mb-1 uppercase tracking-wider">
+                      Total Reward Points Credited:
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={customPoints}
+                      onChange={(e) => setCustomPoints(e.target.value)}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm font-bold text-slate-900 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-100"
+                      required
+                    />
+                    <p className="text-[10px] text-slate-400 mt-1">
+                      Event Base: {rankingRequest.reward_points} PTS. Points will be automatically credited to student wallet.
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-600 mb-1 uppercase tracking-wider">
+                      Admin Note / Congratulatory Remark:
+                    </label>
+                    <input
+                      type="text"
+                      value={rankNote}
+                      onChange={(e) => setRankNote(e.target.value)}
+                      placeholder="e.g. Excellent project pitch and prototype!"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-medium text-slate-800 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-100"
+                    />
+                  </div>
+                </div>
+
+                {/* Bottom spacer so content is never obscured */}
+                <div className="h-6" />
               </div>
 
-              {/* Points Adjustment & Feedback Note */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-mono font-bold text-slate-600 mb-1 uppercase tracking-wider">
-                    Total Reward Points Credited:
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={customPoints}
-                    onChange={(e) => setCustomPoints(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm font-mono font-bold text-slate-900 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-100"
-                    required
-                  />
-                  <p className="text-[10px] text-slate-400 font-mono mt-1">
-                    Event Base: {rankingRequest.reward_points} PTS. Points will be automatically credited to student wallet.
-                  </p>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-mono font-bold text-slate-600 mb-1 uppercase tracking-wider">
-                    Admin Note / Congratulatory Remark:
-                  </label>
-                  <input
-                    type="text"
-                    value={rankNote}
-                    onChange={(e) => setRankNote(e.target.value)}
-                    placeholder="e.g. Excellent project pitch and prototype!"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-medium text-slate-800 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-100"
-                  />
-                </div>
-              </div>
-
-              {/* Submit Buttons */}
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+              {/* Action Buttons (Sticky at bottom, always clickable) */}
+              <div className="flex items-center justify-end gap-3 p-4 sm:p-6 py-3 border-t border-slate-100 shrink-0 bg-white/95 backdrop-blur-sm sticky bottom-0 z-20">
                 <Button
                   type="button"
                   variant="outline"
@@ -1370,7 +1388,7 @@ const Requests = () => {
             </p>
 
             <div>
-              <label className="block text-xs font-mono font-bold text-slate-600 mb-1 uppercase tracking-wide">
+              <label className="block text-xs  font-bold text-slate-600 mb-1 uppercase tracking-wide">
                 Rejection Reason (Visible to Student):
               </label>
               <textarea
@@ -1378,7 +1396,7 @@ const Requests = () => {
                 onChange={(e) => setRejectNote(e.target.value)}
                 placeholder="e.g. Invalid registration screenshot proof or eligibility criteria not met."
                 rows="3"
-                className="w-full p-3 rounded-xl border border-slate-200 text-xs font-sans text-slate-800 focus:outline-none focus:border-rose-500 focus:ring-2 focus:ring-rose-100"
+                className="w-full p-3 rounded-xl border border-slate-200 text-xs  text-slate-800 focus:outline-none focus:border-rose-500 focus:ring-2 focus:ring-rose-100"
               />
             </div>
 
@@ -1445,7 +1463,7 @@ const Requests = () => {
               You are about to reject <strong>{getTargetBulkIds().length}</strong> registration request(s).
             </p>
             <div>
-              <label className="block text-xs font-mono font-bold text-slate-600 mb-1 uppercase tracking-wide">
+              <label className="block text-xs  font-bold text-slate-600 mb-1 uppercase tracking-wide">
                 Rejection Reason (Applied to all):
               </label>
               <textarea
@@ -1453,7 +1471,7 @@ const Requests = () => {
                 onChange={(e) => setBulkRejectNote(e.target.value)}
                 placeholder="e.g. Quota full or eligibility requirements not met."
                 rows="3"
-                className="w-full p-3 rounded-xl border border-slate-200 text-xs font-sans text-slate-800 focus:outline-none focus:border-rose-500 focus:ring-2 focus:ring-rose-100"
+                className="w-full p-3 rounded-xl border border-slate-200 text-xs  text-slate-800 focus:outline-none focus:border-rose-500 focus:ring-2 focus:ring-rose-100"
               />
             </div>
             <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">

@@ -115,7 +115,7 @@ const EventModal = ({ eventId, onClose, onOpenRegister, initialEvent = null }) =
   const renderRegisterButton = () => {
     if (isAdmin) {
       return (
-        <div className="text-center py-3 px-4 rounded-2xl bg-blue-50 border border-blue-200 text-blue-800 text-xs font-mono font-medium">
+        <div className="text-center py-3 px-4 rounded-2xl bg-blue-50 border border-blue-200 text-blue-800 text-xs  font-medium">
           Administrator Mode. Review student applications in the Admin Requests Queue.
         </div>
       );
@@ -146,7 +146,7 @@ const EventModal = ({ eventId, onClose, onOpenRegister, initialEvent = null }) =
             <Trophy className="w-5 h-5 text-amber-600 fill-amber-500" />
             <span>Rank {event.user_rank_position?.toUpperCase()} Awarded!</span>
           </div>
-          <span className="font-mono text-xs px-2.5 py-1 bg-amber-200/80 rounded-xl text-amber-900">
+          <span className=" text-xs px-2.5 py-1 bg-amber-200/80 rounded-xl text-amber-900">
             +{event.user_rank_points_awarded || event.reward_points} PTS Credited
           </span>
         </div>
@@ -195,13 +195,13 @@ const EventModal = ({ eventId, onClose, onOpenRegister, initialEvent = null }) =
         <div className="space-y-3 w-full">
           {event.user_admin_note && (
             <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-slate-800 text-xs">
-              <span className="font-bold font-mono block mb-1 text-slate-600 uppercase tracking-wider text-[10px]">
+              <span className="font-bold  block mb-1 text-slate-600 uppercase tracking-wider text-[10px]">
                 Admin Decision Note:
               </span>
               <span>{event.user_admin_note}</span>
             </div>
           )}
-          <div className="w-full py-3 px-4 rounded-2xl bg-rose-50 border border-rose-200 text-center text-rose-800 text-xs font-mono font-bold">
+          <div className="w-full py-3 px-4 rounded-2xl bg-rose-50 border border-rose-200 text-center text-rose-800 text-xs  font-bold">
             Registration Rejected by Administrator (Cannot Register Again)
           </div>
         </div>
@@ -212,7 +212,7 @@ const EventModal = ({ eventId, onClose, onOpenRegister, initialEvent = null }) =
       return (
         <button
           disabled
-          className="w-full py-3.5 px-4 rounded-2xl font-mono font-bold text-xs bg-slate-100 text-slate-500 border border-slate-200 cursor-not-allowed select-none"
+          className="w-full py-3.5 px-4 rounded-2xl  font-bold text-xs bg-slate-100 text-slate-500 border border-slate-200 cursor-not-allowed select-none"
         >
           Registration Closed (Deadline Passed)
         </button>
@@ -223,7 +223,7 @@ const EventModal = ({ eventId, onClose, onOpenRegister, initialEvent = null }) =
       return (
         <button
           disabled
-          className="w-full py-3.5 px-4 rounded-2xl font-mono font-bold text-xs bg-slate-100 text-slate-500 border border-slate-200 cursor-not-allowed select-none"
+          className="w-full py-3.5 px-4 rounded-2xl  font-bold text-xs bg-slate-100 text-slate-500 border border-slate-200 cursor-not-allowed select-none"
         >
           Seats Full (Maximum Capacity Reached)
         </button>
@@ -246,14 +246,14 @@ const EventModal = ({ eventId, onClose, onOpenRegister, initialEvent = null }) =
 
   return (
     <div 
-      className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5"
+      className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-0 sm:p-5"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
       aria-labelledby="event-modal-title"
     >
       <div 
-        className="relative bg-white text-slate-800 rounded-3xl max-w-3xl w-full shadow-2xl border border-slate-200 overflow-hidden animate-modal-pop my-auto max-h-[92vh] flex flex-col"
+        className="relative bg-white text-slate-800 sm:rounded-3xl rounded-none max-w-3xl w-full h-full sm:h-auto sm:max-h-[92vh] shadow-2xl border sm:border-slate-200 overflow-hidden animate-modal-pop my-auto flex flex-col" style={{ fontFamily: "'Georgia', serif" }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Floating Close Button */}
@@ -268,7 +268,7 @@ const EventModal = ({ eventId, onClose, onOpenRegister, initialEvent = null }) =
         {loading ? (
           <div className="py-28 px-6 flex flex-col items-center justify-center text-center">
             <Loader2 className="w-10 h-10 animate-spin text-blue-600 mb-3" />
-            <p className="text-xs font-mono font-bold text-slate-500 uppercase tracking-wider">
+            <p className="text-xs  font-bold text-slate-500 uppercase tracking-wider">
               Loading Event Specifications...
             </p>
           </div>
@@ -298,7 +298,7 @@ const EventModal = ({ eventId, onClose, onOpenRegister, initialEvent = null }) =
                     />
                   </div>
                   <div className="mt-2.5 flex items-center justify-between w-full px-1">
-                    <span className="text-[11px] font-mono text-slate-500 font-bold flex items-center gap-1.5">
+                    <span className="text-[11px]  text-slate-500 font-bold flex items-center gap-1.5">
                       <Sparkles className="w-3.5 h-3.5 text-blue-600" />
                       <span>Official Event Poster (Full Uncropped View)</span>
                     </span>
@@ -306,7 +306,7 @@ const EventModal = ({ eventId, onClose, onOpenRegister, initialEvent = null }) =
                       href={getPosterUrl(event.poster_url)}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 text-[11px] font-mono font-bold text-blue-600 hover:text-blue-800 hover:underline bg-white px-2.5 py-1 rounded-lg border border-slate-200 shadow-xs transition-colors"
+                      className="inline-flex items-center gap-1 text-[11px]  font-bold text-blue-600 hover:text-blue-800 hover:underline bg-white px-2.5 py-1 rounded-lg border border-slate-200 shadow-xs transition-colors"
                     >
                       <ExternalLink className="w-3 h-3" />
                       <span>View Full Size</span>
@@ -328,7 +328,7 @@ const EventModal = ({ eventId, onClose, onOpenRegister, initialEvent = null }) =
                 <div className="flex flex-wrap items-center justify-between gap-2.5">
                   <div className="flex flex-wrap items-center gap-2">
                     <span
-                      className={`px-3 py-1 rounded-full text-xs font-mono font-bold tracking-wide border shadow-xs ${
+                      className={`px-3 py-1 rounded-full text-xs  font-bold tracking-wide border shadow-xs ${
                         isInternal
                           ? 'bg-blue-600 text-white border-blue-500'
                           : 'bg-slate-100 text-slate-800 border-slate-300'
@@ -336,13 +336,13 @@ const EventModal = ({ eventId, onClose, onOpenRegister, initialEvent = null }) =
                     >
                       {isInternal ? 'Inside College' : 'Outside College'}
                     </span>
-                    <span className="px-3 py-1 rounded-full text-xs font-mono font-bold bg-blue-50 text-blue-800 border border-blue-200 shadow-xs">
+                    <span className="px-3 py-1 rounded-full text-xs  font-bold bg-blue-50 text-blue-800 border border-blue-200 shadow-xs">
                       {event.category}
                     </span>
                   </div>
 
                   {event.reward_points > 0 && (
-                    <span className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-black bg-blue-600 text-white border border-blue-400 shadow-xs">
+                    <span className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs  font-black bg-blue-600 text-white border border-blue-400 shadow-xs">
                       <Award className="w-3.5 h-3.5 text-white fill-current" />
                       <span>+{event.reward_points} Reward Points</span>
                     </span>
@@ -357,7 +357,7 @@ const EventModal = ({ eventId, onClose, onOpenRegister, initialEvent = null }) =
                   >
                     {event.title}
                   </h2>
-                  <p className="text-xs text-slate-500 font-mono mt-1.5 uppercase tracking-wider">
+                  <p className="text-xs text-slate-500  mt-1.5 uppercase tracking-wider">
                     Organized by <span className="text-blue-700 font-bold">{event.organizer}</span>
                   </p>
                 </div>
@@ -369,7 +369,7 @@ const EventModal = ({ eventId, onClose, onOpenRegister, initialEvent = null }) =
                       <Calendar className="w-4 h-4" />
                     </div>
                     <div>
-                      <p className="font-mono font-bold text-slate-500 uppercase tracking-wider text-[10px]">
+                      <p className=" font-bold text-slate-500 uppercase tracking-wider text-[10px]">
                         Event Schedule
                       </p>
                       <p className="font-semibold text-slate-900 text-xs mt-0.5">
@@ -383,7 +383,7 @@ const EventModal = ({ eventId, onClose, onOpenRegister, initialEvent = null }) =
                       <MapPin className="w-4 h-4" />
                     </div>
                     <div>
-                      <p className="font-mono font-bold text-slate-500 uppercase tracking-wider text-[10px]">
+                      <p className=" font-bold text-slate-500 uppercase tracking-wider text-[10px]">
                         Campus Venue
                       </p>
                       <p className="font-semibold text-slate-900 text-xs mt-0.5">
@@ -397,7 +397,7 @@ const EventModal = ({ eventId, onClose, onOpenRegister, initialEvent = null }) =
                       <Users className="w-4 h-4" />
                     </div>
                     <div>
-                      <p className="font-mono font-bold text-slate-500 uppercase tracking-wider text-[10px]">
+                      <p className=" font-bold text-slate-500 uppercase tracking-wider text-[10px]">
                         Seat Limit & Capacity
                       </p>
                       <p className="font-semibold text-slate-900 text-xs mt-0.5">
@@ -417,7 +417,7 @@ const EventModal = ({ eventId, onClose, onOpenRegister, initialEvent = null }) =
                       <Clock className="w-4 h-4" />
                     </div>
                     <div>
-                      <p className="font-mono font-bold text-slate-500 uppercase tracking-wider text-[10px]">
+                      <p className=" font-bold text-slate-500 uppercase tracking-wider text-[10px]">
                         Registration Deadline
                       </p>
                       <p className="font-semibold text-slate-900 text-xs mt-0.5">
@@ -430,11 +430,11 @@ const EventModal = ({ eventId, onClose, onOpenRegister, initialEvent = null }) =
                 {/* Structured Student Event Guide (Separated Sections) */}
                 <div>
                   <div className="flex items-center justify-between mb-3">
-                    <h4 className="text-xs font-mono font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+                    <h4 className="text-xs  font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
                       <Sparkles className="w-3.5 h-3.5 text-blue-600" />
                       <span>Student Event Guide & Breakdown</span>
                     </h4>
-                    <span className="text-[10px] font-mono text-blue-600 font-bold bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-200">
+                    <span className="text-[10px]  text-blue-600 font-bold bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-200">
                       Step-by-Step Overview
                     </span>
                   </div>
@@ -446,7 +446,7 @@ const EventModal = ({ eventId, onClose, onOpenRegister, initialEvent = null }) =
                   <div className="p-4 rounded-2xl bg-blue-50/60 border border-blue-200 flex items-center justify-between">
                     <div>
                       <span className="text-xs font-bold text-slate-900 block">External Resource Portal</span>
-                      <span className="text-[11px] text-slate-500 font-mono truncate max-w-sm block">
+                      <span className="text-[11px] text-slate-500  truncate max-w-sm block">
                         {event.external_link}
                       </span>
                     </div>

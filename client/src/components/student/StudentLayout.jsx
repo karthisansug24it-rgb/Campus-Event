@@ -104,7 +104,7 @@ const StudentLayout = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] flex flex-col md:flex-row antialiased">
+    <div className="min-h-screen bg-[#F8FAFC] flex flex-col md:flex-row antialiased" style={{ fontFamily: "'Georgia', serif" }}>
       
       {/* ─────────────────────────────────────────────────────────────
           1. MOBILE TOP HEADER (Clean with Left Menu Trigger)
@@ -350,7 +350,7 @@ const StudentLayout = () => {
                   <div className="w-8 h-8 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center">
                     <Shield className="w-4 h-4" />
                   </div>
-                  <span>Faculty / Admin Console</span>
+                  <span>Faculty / Admin</span>
                 </div>
                 <ExternalLink className="w-3.5 h-3.5 text-slate-400" />
               </Link>

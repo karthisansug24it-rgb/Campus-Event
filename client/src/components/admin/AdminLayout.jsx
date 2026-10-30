@@ -51,7 +51,7 @@ const AdminLayout = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] text-slate-800 flex flex-col md:flex-row antialiased">
+    <div className="min-h-screen bg-[#F8FAFC] text-slate-800 flex flex-col md:flex-row antialiased" style={{ fontFamily: "'Georgia', serif" }}>
       
       {/* ─────────────────────────────────────────────────────────────
           1. MOBILE TOP HEADER (Clean with Left Hamburger Button)
@@ -79,9 +79,6 @@ const AdminLayout = () => {
             <div className="leading-tight">
               <span className="font-extrabold font-display text-sm tracking-tight text-slate-900 block">
                 FXEC ADMIN
-              </span>
-              <span className="text-[10px] font-mono text-blue-600 font-bold block leading-none">
-                Console
               </span>
             </div>
           </div>
@@ -131,14 +128,8 @@ const AdminLayout = () => {
               />
               <div>
                 <h2 className="text-sm font-extrabold font-display text-slate-900 tracking-tight leading-none">
-                  Admin Console
+                  Admin
                 </h2>
-                <div className="flex items-center gap-1.5 mt-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-blue-600 animate-pulse" />
-                  <p className="text-[10px] text-blue-700 font-mono font-bold tracking-wider uppercase">
-                    FXEC OPS v2.4
-                  </p>
-                </div>
               </div>
             </div>
 
@@ -225,7 +216,7 @@ const AdminLayout = () => {
             className="flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-xl text-rose-600 hover:bg-rose-50 border border-rose-200/80 font-bold text-xs transition-all active:scale-95"
           >
             <LogOut className="w-4 h-4" />
-            <span>Sign Out of Console</span>
+            <span>Sign Out</span>
           </button>
         </div>
       </div>
@@ -245,14 +236,8 @@ const AdminLayout = () => {
               />
               <div>
                 <h2 className="text-sm font-extrabold font-display text-slate-900 tracking-tight">
-                  Admin Console
+                  Admin
                 </h2>
-                <div className="flex items-center gap-1.5 mt-0.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-blue-600 animate-pulse" />
-                  <p className="text-[10px] text-blue-700 font-mono font-bold tracking-wider uppercase">
-                    FXEC OPS v2.4
-                  </p>
-                </div>
               </div>
             </div>
           </div>
@@ -326,7 +311,7 @@ const AdminLayout = () => {
             <button
               onClick={handleLogout}
               className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-colors shrink-0"
-              title="Sign out of Admin Console"
+              title="Sign out"
               aria-label="Sign out"
             >
               <LogOut className="w-4 h-4" />
