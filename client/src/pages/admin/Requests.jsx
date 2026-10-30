@@ -46,7 +46,7 @@ import {
   EmptyState, 
   AnimatedSection 
 } from '../../components/ui';
-import { getPosterUrl, handleImageError } from '../../utils/imageUrl';
+import { getPosterUrl, getUploadUrl, handleImageError } from '../../utils/imageUrl';
 
 const DEFAULT_DEPARTMENTS = [
   { code: 'it', name: 'Information Technology' },
@@ -1116,7 +1116,7 @@ const Requests = () => {
             {/* Proof Image Box */}
             <div className="flex-1 overflow-auto bg-slate-900 rounded-2xl p-3 flex items-center justify-center min-h-[300px]">
               <img 
-                src={inspectingProof.registration_screenshot} 
+                src={getUploadUrl(inspectingProof.registration_screenshot)} 
                 alt="Registration proof screenshot" 
                 className="max-h-[50vh] max-w-full object-contain rounded-xl shadow-lg"
               />
@@ -1145,7 +1145,7 @@ const Requests = () => {
             {/* Actions Bar */}
             <div className="flex items-center justify-between pt-2 border-t border-slate-100 shrink-0">
               <a 
-                href={inspectingProof.registration_screenshot} 
+                href={getUploadUrl(inspectingProof.registration_screenshot)} 
                 target="_blank" 
                 rel="noreferrer"
                 className="text-xs font-mono text-blue-600 hover:underline flex items-center gap-1"
@@ -1205,7 +1205,7 @@ const Requests = () => {
                   <FileText className="w-16 h-16 mx-auto text-purple-400" />
                   <p className="font-bold text-sm">PDF Participation Certificate Uploaded</p>
                   <a 
-                    href={rankingRequest.certificate_url} 
+                    href={getUploadUrl(rankingRequest.certificate_url)} 
                     target="_blank" 
                     rel="noreferrer"
                     className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-purple-600 text-white font-bold text-xs hover:bg-purple-700 transition-colors"
@@ -1216,7 +1216,7 @@ const Requests = () => {
                 </div>
               ) : (
                 <img 
-                  src={rankingRequest.certificate_url} 
+                  src={getUploadUrl(rankingRequest.certificate_url)} 
                   alt="Student Certificate" 
                   className="max-h-[38vh] max-w-full object-contain rounded-xl shadow-lg"
                 />

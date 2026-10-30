@@ -42,9 +42,10 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// 4. Static files serving for uploaded posters
+// 4. Static files serving for uploaded posters and files
 const uploadsPath = path.join(__dirname, '../uploads');
 app.use('/uploads', express.static(uploadsPath));
+app.use('/api/uploads', express.static(uploadsPath));
 
 // 5. Health Check endpoint
 app.get('/api/health', (req, res) => {

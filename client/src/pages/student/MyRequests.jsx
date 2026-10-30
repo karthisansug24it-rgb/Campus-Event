@@ -38,7 +38,7 @@ import {
   EmptyState,
   AnimatedSection
 } from '../../components/ui';
-import { getPosterUrl, handleImageError } from '../../utils/imageUrl';
+import { getPosterUrl, getUploadUrl, handleImageError } from '../../utils/imageUrl';
 
 const MyRequests = () => {
   const [requests, setRequests] = useState([]);
@@ -683,7 +683,7 @@ const MyRequests = () => {
                           {req.registration_screenshot ? (
                             <button
                               type="button"
-                              onClick={() => setLightboxMedia({ url: req.registration_screenshot, title: `${req.event_title} - Registration Screenshot Proof`, type: 'image' })}
+                              onClick={() => setLightboxMedia({ url: getUploadUrl(req.registration_screenshot), title: `${req.event_title} - Registration Screenshot Proof`, type: 'image' })}
                               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-100/70 text-blue-800 text-xs font-mono font-bold hover:bg-blue-200 transition-colors"
                             >
                               <Eye className="w-3.5 h-3.5" />
@@ -716,11 +716,12 @@ const MyRequests = () => {
                             <button
                               type="button"
                               onClick={() => {
+                                const resolvedUrl = getUploadUrl(req.certificate_url);
                                 const isPdf = req.certificate_url.toLowerCase().endsWith('.pdf');
                                 if (isPdf) {
-                                  window.open(req.certificate_url, '_blank');
+                                  window.open(resolvedUrl, '_blank');
                                 } else {
-                                  setLightboxMedia({ url: req.certificate_url, title: `${req.event_title} - Participation Certificate`, type: 'image' });
+                                  setLightboxMedia({ url: resolvedUrl, title: `${req.event_title} - Participation Certificate`, type: 'image' });
                                 }
                               }}
                               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-purple-100/70 text-purple-800 text-xs font-mono font-bold hover:bg-purple-200 transition-colors"

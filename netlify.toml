@@ -13,7 +13,7 @@
   from = "/uploads/*"
   to = "https://fxec-events-backend.onrender.com/uploads/:splat"
   status = 200
-  force = true
+  force = false
 
 [[redirects]]
   from = "/*"

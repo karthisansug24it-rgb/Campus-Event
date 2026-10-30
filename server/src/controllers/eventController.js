@@ -219,7 +219,7 @@ async function getEventById(req, res) {
     let query = `
       SELECT 
         e.*,
-        u.name AS creator_name,
+        MAX(u.name) AS creator_name,
         COUNT(CASE WHEN rr.status IN ('registration_approved', 'approved', 'participated', 'ranked') THEN 1 END) AS approved_count,
         COUNT(CASE WHEN rr.status IN ('registered', 'pending') THEN 1 END) AS pending_count
     `;

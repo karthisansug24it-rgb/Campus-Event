@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
+import { getUploadUrl } from '../../utils/imageUrl';
 
 const EventAttendeesModal = ({ eventId, isOpen, onClose }) => {
   const { showToast } = useToast();
@@ -451,7 +452,7 @@ const EventAttendeesModal = ({ eventId, isOpen, onClose }) => {
                         <div className="flex flex-col gap-1.5 items-start">
                           {a.certificate_url ? (
                             <a
-                              href={a.certificate_url}
+                              href={getUploadUrl(a.certificate_url)}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-bold bg-purple-50 text-purple-800 hover:bg-purple-100 border border-purple-200 transition-colors"
@@ -464,7 +465,7 @@ const EventAttendeesModal = ({ eventId, isOpen, onClose }) => {
 
                           {a.registration_screenshot ? (
                             <a
-                              href={a.registration_screenshot}
+                              href={getUploadUrl(a.registration_screenshot)}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-bold bg-blue-50 text-blue-800 hover:bg-blue-100 border border-blue-200 transition-colors"
