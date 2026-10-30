@@ -735,6 +735,7 @@ const Home = () => {
       {selectedEventId && (
         <EventModal
           eventId={selectedEventId}
+          initialEvent={events.find(e => e.id === selectedEventId) || null}
           onClose={() => setSelectedEventId(null)}
           onOpenRegister={handleOpenRegister}
         />

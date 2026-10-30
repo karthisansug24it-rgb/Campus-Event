@@ -23,17 +23,19 @@ import { getPosterUrl, handleImageError } from '../utils/imageUrl';
 import StructuredEventGuide from './StructuredEventGuide';
 
 
-const EventModal = ({ eventId, onClose, onOpenRegister }) => {
+const EventModal = ({ eventId, onClose, onOpenRegister, initialEvent = null }) => {
   const { isAuthenticated, isAdmin } = useAuth();
-  const [event, setEvent] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [event, setEvent] = useState(initialEvent);
+  const [loading, setLoading] = useState(!initialEvent);
   const [error, setError] = useState('');
 
   // Fetch event details
   useEffect(() => {
     let isMounted = true;
     const fetchEvent = async () => {
-      setLoading(true);
+      if (!initialEvent) {
+        setLoading(true);
+      }
       setError('');
       try {
         const res = await api.get(`/events/${eventId}`);
@@ -42,7 +44,21 @@ const EventModal = ({ eventId, onClose, onOpenRegister }) => {
         }
       } catch (err) {
         if (isMounted) {
-          setError(err.response?.data?.message || 'Failed to load event details.');
+          if (initialEvent) {
+            setEvent(initialEvent);
+          } else {
+            try {
+              const allRes = await api.get('/events');
+              const matched = allRes.data?.data?.find(e => Number(e.id) === Number(eventId));
+              if (matched) {
+                setEvent(matched);
+                return;
+              }
+            } catch (fallbackErr) {
+              // Ignore fallback error
+            }
+            setError(err.response?.data?.message || 'Failed to load event details.');
+          }
         }
       } finally {
         if (isMounted) {
