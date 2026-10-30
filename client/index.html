@@ -2,6 +2,34 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <!-- Neutralize Netlify HUD badge injection at script source -->
+    <script>
+      (function() {
+        const observer = new MutationObserver(function(mutations) {
+          for (let i = 0; i < mutations.length; i++) {
+            const added = mutations[i].addedNodes;
+            for (let j = 0; j < added.length; j++) {
+              const node = added[j];
+              if (node.nodeType === 1) {
+                if (node.tagName === 'SCRIPT' && (node.getAttribute('data-nf-variant') || (node.src && node.src.indexOf('netlify/scripts/hud') !== -1))) {
+                  node.removeAttribute('data-nf-variant');
+                  node.src = '';
+                  node.remove();
+                } else if (node.tagName === 'IFRAME' && (node.id === 'nl-badge-frame' || node.id === 'nl-hud-frame' || (node.id && node.id.indexOf('nl-') === 0))) {
+                  node.remove();
+                }
+              }
+            }
+          }
+        });
+        observer.observe(document.documentElement, { childList: true, subtree: true });
+
+        document.addEventListener('DOMContentLoaded', function() {
+          const badges = document.querySelectorAll('script[data-nf-variant], script[src*="netlify/scripts/hud"], iframe#nl-badge-frame, iframe#nl-hud-frame, iframe[id^="nl-"]');
+          badges.forEach(function(el) { el.remove(); });
+        });
+      })();
+    </script>
     <link rel="icon" type="image/png" href="/fxec-logo.png" />
     <link rel="alternate icon" type="image/png" href="/icon-192.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />

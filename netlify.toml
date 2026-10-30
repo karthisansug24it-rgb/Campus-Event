@@ -4,6 +4,12 @@
   command = "npm run build"
 
 [[redirects]]
+  from = "/.netlify/scripts/*"
+  to = "/index.html"
+  status = 404
+  force = true
+
+[[redirects]]
   from = "/api/*"
   to = "https://fxec-events-backend.onrender.com/api/:splat"
   status = 200
