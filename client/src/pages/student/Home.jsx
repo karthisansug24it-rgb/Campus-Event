@@ -152,6 +152,8 @@ const Home = () => {
   const [dragStartX, setDragStartX] = useState(null);
   const [dragDeltaX, setDragDeltaX] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
+  const touchStartYRef = useRef(0);
+  const isHorizontalSwipeRef = useRef(null);
 
   const activeSlideIndex = upcomingEvents.length > 0
     ? (currentSlideIndex % upcomingEvents.length + upcomingEvents.length) % upcomingEvents.length
@@ -168,7 +170,7 @@ const Home = () => {
     setCurrentSlideIndex(prev => (prev + 1) % upcomingEvents.length);
   }, [upcomingEvents.length]);
 
-  // Auto slide timer with pause on hover
+  // Auto slide timer with pause on hover/touch
   useEffect(() => {
     if (upcomingEvents.length <= 1 || isPaused || isDragging) return;
     const interval = setInterval(() => {
@@ -177,7 +179,7 @@ const Home = () => {
     return () => clearInterval(interval);
   }, [upcomingEvents.length, isPaused, isDragging, handleNextSlide]);
 
-  // Touchpad horizontal scroll listener ("if i scroll from touchpad from left to right the next events should be displayed")
+  // Touchpad horizontal scroll listener
   useEffect(() => {
     const el = sliderContainerRef.current;
     if (!el || upcomingEvents.length <= 1) return;
@@ -190,9 +192,7 @@ const Home = () => {
       const absX = Math.abs(e.deltaX);
       const absY = Math.abs(e.deltaY);
 
-      // Only handle if horizontal scroll gesture on touchpad is dominant
       if (absX > absY && absX > 6) {
-        // Prevent default browser horizontal page bounce/history navigation
         e.preventDefault();
         setIsPaused(true);
 
@@ -200,7 +200,6 @@ const Home = () => {
 
         accumulatedDeltaX += e.deltaX;
 
-        // When threshold reached: scroll from left to right (deltaX > 0) displays next events!
         if (Math.abs(accumulatedDeltaX) >= 25) {
           isCooldown = true;
           if (accumulatedDeltaX > 0) {
@@ -210,7 +209,6 @@ const Home = () => {
           }
           accumulatedDeltaX = 0;
 
-          // Cooldown to prevent multi-slide skipping from trackpad momentum
           setTimeout(() => {
             isCooldown = false;
           }, 450);
@@ -223,7 +221,6 @@ const Home = () => {
       }
     };
 
-    // Attach non-passive wheel listener so e.preventDefault() works cleanly
     el.addEventListener('wheel', handleWheel, { passive: false });
     return () => {
       el.removeEventListener('wheel', handleWheel);
@@ -231,9 +228,61 @@ const Home = () => {
     };
   }, [upcomingEvents.length, handleNextSlide, handlePrevSlide]);
 
-  // Pointer drag handlers for mouse / touchpad drag & touch swipe
-  const handlePointerDown = (e) => {
+  // Dedicated Native Touch Handlers for Mobile Phones & Tablets
+  const handleTouchStart = (e) => {
     if (e.target.closest('button') || e.target.closest('a') || e.target.closest('input')) return;
+    const touch = e.touches[0];
+    setDragStartX(touch.clientX);
+    touchStartYRef.current = touch.clientY;
+    isHorizontalSwipeRef.current = null;
+    setDragDeltaX(0);
+    setIsDragging(true);
+    setIsPaused(true);
+  };
+
+  const handleTouchMove = (e) => {
+    if (!isDragging || dragStartX === null) return;
+    const touch = e.touches[0];
+    const deltaX = touch.clientX - dragStartX;
+    const deltaY = touch.clientY - touchStartYRef.current;
+
+    // Determine direction on initial movement
+    if (isHorizontalSwipeRef.current === null) {
+      if (Math.abs(deltaX) > 6 || Math.abs(deltaY) > 6) {
+        isHorizontalSwipeRef.current = Math.abs(deltaX) > Math.abs(deltaY);
+      }
+    }
+
+    if (isHorizontalSwipeRef.current) {
+      if (e.cancelable) e.preventDefault();
+      setDragDeltaX(deltaX);
+    }
+  };
+
+  const handleTouchEnd = () => {
+    if (!isDragging) return;
+    const swipeThreshold = 30; // Sensitive threshold for rapid phone touch response
+    if (dragDeltaX < -swipeThreshold) {
+      // Swiped right-to-left -> Next slide
+      handleNextSlide();
+    } else if (dragDeltaX > swipeThreshold) {
+      // Swiped left-to-right -> Previous slide
+      handlePrevSlide();
+    }
+    setIsDragging(false);
+    setDragStartX(null);
+    setDragDeltaX(0);
+    isHorizontalSwipeRef.current = null;
+    setTimeout(() => setIsPaused(false), 2500);
+  };
+
+  // Pointer drag handlers for mouse on desktop
+  const handlePointerDown = (e) => {
+    if (e.pointerType === 'touch') return;
+    if (e.target.closest('button') || e.target.closest('a') || e.target.closest('input')) return;
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    } catch {}
     setDragStartX(e.clientX);
     setDragDeltaX(0);
     setIsDragging(true);
@@ -241,25 +290,30 @@ const Home = () => {
   };
 
   const handlePointerMove = (e) => {
+    if (e.pointerType === 'touch') return;
     if (!isDragging || dragStartX === null) return;
-    const delta = e.clientX - dragStartX;
-    setDragDeltaX(delta);
+    setDragDeltaX(e.clientX - dragStartX);
   };
 
-  const handlePointerUp = () => {
+  const handlePointerUp = (e) => {
+    if (e.pointerType === 'touch') return;
     if (!isDragging) return;
-    if (Math.abs(dragDeltaX) > 40) {
+    try {
+      if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+        e.currentTarget.releasePointerCapture(e.pointerId);
+      }
+    } catch {}
+    if (Math.abs(dragDeltaX) > 35) {
       if (dragDeltaX < 0) {
-        // Dragged leftward -> reveal next slide
         handleNextSlide();
       } else {
-        // Dragged rightward -> reveal previous slide
         handlePrevSlide();
       }
     }
     setIsDragging(false);
     setDragStartX(null);
     setDragDeltaX(0);
+    setTimeout(() => setIsPaused(false), 2000);
   };
 
   const handleKeyDown = (e) => {
@@ -348,17 +402,22 @@ const Home = () => {
 
               {/* Viewport with overflow-hidden for genuine horizontal slide animation */}
               <div 
-                className={`relative z-10 overflow-hidden w-full select-none ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+                className={`relative z-10 overflow-hidden w-full select-none touch-pan-y ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+                style={{ touchAction: 'pan-y' }}
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
+                onTouchCancel={handleTouchEnd}
                 onPointerDown={handlePointerDown}
                 onPointerMove={handlePointerMove}
                 onPointerUp={handlePointerUp}
                 onPointerCancel={handlePointerUp}
               >
                 <div 
-                  className="flex items-start"
+                  className="flex items-start will-change-transform"
                   style={{
-                    transform: `translateX(calc(-${activeSlideIndex * 100}% + ${dragDeltaX}px))`,
-                    transition: isDragging ? 'none' : 'transform 500ms cubic-bezier(0.25, 1, 0.5, 1)'
+                    transform: `translate3d(calc(-${activeSlideIndex * 100}% + ${dragDeltaX}px), 0, 0)`,
+                    transition: isDragging ? 'none' : 'transform 450ms cubic-bezier(0.16, 1, 0.3, 1)'
                   }}
                 >
                   {upcomingEvents.map((event) => (
@@ -366,21 +425,23 @@ const Home = () => {
                       key={event.id}
                       className="w-full shrink-0 flex flex-col lg:flex-row items-stretch lg:items-center gap-6 sm:gap-8 px-0.5"
                     >
-                      {/* Event Poster / Visual Preview */}
+                      {/* Event Poster / Visual Preview - Edge-to-Edge Optimized */}
                       <div 
-                        onClick={() => handleSelectEvent(event)}
+                        onClick={() => {
+                          if (Math.abs(dragDeltaX) < 8) handleSelectEvent(event);
+                        }}
                         className="w-full lg:w-auto flex items-center justify-center shrink-0 self-center"
                       >
-                        <div className="relative group cursor-pointer rounded-2xl overflow-hidden bg-white/10 backdrop-blur-md border border-white/20 shadow-2xl p-1.5 flex items-center justify-center transition-all duration-300 hover:border-white/40 hover:shadow-blue-950/40 max-w-full">
+                        <div className="relative group cursor-pointer rounded-2xl overflow-hidden bg-black/25 backdrop-blur-md border border-white/20 shadow-xl flex items-center justify-center transition-all duration-300 hover:border-white/40 hover:shadow-blue-950/40 w-full sm:w-[320px] md:w-[360px] aspect-[16/10]">
                           {event.poster_url ? (
                             <>
                               <img
                                 src={getPosterUrl(event.poster_url)}
                                 alt={event.title}
-                                className="w-auto h-auto max-h-[280px] sm:max-h-[330px] max-w-full sm:max-w-xs md:max-w-sm object-contain rounded-xl shadow-md transition-transform duration-500 group-hover:scale-[1.02] block"
+                                className="w-full h-full object-cover object-center rounded-2xl shadow-md transition-transform duration-500 group-hover:scale-[1.03] block"
                                 onError={(e) => handleImageError(e, event.poster_url)}
                               />
-                              <div className="absolute inset-0 bg-slate-950/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center rounded-xl pointer-events-none">
+                              <div className="absolute inset-0 bg-slate-950/25 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center rounded-2xl pointer-events-none">
                                 <span className="px-3 py-1.5 rounded-full bg-white/95 text-slate-900 text-xs font-mono font-bold shadow-lg flex items-center gap-1.5 backdrop-blur-sm">
                                   <ExternalLink className="w-3.5 h-3.5 text-blue-600" />
                                   <span>View Full Poster</span>
@@ -388,7 +449,7 @@ const Home = () => {
                               </div>
                             </>
                           ) : (
-                            <div className="w-56 h-56 flex flex-col items-center justify-center bg-blue-900/60 rounded-xl text-blue-200">
+                            <div className="w-full h-full flex flex-col items-center justify-center bg-blue-900/60 rounded-2xl text-blue-200">
                               <Calendar className="w-12 h-12 mb-2" />
                               <span className="text-xs font-mono font-medium">No Poster Available</span>
                             </div>
@@ -416,7 +477,9 @@ const Home = () => {
                         </div>
 
                         <h2 
-                          onClick={() => handleSelectEvent(event)}
+                          onClick={() => {
+                            if (Math.abs(dragDeltaX) < 8) handleSelectEvent(event);
+                          }}
                           className="text-2xl sm:text-3xl font-black font-display text-white tracking-tight leading-snug cursor-pointer hover:text-blue-200 transition-colors"
                         >
                           {event.title}

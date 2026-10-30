@@ -525,11 +525,6 @@ const StudentLayout = () => {
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-36 bg-blue-100/40 rounded-full blur-3xl pointer-events-none" />
           
           <div className="relative z-10 max-w-3xl mx-auto space-y-2 sm:space-y-3">
-            <div className="inline-flex items-center gap-1.5 sm:gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-200/80 text-blue-700 text-[10px] sm:text-xs font-mono font-bold tracking-wide shadow-xs">
-              <Sparkles className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-              <span>FRANCIS XAVIER ENGINEERING COLLEGE</span>
-            </div>
-
             <h1 className="text-2xl sm:text-4xl lg:text-5xl font-black font-display text-slate-900 tracking-tight leading-tight">
               Welcome to <span className="text-blue-600">FXEC Events</span>
             </h1>

@@ -45,15 +45,18 @@ const EventCard = ({ event, onSelect }) => {
       aria-label={`View details for ${event.title}`}
     >
       {/* Poster Image Container */}
-      <div className="relative aspect-[4/5] bg-slate-100/80 overflow-hidden flex items-center justify-center border-b border-slate-100">
+      <div className="relative aspect-[16/10] w-full bg-slate-900/5 overflow-hidden flex items-center justify-center border-b border-slate-100">
         {posterSrc ? (
-          <img
-            src={posterSrc}
-            alt={event.title}
-            className="w-full h-full object-contain object-center group-hover:scale-[1.02] transition-transform duration-500 ease-out"
-            loading="lazy"
-            onError={(e) => handleImageError(e, event.poster_url)}
-          />
+          <>
+            <img
+              src={posterSrc}
+              alt={event.title}
+              className="w-full h-full object-cover object-center group-hover:scale-[1.03] transition-transform duration-500 ease-out"
+              loading="lazy"
+              onError={(e) => handleImageError(e, event.poster_url)}
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-black/25 pointer-events-none" />
+          </>
         ) : null}
 
 
