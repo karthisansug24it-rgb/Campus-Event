@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   Calendar, 
   MapPin, 
@@ -15,6 +15,7 @@ import { Badge } from './ui/Badge';
 import { getPosterUrl, handleImageError } from '../utils/imageUrl';
 
 const EventCard = ({ event, onSelect }) => {
+  const [isLandscape, setIsLandscape] = useState(false);
   const isInternal = event.event_type === 'internal';
   const eventDate = new Date(event.event_date);
   const deadline = new Date(event.registration_deadline);
@@ -44,21 +45,32 @@ const EventCard = ({ event, onSelect }) => {
       }}
       aria-label={`View details for ${event.title}`}
     >
-      {/* Poster Image Container */}
-      <div className="relative aspect-[16/10] w-full bg-slate-900/5 overflow-hidden flex items-center justify-center border-b border-slate-100">
+      {/* Poster Image Container - Smart Orientation Adaptive (4:5 for Vertical, 16:10 for Horizontal, 100% Uncropped) */}
+      <div className={`relative ${isLandscape ? 'aspect-[16/10]' : 'aspect-[4/5]'} w-full bg-slate-900/10 overflow-hidden flex items-center justify-center border-b border-slate-100 transition-all duration-300`}>
         {posterSrc ? (
           <>
+            {/* Ambient blurred backdrop fills any border cleanly with NO plain white gaps */}
+            <div 
+              className="absolute inset-0 bg-cover bg-center blur-md scale-110 opacity-35 pointer-events-none"
+              style={{ backgroundImage: `url(${posterSrc})` }}
+            />
+            {/* Full uncropped image, 100% completely visible without cutting off */}
             <img
               src={posterSrc}
               alt={event.title}
-              className="w-full h-full object-cover object-center group-hover:scale-[1.03] transition-transform duration-500 ease-out"
+              className="relative z-10 w-full h-full object-contain object-center group-hover:scale-[1.02] transition-transform duration-500 ease-out"
               loading="lazy"
+              onLoad={(e) => {
+                const { naturalWidth, naturalHeight } = e.currentTarget;
+                if (naturalWidth && naturalHeight) {
+                  setIsLandscape(naturalWidth > naturalHeight * 1.15);
+                }
+              }}
               onError={(e) => handleImageError(e, event.poster_url)}
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-black/25 pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-black/20 pointer-events-none z-10" />
           </>
         ) : null}
-
 
         {/* Fallback Display if no image or error */}
         <div className={`fallback-container w-full h-full flex flex-col items-center justify-center p-6 text-center bg-gradient-to-br from-blue-50 via-slate-50 to-blue-100/60 ${event.poster_url ? 'hidden' : 'flex'}`}>

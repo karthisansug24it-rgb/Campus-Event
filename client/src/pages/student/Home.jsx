@@ -425,23 +425,29 @@ const Home = () => {
                       key={event.id}
                       className="w-full shrink-0 flex flex-col lg:flex-row items-stretch lg:items-center gap-6 sm:gap-8 px-0.5"
                     >
-                      {/* Event Poster / Visual Preview - Edge-to-Edge Optimized */}
+                      {/* Event Poster / Visual Preview - 100% Uncropped with Ambient Backdrop */}
                       <div 
                         onClick={() => {
                           if (Math.abs(dragDeltaX) < 8) handleSelectEvent(event);
                         }}
                         className="w-full lg:w-auto flex items-center justify-center shrink-0 self-center"
                       >
-                        <div className="relative group cursor-pointer rounded-2xl overflow-hidden bg-black/25 backdrop-blur-md border border-white/20 shadow-xl flex items-center justify-center transition-all duration-300 hover:border-white/40 hover:shadow-blue-950/40 w-full sm:w-[320px] md:w-[360px] aspect-[16/10]">
+                        <div className="relative group cursor-pointer rounded-2xl overflow-hidden bg-black/30 backdrop-blur-md border border-white/20 shadow-xl flex items-center justify-center transition-all duration-300 hover:border-white/40 hover:shadow-blue-950/40 w-full sm:w-[330px] md:w-[370px] max-h-[260px] sm:max-h-[320px] aspect-[16/10] sm:aspect-auto p-1">
                           {event.poster_url ? (
                             <>
+                              {/* Ambient blurred backdrop so horizontal and vertical posters have zero dead space */}
+                              <div 
+                                className="absolute inset-0 bg-cover bg-center blur-lg scale-110 opacity-35 pointer-events-none"
+                                style={{ backgroundImage: `url(${getPosterUrl(event.poster_url)})` }}
+                              />
+                              {/* 100% full uncropped image */}
                               <img
                                 src={getPosterUrl(event.poster_url)}
                                 alt={event.title}
-                                className="w-full h-full object-cover object-center rounded-2xl shadow-md transition-transform duration-500 group-hover:scale-[1.03] block"
+                                className="relative z-10 w-full h-full max-h-[250px] sm:max-h-[310px] object-contain object-center rounded-xl shadow-md transition-transform duration-500 group-hover:scale-[1.02] block"
                                 onError={(e) => handleImageError(e, event.poster_url)}
                               />
-                              <div className="absolute inset-0 bg-slate-950/25 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center rounded-2xl pointer-events-none">
+                              <div className="absolute inset-0 bg-slate-950/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center rounded-xl pointer-events-none z-20">
                                 <span className="px-3 py-1.5 rounded-full bg-white/95 text-slate-900 text-xs font-mono font-bold shadow-lg flex items-center gap-1.5 backdrop-blur-sm">
                                   <ExternalLink className="w-3.5 h-3.5 text-blue-600" />
                                   <span>View Full Poster</span>
@@ -449,7 +455,7 @@ const Home = () => {
                               </div>
                             </>
                           ) : (
-                            <div className="w-full h-full flex flex-col items-center justify-center bg-blue-900/60 rounded-2xl text-blue-200">
+                            <div className="w-full h-48 sm:h-64 flex flex-col items-center justify-center bg-blue-900/60 rounded-xl text-blue-200">
                               <Calendar className="w-12 h-12 mb-2" />
                               <span className="text-xs font-mono font-medium">No Poster Available</span>
                             </div>
